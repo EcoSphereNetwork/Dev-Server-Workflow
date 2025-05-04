@@ -36,7 +36,7 @@ check_docker() {
     exit 1
   fi
 
-  if ! command -v docker-compose &> /dev/null; then
+  if ! command -v docker compose &> /dev/null; then
     echo -e "${RED}Docker Compose ist nicht installiert. Bitte installieren Sie Docker Compose und versuchen Sie es erneut.${NC}"
     exit 1
   fi
@@ -69,7 +69,7 @@ ENVEOF
 # Starte die Container
 start_containers() {
   echo -e "${GREEN}Starte Container...${NC}"
-  docker-compose up -d
+  docker compose up -d
   echo -e "${GREEN}Container gestartet. n8n ist unter http://localhost:5678 erreichbar.${NC}"
   echo -e "${GREEN}MCP-Server ist unter http://localhost:3000 erreichbar.${NC}"
 }
@@ -77,31 +77,31 @@ start_containers() {
 # Stoppe die Container
 stop_containers() {
   echo -e "${YELLOW}Stoppe Container...${NC}"
-  docker-compose down
+  docker compose down
   echo -e "${GREEN}Container gestoppt.${NC}"
 }
 
 # Zeige den Status der Container an
 show_status() {
   echo -e "${GREEN}Status der Container:${NC}"
-  docker-compose ps
+  docker compose ps
 }
 
 # Zeige die Logs der Container an
 show_logs() {
   if [ -z "$1" ]; then
     echo -e "${GREEN}Logs aller Container:${NC}"
-    docker-compose logs --tail=100
+    docker compose logs --tail=100
   else
     echo -e "${GREEN}Logs des Containers $1:${NC}"
-    docker-compose logs --tail=100 "$1"
+    docker compose logs --tail=100 "$1"
   fi
 }
 
 # Führe das Setup-Skript aus
 run_setup() {
   echo -e "${GREEN}Führe Setup-Skript aus...${NC}"
-  docker-compose run --rm setup
+  docker compose run --rm setup
   echo -e "${GREEN}Setup abgeschlossen.${NC}"
 }
 
