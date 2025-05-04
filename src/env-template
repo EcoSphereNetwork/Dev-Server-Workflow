@@ -1,12 +1,6 @@
 # ENV-Template für Workflow-Integration
 # Kopieren Sie diese Datei zu .env und füllen Sie die Werte aus
 
-# ---------- MCP Konfiguration ----------
-MCP_ENABLED=true
-MCP_SERVER_PORT=3333
-MCP_SERVER_HOST=localhost
-MCP_DEFAULT_TOOLS=create_github_issue,update_work_package,sync_documentation
-
 # ---------- n8n Konfiguration ----------
 N8N_URL=http://localhost:5678
 N8N_USER=admin
@@ -47,6 +41,10 @@ LLM_MODEL=anthropic/claude-3-5-sonnet-20240620
 # Base URL für OpenHands API falls custom
 OPENHANDS_API_URL=
 
+# ---------- Discord Konfiguration ----------
+# Discord Webhook URL für Benachrichtigungen
+DISCORD_WEBHOOK_URL=
+
 # ---------- Webhook Konfiguration ----------
 # Webhook-Secret für sichere Kommunikation zwischen den Systemen
 WEBHOOK_SECRET=generate_a_secure_random_string
@@ -63,6 +61,16 @@ ONLY_REPOS=
 # JSON-Mapping zwischen Repositories und OpenProject-Projekten
 # Format: {"owner/repo": {"projectId": "1", "projectName": "Project 1"}}
 PROJECT_MAPPING={"owner/repo-1": {"projectId": "1", "projectName": "Project 1", "newIssueStatus": "1", "inProgressStatus": "7", "prStatus": "2", "resolvedStatus": "12"}}
+
+# ---------- MCP Konfiguration ----------
+# Aktivieren Sie den MCP-Server für n8n
+MCP_ENABLED=true
+# Port für den MCP-Server
+MCP_SERVER_PORT=3333
+# Host für den MCP-Server
+MCP_SERVER_HOST=localhost
+# Komma-separierte Liste der verfügbaren Tools
+MCP_DEFAULT_TOOLS=create_github_issue,update_work_package,sync_documentation
 
 # ---------- Logging Konfiguration ----------
 LOG_LEVEL=info
