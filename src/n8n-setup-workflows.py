@@ -14,6 +14,7 @@ from n8n_setup_workflows_special import (
     TIME_TRACKING_WORKFLOW,
     AI_SUMMARY_WORKFLOW
 )
+from n8n_setup_workflows_mcp import MCP_SERVER_WORKFLOW
 
 # Exportiere alle Workflows
 __all__ = [
@@ -23,5 +24,6 @@ __all__ = [
     'OPENHANDS_WORKFLOW',
     'DISCORD_NOTIFICATION_WORKFLOW',
     'TIME_TRACKING_WORKFLOW',
-    'AI_SUMMARY_WORKFLOW'
+    'AI_SUMMARY_WORKFLOW',
+    'MCP_SERVER_WORKFLOW'
 ]

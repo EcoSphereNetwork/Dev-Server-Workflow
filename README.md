@@ -68,8 +68,8 @@ Die Integration ermöglicht eine nahtlose Zusammenarbeit zwischen den verschiede
 1. **Klonen des Repositories**
 
    ```bash
-   git clone https://github.com/YourOrganization/n8n-workflow-integration.git
-   cd n8n-workflow-integration
+   git clone https://github.com/EcoSphereNetwork/Dev-Server-Workflow.git
+   cd Dev-Server-Workflow
    ```
 
 2. **Erstellen der Konfigurationsdatei**
@@ -79,11 +79,28 @@ Die Integration ermöglicht eine nahtlose Zusammenarbeit zwischen den verschiede
    # Bearbeiten Sie die .env Datei und füllen Sie alle benötigten Werte aus
    ```
 
-3. **Installation und Konfiguration**
+3. **Installation und Konfiguration mit dem Setup-Skript**
 
    ```bash
-   pip install -r requirements.txt
-   python src/n8n_setup_main.py --install --env-file .env
+   python setup.py install --env-file .env
+   ```
+
+   Oder für spezifische Workflows:
+
+   ```bash
+   python setup.py install --env-file .env --workflows github document openhands
+   ```
+
+   Für die MCP-Integration:
+
+   ```bash
+   python setup.py install --env-file .env --mcp
+   ```
+
+4. **Testen der Installation**
+
+   ```bash
+   python setup.py test
    ```
 
 ## 📁 Projektstruktur
