@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "n8n-workflow": {
+      "command": "python",
+      "args": ["path/to/n8n-mcp-server.py"],
+      "env": {
+        "N8N_URL": "http://localhost:5678",
+        "N8N_API_KEY": "your-n8n-api-key-here"
+      },
+      "autoApprove": ["create_github_issue", "update_work_package", "sync_documentation"]
+    }
+  }
+}
