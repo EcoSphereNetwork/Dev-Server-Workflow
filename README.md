@@ -1,7 +1,117 @@
+# n8n Workflow Integration für AFFiNE, AppFlowy, GitHub/GitLab, OpenProject und OpenHands
+
+Dieses Paket enthält modulare Skripte zur Einrichtung und Konfiguration von n8n-Workflows für die Integration der folgenden Tools:
+
+- AFFiNE / AppFlowy (Wissensmanagement)
+- GitLab / GitHub (Code-Repository)
+- OpenProject (Projektmanagement)
+- OpenHands (KI-gestützte Issue-Lösung)
+
+## Voraussetzungen
+
+- Python 3.6+
+- Docker und Docker Compose (für lokale Installation)
+- Gültige API-Keys für die zu integrierenden Dienste
+
+### Python-Abhängigkeiten
+
+```bash
+pip install requests
+```
+
+## Erste Schritte
+
+1. Kopieren Sie `.env-template` zu `.env` und befüllen Sie alle benötigten Werte.
+2. Führen Sie das Hauptskript aus:
+
+```bash
+python n8n_setup_main.py --install --env-file .env
+```
+
+## Modulare Struktur
+
+Das Paket ist in mehrere Module aufgeteilt:
+
+- `n8n_setup_main.py`: Haupteinstiegspunkt für die Installation und Konfiguration
+- `n8n_setup_utils.py`: Hilfsfunktionen für alle Module
+- `n8n_setup_install.py`: Funktionen für die Installation von n8n via Docker
+- `n8n_setup_credentials.py`: Funktionen zur Einrichtung von Anmeldedaten
+- `n8n_setup_workflows/`: Modul mit Workflow-Definitionen:
+  - `n8n_setup_workflows_github.py`: GitHub/GitLab zu OpenProject Integration
+  - `n8n_setup_workflows_document.py`: Dokumenten-Synchronisierung
+  - `n8n_setup_workflows_openhands.py`: OpenHands Integration
+  - `n8n_setup_workflows_special.py`: Spezialworkflows (Discord, Zeit-Tracking, KI-Zusammenfassungen)
+  - `n8n_setup_workflows.py`: Haupt-Workflow-Importer
+
+## Verfügbare Workflows
+
+### 1. GitHub zu OpenProject Integration
+
+Synchronisiert Issues und Pull Requests zwischen GitHub/GitLab und OpenProject.
+
+- Issues in GitHub/GitLab werden als Arbeitspakete in OpenProject angelegt
+- Pull Requests aktualisieren den Status von Arbeitspaketen
+- Issues können mit dem "fix-me" Label versehen werden, um OpenHands zu aktivieren
+
+### 2. Dokumenten-Synchronisierung
+
+Synchronisiert Dokumente zwischen AFFiNE/AppFlowy, GitHub und OpenProject.
+
+- Änderungen an Dokumenten in AFFiNE/AppFlowy werden nach GitHub und OpenProject repliziert
+- Erkennung und Auflösung von Konflikten bei gleichzeitigen Änderungen
+- Benachrichtigungen bei Konflikten
+
+### 3. OpenHands Integration
+
+Integriert OpenHands für die KI-gestützte Lösung von Issues.
+
+- Erkennung und Verarbeitung von OpenHands-generierten Pull Requests
+- Aktualisierung des Status in OpenProject
+- Erstellung von Dokumenten in AFFiNE/AppFlowy zur Dokumentation der Änderungen
+- Discord-Benachrichtigungen (optional)
+
+### 4. Zusätzliche Workflows
+
+- **Discord Benachrichtigungen**: Sendet Benachrichtigungen über GitHub/GitLab-Ereignisse an Discord
+- **Zeit-Tracking**: Extrahiert Zeit-Tracking-Informationen aus Commit-Nachrichten und überträgt sie nach OpenProject
+- **KI-gestützte Zusammenfassungen**: Erzeugt wöchentliche Zusammenfassungen von Repository-Aktivitäten
+
+## Kommandozeilenoptionen
+
+```
+python n8n_setup_main.py --help
+```
+
+Wichtige Optionen:
+- `--install`: Installiert n8n lokal mit Docker
+- `--env-file FILE`: Pfad zur .env-Datei mit Konfigurationen
+- `--n8n-url URL`: URL der n8n-Instanz (Standard: http://localhost:5678)
+- `--workflows LIST`: Liste der zu installierenden Workflows (z.B. `github document openhands discord timetracking ai`)
+
+## Konfiguration
+
+Die Konfiguration erfolgt über eine `.env`-Datei. Ein Beispiel finden Sie in `.env-template`.
+
+## Webhook-URLs
+
+Nach der Einrichtung werden Webhook-URLs generiert, die Sie in den entsprechenden Diensten konfigurieren müssen:
+
+- **Document Sync Webhook URL**: Für die Integration mit AFFiNE/AppFlowy
+- **OpenHands Webhook URL**: Für Benachrichtigungen von OpenHands
+
+## Weiterführende Links
+
+- [n8n Dokumentation](https://docs.n8n.io/)
+- [OpenProject API Dokumentation](https://www.openproject.org/docs/api/)
+- [GitHub API Dokumentation](https://docs.github.com/en/rest)
+- [OpenHands Repository](https://github.com/All-Hands-AI/OpenHands)
+
+
+README-TEMPLATE:
 <div align="center">
   <img src="./docs/static/img/logo.png" alt="Logo" width="200">
-  <h1>EcoSphere Network: n8n Workflow Integrations</h1>
-  <p>Modulare Automatisierung von AFFiNE, AppFlowy, GitHub/GitLab, OpenProject und OpenHands mit n8n.</p>
+  <h1>EcoSphere Network Repository Template</h1>
+  <p>A modern, comprehensive template for creating new repositories within the EcoSphere Network ecosystem.</p>
 
   [![Contributors][contributors-shield]][contributors-url]
   [![Stars][stars-shield]][stars-url]
@@ -22,40 +132,202 @@
 - [Key Features](#-key-features)
 - [Getting Started](#-getting-started)
 - [Project Structure](#-project-structure)
-- [Workflows](#-workflows)
 - [Development](#-development)
+- [Testing](#-testing)
 - [Deployment](#-deployment)
+- [Contributing](#-contributing)
 - [Support](#-support)
 - [License](#-license)
 
 ## 🎯 About
-Dieses Repository enthält ein modulares Setup zur Einrichtung und Erweiterung von **n8n-Workflows** innerhalb des EcoSphere Network. Es ermöglicht die Automatisierung und Synchronisierung zwischen:
+The EcoSphere Network Repository Template provides a standardized starting point for new projects, incorporating modern development practices, comprehensive workflows, and essential tooling. This template is designed to accelerate project setup while ensuring consistency across the *ESN* ecosystem.
 
-- 🧠 AFFiNE / AppFlowy (Wissensmanagement)
-- 🛠️ GitHub / GitLab (Code-Management)
-- 📈 OpenProject (Projektmanagement)
-- 🤖 OpenHands (KI-gestützte Issue-Lösungen)
+### Why Use This Template?
+- 🚀 **Quick Start**: Get your project running in minutes with pre-configured tooling
+- 🔄 **CI/CD Ready**: Comprehensive GitHub Actions workflows for testing, building, and deployment
+- 📊 **Quality Focused**: Built-in code quality tools and testing frameworks
+- 🛡️ **Security First**: Automated security scanning and best practices
+- 📚 **Well Documented**: Extensive documentation and examples
 
 ## ✨ Key Features
-- 🔄 Vollständige Synchronisation von Dokumenten und Issues zwischen Tools
-- 🧩 Modulare Struktur für einfache Erweiterung und Wiederverwendbarkeit
-- 🐳 Docker-basierte lokale Installation
-- 📡 Webhook-Unterstützung für Live-Updates
-- 🛡️ Integration von Sicherheits- und Qualitätschecks
+
+### Core Features
+- 🔧 **Project Structure**: Organized directory layout for various project types
+- 📝 **Documentation**: Docs and Wiki with Docusaurus and documentation templates
+- 🔄 **Workflows**: Reusable GitHub Actions for CI/CD
+- 🧪 **Testing**: Configured testing framework with examples
+- 🛡️ **Security**: Automated security scanning and best practices
+
+### Development Tools
+- 📊 **Code Quality**: Pre-configured linting and formatting
+- 🐳 **Docker Support**: Container configurations and build workflows
+- 🔄 **Dependency Management**: Automated updates and vulnerability scanning
+- 🧪 **Testing Framework**: Unit, integration, and end-to-end testing setup
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Python 3.6+
-- Docker + Docker Compose
-- Gültige API-Tokens für alle Tools
-- `pip install requests`
+- Git
+- Python 3.9 or higher
+- Docker (optional)
 
 ### Installation
 
-```bash
-git clone git@github.com:EcoSphereNetwork/Dev-Server-Workflow.git
-cd Dev-Server-Workflow
-cp .env-template .env  # .env mit API-Schlüsseln ausfüllen
+1. **Create a New Repository**
 
-python n8n_setup_main.py --install --env-file .env
+   ```bash
+   gh repo create my-project --template EcoSphereNetwork/ESN-Repo-Template
+   ```
+
+   or
+
+   ```bash
+   git clone https://github.com/EcoSphereNetwork/ESN_Repo-Template.git my-project
+   ```
+
+2. **Create a separate directory for your actual project:**
+
+   ```bash
+   mkdir my-actual-project
+   cd my-actual-project
+   ```
+
+3. **Run the initialization script from the cloned template:**
+
+   ```bash
+   ../my-project/scripts/init.sh
+   ```
+
+4. **Set Up Development Environment**
+   ```bash
+   poetry install  # Install dependencies
+   pre-commit install  # Set up git hooks
+   ```
+
+## 📁 Project Structure
+```
+my-project/
+├── .github/                    # GitHub configurations and workflows
+├── docs/                       # Project documentation
+├── src/                        # Source code
+│   ├── core/                  # Core functionality
+│   ├── modules/               # Optional modules
+│   └── main.py               # Application entry point
+├── tests/                     # Test suite
+│   ├── unit/                 # Unit tests
+│   ├── integration/          # Integration tests
+│   └── e2e/                  # End-to-end tests
+├── scripts/                   # Development and deployment scripts
+├── .env.example              # Environment variables template
+├── pyproject.toml            # Project dependencies and configuration
+└── README.md                 # Project documentation
+```
+
+## 💻 Development
+
+### Setting Up for Development
+1. Install dependencies:
+   ```bash
+   poetry install
+   ```
+
+2. Set up pre-commit hooks:
+   ```bash
+   pre-commit install
+   ```
+
+3. Create environment file:
+   ```bash
+   cp .env.example .env
+   ```
+
+### Code Quality Tools
+- **Formatting**: `poetry run black .`
+- **Linting**: `poetry run ruff check .`
+- **Type Checking**: `poetry run mypy .`
+
+## 🧪 Testing
+
+### Running Tests
+```bash
+# Run all tests
+poetry run pytest
+
+# Run specific test types
+poetry run pytest tests/unit
+poetry run pytest tests/integration
+poetry run pytest tests/e2e
+
+# Run with coverage
+poetry run pytest --cov=src
+```
+
+## 🚢 Deployment
+
+### Using GitHub Actions
+1. Configure secrets in repository settings
+2. Push to trigger deployment workflow
+3. Monitor deployment in Actions tab
+
+### Manual Deployment
+```bash
+./scripts/deploy.sh [environment]
+```
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+1. Fork the repository
+2. Create your feature branch:
+   ```bash
+   git checkout -b feature/amazing-feature
+   ```
+3. Commit your changes:
+   ```bash
+   git commit -m 'feat: add amazing feature'
+   ```
+4. Push to the branch:
+   ```bash
+   git push origin feature/amazing-feature
+   ```
+5. Open a Pull Request
+
+## 💬 Support
+
+- [Issue Tracker](https://github.com/EcoSphereNetwork/ESN_Repo-Template.git/issues)
+- [Discussions](https://github.com/EcoSphereNetwork/ESN_Repo-Template.git/discussions)
+- [Discord Community][discord-url]
+- [Documentation][docs-url]
+
+## 📄 License
+
+Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
+
+---
+
+<div align="center">
+
+### Repository Activity
+
+[![Repository Activity][activity-graph]][activity-url]
+
+</div>
+
+<!-- MARKDOWN LINKS & IMAGES -->
+[contributors-shield]: https://img.shields.io/github/contributors/EcoSphereNetwork/ESN_Repo-Template?style=for-the-badge&color=blue
+[contributors-url]: https://github.com/EcoSphereNetwork/ESN_Repo-Template/graphs/contributors
+[stars-shield]: https://img.shields.io/github/stars/EcoSphereNetwork/ESN_Repo-Template?style=for-the-badge&color=blue
+[stars-url]: https://github.com/EcoSphereNetwork/ESN_Repo-Template/stargazers
+[coverage-shield]: https://img.shields.io/codecov/c/github/EcoSphereNetwork/ESN_Repo-Template?style=for-the-badge&color=blue
+[coverage-url]: https://codecov.io/github/EcoSphereNetwork/ESN_Repo-Template
+[license-shield]: https://img.shields.io/github/license/EcoSphereNetwork/ESN_Repo-Template?style=for-the-badge&color=blue
+[license-url]: https://github.com/EcoSphereNetwork/ESN_Repo-Template/blob/main/LICENSE
+[discord-shield]: https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=for-the-badge
+[discord-url]: https://discord.gg/cTWBHGkn
+[docs-shield]: https://img.shields.io/badge/Documentation-000?logo=googledocs&logoColor=FFE165&style=for-the-badge
+[docs-url]: https://github.com/EcoSphereNetwork/ESN_Repo-Template/wiki
+[credits-shield]: https://img.shields.io/badge/Project-Credits-blue?style=for-the-badge&color=FFE165&logo=github&logoColor=white
+[credits-url]: https://github.com/EcoSphereNetwork/ESN_Repo-Template/blob/main/CREDITS.md
+[activity-graph]: https://repobeats.axiom.co/api/embed/8d1a53c73cf5523d0e52a6cc5b74bce75eecc801.svg
+[activity-url]: https://repobeats.axiom.co
