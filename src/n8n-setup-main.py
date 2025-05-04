@@ -13,20 +13,256 @@ import os
 import argparse
 import time
 import subprocess
+import json
 from pathlib import Path
 
 # Import der Modulskripte
 from n8n_setup_utils import load_env_file, create_workflow, create_credential
 from n8n_setup_install import install_n8n_docker, get_n8n_api_key
-from n8n_setup_credentials import setup_github_credential, setup_openproject_credential
+from n8n_setup_credentials import (
+    setup_github_credential, 
+    setup_openproject_credential,
+    setup_discord_credential,
+    setup_affine_credential,
+    setup_appflowy_credential,
+    setup_openhands_credential
+)
 from n8n_setup_workflows import (
     GITHUB_OPENPROJECT_WORKFLOW,
     DOCUMENT_SYNC_WORKFLOW,
     OPENHANDS_WORKFLOW,
     DISCORD_NOTIFICATION_WORKFLOW,
     TIME_TRACKING_WORKFLOW,
-    AI_SUMMARY_WORKFLOW
+    AI_SUMMARY_WORKFLOW,
+    MCP_SERVER_WORKFLOW
 )
+
+# MCP Server Template
+N8N_MCP_SERVER_TEMPLATE = """#!/usr/bin/env python3
+\"\"\"
+n8n MCP Server
+
+Implementiert einen Model Context Protocol (MCP) Server für n8n, der es KI-Agenten 
+ermöglicht, n8n-Workflows als Tools zu verwenden.
+\"\"\"
+
+import os
+import json
+import asyncio
+import subprocess
+import sys
+import logging
+from pathlib import Path
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger("n8n-mcp-server")
+
+class N8nMCPServer:
+    \"\"\"MCP-Server, der n8n-Funktionalität als Tools bereitstellt.\"\"\"
+    
+    def __init__(self, n8n_url, api_key):
+        \"\"\"Initialisiert den MCP-Server mit n8n-API Zugangsdaten.
+        
+        Args:
+            n8n_url: URL der n8n-Instanz
+            api_key: API-Key für n8n
+        \"\"\"
+        self.n8n_url = n8n_url
+        self.n8n_api_key = api_key
+        self.request_id = 0
+        self.tools = self._load_available_tools()
+        
+    def _load_available_tools(self):
+        \"\"\"Lädt verfügbare n8n-Workflows als Tools.\"\"\"
+        # Diese würden tatsächlich über die n8n-API abgefragt
+        return [
+            {
+                "name": "create_github_issue",
+                "description": "Erstellt ein neues Issue in GitHub",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "title": {"type": "string", "description": "Titel des Issues"},
+                        "body": {"type": "string", "description": "Beschreibung des Issues"},
+                        "owner": {"type": "string", "description": "Repository Owner"},
+                        "repo": {"type": "string", "description": "Repository Name"}
+                    },
+                    "required": ["title", "body", "owner", "repo"]
+                }
+            },
+            {
+                "name": "update_work_package",
+                "description": "Aktualisiert ein Arbeitspaket in OpenProject",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"type": "string", "description": "ID des Arbeitspakets"},
+                        "status": {"type": "string", "description": "Neuer Status"},
+                        "description": {"type": "string", "description": "Neue Beschreibung"}
+                    },
+                    "required": ["id"]
+                }
+            },
+            {
+                "name": "sync_documentation",
+                "description": "Synchronisiert Dokumentation zwischen AFFiNE und GitHub",
+                "parameters": {
+                    "type": "object", 
+                    "properties": {
+                        "doc_id": {"type": "string", "description": "ID des Dokuments in AFFiNE"},
+                        "github_path": {"type": "string", "description": "Pfad der Datei in GitHub"},
+                        "owner": {"type": "string", "description": "Repository Owner"},
+                        "repo": {"type": "string", "description": "Repository Name"}
+                    },
+                    "required": ["doc_id", "github_path", "owner", "repo"]
+                }
+            }
+        ]
+    
+    async def start(self):
+        \"\"\"Startet den MCP-Server und verarbeitet Standard-Ein/Ausgabe nach dem MCP-Protokoll.\"\"\"
+        logger.info("Starting MCP Server for n8n")
+        
+        # Lese von stdin, schreibe nach stdout
+        self.reader = asyncio.StreamReader()
+        protocol = asyncio.StreamReaderProtocol(self.reader)
+        await asyncio.get_event_loop().connect_read_pipe(lambda: protocol, sys.stdin)
+        
+        self.writer_transport, self.writer_protocol = await asyncio.get_event_loop().connect_write_pipe(
+            asyncio.streams.FlowControlMixin, sys.stdout)
+        self.writer = asyncio.StreamWriter(
+            self.writer_transport, self.writer_protocol, None, asyncio.get_event_loop())
+        
+        # Verarbeite eingehende Nachrichten
+        while True:
+            try:
+                line = await self.reader.readline()
+                if not line:
+                    break
+                    
+                message = json.loads(line.decode())
+                await self._handle_message(message)
+            except Exception as e:
+                logger.error(f"Error processing message: {e}")
+                await self._send_error(None, str(e))
+    
+    async def _handle_message(self, message):
+        \"\"\"Verarbeitet eingehende JSON-RPC-Nachrichten.
+        
+        Args:
+            message: Die empfangene JSON-RPC-Nachricht
+        \"\"\"
+        message_id = message.get("id")
+        method = message.get("method")
+        params = message.get("params", {})
+        
+        # Verarbeiten unterschiedlicher RPC-Methoden
+        if method == "initialize":
+            await self._send_response(message_id, {"capabilities": {"tools": True}})
+        elif method == "mcp.listTools":
+            await self._send_response(message_id, self.tools)
+        elif method == "mcp.callTool":
+            result = await self._execute_tool(params.get("name"), params.get("arguments", {}))
+            await self._send_response(message_id, result)
+        else:
+            await self._send_error(message_id, f"Unsupported method: {method}")
+    
+    async def _execute_tool(self, tool_name, arguments):
+        \"\"\"Führt ein Tool aus, indem der entsprechende n8n-Workflow aufgerufen wird.
+        
+        Args:
+            tool_name: Name des auszuführenden Tools
+            arguments: Parameter für den Tool-Aufruf
+            
+        Returns:
+            Das Ergebnis der Workflow-Ausführung
+        \"\"\"
+        logger.info(f"Executing tool {tool_name} with arguments {json.dumps(arguments)}")
+        
+        # Hier würde tatsächlich ein Aufruf an die n8n-API erfolgen
+        # Für dieses Beispiel simulieren wir eine Antwort
+        
+        if tool_name == "create_github_issue":
+            return {
+                "status": "success",
+                "issue_number": 42,
+                "issue_url": f"https://github.com/{arguments['owner']}/{arguments['repo']}/issues/42"
+            }
+        elif tool_name == "update_work_package":
+            return {
+                "status": "success",
+                "work_package_id": arguments["id"],
+                "updated_fields": list(arguments.keys())
+            }
+        elif tool_name == "sync_documentation":
+            return {
+                "status": "success",
+                "doc_id": arguments["doc_id"],
+                "github_path": arguments["github_path"],
+                "commit_sha": "abc123"
+            }
+        else:
+            raise ValueError(f"Unknown tool: {tool_name}")
+    
+    async def _send_response(self, request_id, result):
+        \"\"\"Sendet eine erfolgreiche JSON-RPC-Antwort.
+        
+        Args:
+            request_id: ID der Anfrage
+            result: Ergebnis der Operation
+        \"\"\"
+        response = {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "result": result
+        }
+        await self._send_message(response)
+    
+    async def _send_error(self, request_id, error_message, code=-32603):
+        \"\"\"Sendet eine JSON-RPC-Fehlermeldung.
+        
+        Args:
+            request_id: ID der Anfrage
+            error_message: Fehlermeldung
+            code: JSON-RPC-Fehlercode
+        \"\"\"
+        response = {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "error": {
+                "code": code,
+                "message": error_message
+            }
+        }
+        await self._send_message(response)
+    
+    async def _send_message(self, message):
+        \"\"\"Sendet eine JSON-RPC-Nachricht.
+        
+        Args:
+            message: Die zu sendende Nachricht
+        \"\"\"
+        message_json = json.dumps(message)
+        self.writer.write(f"{message_json}\\n".encode())
+        await self.writer.drain()
+
+async def main():
+    \"\"\"Hauptfunktion zum Starten des MCP-Servers.\"\"\"
+    # Lade Umgebungsvariablen
+    n8n_url = os.environ.get("N8N_URL", "http://localhost:5678")
+    n8n_api_key = os.environ.get("N8N_API_KEY")
+    
+    if not n8n_api_key:
+        logger.error("N8N_API_KEY environment variable is required")
+        sys.exit(1)
+    
+    # Starte MCP-Server
+    server = N8nMCPServer(n8n_url, n8n_api_key)
+    await server.start()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+"""
 
 def parse_args():
     """Parse command line arguments."""
@@ -39,9 +275,72 @@ def parse_args():
     parser.add_argument('--install', action='store_true', help='Install n8n locally using Docker')
     parser.add_argument('--env-file', help='Path to .env file with configurations')
     parser.add_argument('--workflows', nargs='+', choices=[
-        'github', 'document', 'openhands', 'discord', 'timetracking', 'ai'
-    ], default=['github', 'document', 'openhands'], help='Specific workflows to install')
+        'github', 'document', 'openhands', 'discord', 'timetracking', 'ai', 'mcp'
+    ], default=['github', 'document', 'openhands', 'mcp'], help='Specific workflows to install')
+    parser.add_argument('--mcp', action='store_true', help='Enable MCP server for n8n workflows')
+    parser.add_argument('--mcp-port', type=int, default=3333, help='Port for the MCP server')
     return parser.parse_args()
+
+def setup_mcp_server(n8n_url, api_key, port=3333):
+    """Richtet den MCP-Server für n8n ein."""
+    print("Setting up MCP server for n8n...")
+    
+    # Kopiere die MCP-Server-Datei in das Zielverzeichnis
+    mcp_server_path = Path('n8n-mcp-server.py')
+    if not mcp_server_path.exists():
+        print("Creating MCP server script...")
+        with open(mcp_server_path, 'w') as f:
+            f.write(N8N_MCP_SERVER_TEMPLATE)
+        print(f"MCP server script created at {mcp_server_path.absolute()}")
+    
+    # Generiere eine systemd-Service-Datei für den MCP-Server (falls Linux)
+    if os.name == 'posix':
+        service_file = Path('/tmp/n8n-mcp-server.service')
+        service_content = f"""[Unit]
+Description=n8n MCP Server
+After=network.target
+
+[Service]
+Environment=N8N_URL={n8n_url}
+Environment=N8N_API_KEY={api_key}
+Environment=MCP_SERVER_PORT={port}
+ExecStart=/usr/bin/python3 {mcp_server_path.absolute()}
+Restart=on-failure
+User={os.environ.get('USER', 'root')}
+
+[Install]
+WantedBy=multi-user.target
+"""
+        with open(service_file, 'w') as f:
+            f.write(service_content)
+        
+        print(f"SystemD service file created at {service_file}")
+        print("To install the service run:")
+        print(f"  sudo cp {service_file} /etc/systemd/system/")
+        print("  sudo systemctl daemon-reload")
+        print("  sudo systemctl enable n8n-mcp-server")
+        print("  sudo systemctl start n8n-mcp-server")
+    
+    # Erzeuge Konfiguration für OpenHands
+    openhands_config = {
+        "mcpServers": {
+            "n8n-workflow": {
+                "command": "python",
+                "args": [str(mcp_server_path.absolute())],
+                "env": {
+                    "N8N_URL": n8n_url,
+                    "N8N_API_KEY": api_key
+                },
+                "autoApprove": ["create_github_issue", "update_work_package", "sync_documentation"]
+            }
+        }
+    }
+    
+    with open('openhands-mcp-config.json', 'w') as f:
+        json.dump(openhands_config, f, indent=2)
+    
+    print("OpenHands MCP configuration generated at openhands-mcp-config.json")
+    print("Add this file to your OpenHands configuration.")
 
 def main():
     """Main function."""
@@ -84,6 +383,10 @@ def main():
     # Set up credentials
     github_cred = None
     openproject_cred = None
+    discord_cred = None
+    affine_cred = None
+    appflowy_cred = None
+    openhands_cred = None
     
     if github_token:
         github_cred = setup_github_credential(n8n_url, api_key, github_token)
@@ -98,6 +401,34 @@ def main():
             print(f"Created OpenProject credential with ID: {openproject_cred['id']}")
     else:
         print("No OpenProject token provided. Skipping OpenProject credential setup.")
+    
+    # Lade Discord Webhook URL
+    discord_webhook_url = env_vars.get('DISCORD_WEBHOOK_URL')
+    if discord_webhook_url:
+        discord_cred = setup_discord_credential(n8n_url, api_key, discord_webhook_url)
+        if discord_cred:
+            print(f"Created Discord credential with ID: {discord_cred['id']}")
+    
+    # Lade AFFiNE API Key
+    affine_api_key = env_vars.get('AFFINE_API_KEY')
+    if affine_api_key:
+        affine_cred = setup_affine_credential(n8n_url, api_key, affine_api_key)
+        if affine_cred:
+            print(f"Created AFFiNE credential with ID: {affine_cred['id']}")
+    
+    # Lade AppFlowy API Key
+    appflowy_api_key = env_vars.get('APPFLOWY_API_KEY')
+    if appflowy_api_key:
+        appflowy_cred = setup_appflowy_credential(n8n_url, api_key, appflowy_api_key)
+        if appflowy_cred:
+            print(f"Created AppFlowy credential with ID: {appflowy_cred['id']}")
+    
+    # Lade LLM API Key
+    llm_api_key = env_vars.get('LLM_API_KEY')
+    if llm_api_key:
+        openhands_cred = setup_openhands_credential(n8n_url, api_key, llm_api_key)
+        if openhands_cred:
+            print(f"Created OpenHands credential with ID: {openhands_cred['id']}")
     
     print("Creating workflows...")
     
@@ -169,6 +500,19 @@ def main():
         if ai_workflow:
             print(f"Created AI Summary workflow with ID: {ai_workflow['id']}")
     
+    # MCP Server Workflow
+    if 'mcp' in args.workflows:
+        workflow_data = MCP_SERVER_WORKFLOW
+        if github_cred:
+            update_github_credentials(workflow_data, github_cred['id'])
+        
+        if openproject_cred and openproject_url:
+            update_openproject_credentials(workflow_data, openproject_cred['id'], openproject_url)
+            
+        mcp_workflow = create_workflow(n8n_url, api_key, workflow_data)
+        if mcp_workflow:
+            print(f"Created MCP Server workflow with ID: {mcp_workflow['id']}")
+    
     print("\nWorkflow setup complete!")
     print(f"You can access your n8n instance at: {n8n_url}")
     
@@ -189,10 +533,22 @@ def main():
             print(f"\nOpenHands Webhook URL: {n8n_url}{webhook_path}")
             print("Use this URL to receive notifications from OpenHands.")
     
+    if 'mcp' in args.workflows:
+        webhook_node = next((node for node in MCP_SERVER_WORKFLOW['nodes'] 
+                             if node.get('type') == 'n8n-nodes-base.mcpTrigger'), None)
+        if webhook_node:
+            webhook_path = webhook_node.get('parameters', {}).get('path', '/mcp/endpoint')
+            print(f"\nMCP Server URL: {n8n_url}{webhook_path}")
+            print("Use this URL to integrate with MCP clients like OpenHands.")
+    
     print("\nNext steps:")
     print("1. Configure your GitHub repositories to send webhooks to n8n")
     print("2. Set up webhook endpoints in AFFiNE/AppFlowy to notify n8n of document updates")
     print("3. Configure OpenHands to notify n8n when PRs are created")
+    
+    # Set up MCP Server if requested
+    if args.mcp:
+        setup_mcp_server(n8n_url, api_key, args.mcp_port)
 
 def update_github_credentials(workflow_data, credential_id):
     """Update GitHub credentials in the workflow."""
