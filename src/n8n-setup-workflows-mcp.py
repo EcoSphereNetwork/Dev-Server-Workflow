@@ -9,6 +9,8 @@ der als Brücke zwischen MCP und n8n dient.
 # MCP-Server Workflow
 MCP_SERVER_WORKFLOW = {
     "name": "MCP Server Integration",
+    "tags": ["mcp", "integration", "automation"],
+    "description": "Workflow zur Integration von n8n mit dem Model Context Protocol (MCP) für KI-Agenten",
     "nodes": [
         {
             "parameters": {

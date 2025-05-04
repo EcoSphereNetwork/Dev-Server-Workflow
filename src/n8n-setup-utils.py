@@ -142,24 +142,62 @@ def find_workflow_by_name(n8n_url, api_key, name):
     return None
 
 def activate_workflow(n8n_url, api_key, workflow_id, active=True):
-    """Activate or deactivate a workflow."""
-    headers = {
-        'X-N8N-API-KEY': api_key,
-        'Content-Type': 'application/json'
-    }
+    """Activate or deactivate a workflow.
     
-    data = {
-        'active': active
-    }
-    
-    response = requests.patch(
-        f"{n8n_url}/rest/workflows/{workflow_id}/activate",
-        headers=headers,
-        json=data
-    )
-    
-    if response.status_code != 200:
-        print(f"Failed to {'activate' if active else 'deactivate'} workflow: {response.text}")
+    Args:
+        n8n_url: URL of the n8n instance
+        api_key: n8n API key
+        workflow_id: ID of the workflow to activate/deactivate
+        active: True to activate, False to deactivate
+        
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        if not workflow_id:
+            print("Error: Workflow ID is required to activate/deactivate a workflow")
+            return False
+            
+        headers = {
+            'X-N8N-API-KEY': api_key,
+            'Content-Type': 'application/json'
+        }
+        
+        data = {
+            'active': active
+        }
+        
+        # Überprüfe zuerst den aktuellen Status des Workflows
+        status_response = requests.get(
+            f"{n8n_url}/rest/workflows/{workflow_id}",
+            headers=headers
+        )
+        
+        if status_response.status_code != 200:
+            print(f"Failed to get workflow status: {status_response.text}")
+            return False
+            
+        current_status = status_response.json().get('active', False)
+        
+        # Wenn der Workflow bereits im gewünschten Status ist, nichts tun
+        if current_status == active:
+            print(f"Workflow is already {'active' if active else 'inactive'}")
+            return True
+        
+        # Aktiviere/Deaktiviere den Workflow
+        response = requests.patch(
+            f"{n8n_url}/rest/workflows/{workflow_id}/activate",
+            headers=headers,
+            json=data
+        )
+        
+        if response.status_code != 200:
+            print(f"Failed to {'activate' if active else 'deactivate'} workflow: {response.text}")
+            return False
+        
+        print(f"Successfully {'activated' if active else 'deactivated'} workflow")
+        return True
+        
+    except Exception as e:
+        print(f"Error {'activating' if active else 'deactivating'} workflow: {str(e)}")
         return False
-    
-    return True
