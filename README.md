@@ -59,11 +59,52 @@ Die Integration ermöglicht eine nahtlose Zusammenarbeit zwischen den verschiede
 ## 🚀 Erste Schritte
 
 ### Voraussetzungen
-- Python 3.6+
-- Docker und Docker Compose (für lokale Installation)
+- **Für direkte Installation**: Python 3.6+
+- **Für Docker-Installation**: Docker und Docker Compose
 - Gültige API-Keys für die zu integrierenden Dienste
 
 ### Installation
+
+#### 🐳 Option 1: Docker-Installation (empfohlen)
+
+Die Docker-Installation ist der einfachste Weg, um die n8n Workflow Integration einzurichten. Sie benötigen nur Docker und Docker Compose.
+
+1. **Klonen des Repositories**
+
+   ```bash
+   git clone https://github.com/EcoSphereNetwork/Dev-Server-Workflow.git
+   cd Dev-Server-Workflow
+   ```
+
+2. **Konfiguration erstellen**
+   
+   ```bash
+   ./docker-start.sh help
+   # Dies erstellt eine .env-Datei, wenn keine vorhanden ist
+   # Bearbeiten Sie die .env-Datei und füllen Sie alle benötigten Werte aus
+   ```
+
+3. **Docker-Container starten**
+
+   ```bash
+   ./docker-start.sh start
+   ```
+
+4. **Setup ausführen**
+
+   ```bash
+   ./docker-start.sh setup
+   ```
+
+5. **Zugriff auf die Dienste**
+   - n8n: http://localhost:5678 (Benutzername: admin, Passwort: password)
+   - MCP-Server: http://localhost:3000
+
+Weitere Befehle und Informationen zur Docker-Installation finden Sie in der [ausführlichen Docker-Anleitung](DOCKER.md).
+
+#### Option 2: Direkte Installation
+
+Wenn Sie eine direkte Installation ohne Docker bevorzugen:
 
 1. **Klonen des Repositories**
 
