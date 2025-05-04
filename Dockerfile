@@ -1,61 +1,35 @@
-# Use multi-stage build for development and production
-FROM python:3.11-slim as base
+# Dockerfile for n8n Workflow Integration
+FROM python:3.10-slim
+
+WORKDIR /app
 
 # Set environment variables
-ENV PYTHONFAULTHANDLER=1 \
-    PYTHONUNBUFFERED=1 \
+ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    POETRY_VERSION=1.5.1 \
-    POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_CREATE=false \
-    POETRY_CACHE_DIR='/var/cache/pypoetry' \
-    PATH="$PATH:/root/.local/bin"
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
     curl \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Poetry
-RUN curl -sSL https://install.python-poetry.org | python3 -
+# Copy requirements first to leverage cache layer
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Development stage
-FROM base as development
+# Copy source code
+COPY src/ ./src/
+COPY setup.py .
+COPY test-setup.py .
 
-WORKDIR /app
+# Make scripts executable
+RUN chmod +x src/n8n-mcp-server.py
+RUN chmod +x setup.py
 
-# Copy project files
-COPY pyproject.toml poetry.lock ./
+# Default port for MCP server
+EXPOSE 3000
 
-# Install dependencies including development ones
-RUN poetry install --no-root
-
-# Copy the rest of the application
-COPY . .
-
-# Install the project in development mode
-RUN poetry install
-
-# Production stage
-FROM base as production
-
-WORKDIR /app
-
-# Copy project files
-COPY pyproject.toml poetry.lock ./
-
-# Install only production dependencies
-RUN poetry install --no-root --no-dev
-
-# Copy the rest of the application
-COPY . .
-
-# Install the project
-RUN poetry install --no-dev
-
-# Run the application
-CMD ["python", "-m", "src.main"]
+# Start command (can be overridden)
+CMD ["python", "src/n8n-mcp-server.py"]
