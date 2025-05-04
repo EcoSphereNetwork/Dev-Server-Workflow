@@ -1,6 +1,12 @@
 # ENV-Template für Workflow-Integration
 # Kopieren Sie diese Datei zu .env und füllen Sie die Werte aus
 
+# ---------- MCP Konfiguration ----------
+MCP_ENABLED=true
+MCP_SERVER_PORT=3333
+MCP_SERVER_HOST=localhost
+MCP_DEFAULT_TOOLS=create_github_issue,update_work_package,sync_documentation
+
 # ---------- n8n Konfiguration ----------
 N8N_URL=http://localhost:5678
 N8N_USER=admin
