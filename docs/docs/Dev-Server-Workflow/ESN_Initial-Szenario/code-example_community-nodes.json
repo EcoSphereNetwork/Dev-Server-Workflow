@@ -1,0 +1,509 @@
+{
+  "name": "GitLab-OpenProject-Synchronisation mit Community-Nodes",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gitlab-issue-webhook",
+        "options": {
+          "responseMode": "onReceived"
+        }
+      },
+      "name": "GitLab Issue Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrahiere die wichtigen Informationen aus dem Webhook-Payload\nconst payload = $input.item.json.body || $input.item.json;\n\n// Prüfe, ob es sich um ein Issue-Event handelt\nif (!payload.object_kind || payload.object_kind !== 'issue') {\n  return {\n    continue: false,\n    reason: `Ignoriere Event vom Typ ${payload.object_kind || 'unbekannt'}`\n  };\n}\n\nconst issue = payload.object_attributes;\nconst project = payload.project;\n\n// Sammle relevante Daten für die Weiterverarbeitung\nconst outputData = {\n  issue_id: issue.id,\n  issue_iid: issue.iid,\n  project_id: project.id,\n  project_name: project.name,\n  project_path: project.path_with_namespace,\n  title: issue.title,\n  description: issue.description,\n  state: issue.state,\n  created_at: issue.created_at,\n  updated_at: issue.updated_at,\n  labels: (payload.labels || []).map(label => label.title),\n  assignees: (payload.assignees || []).map(assignee => assignee.username),\n  author: payload.user ? payload.user.username : 'unknown',\n  gitlab_url: issue.url\n};\n\n// Füge einen Synchronisations-Marker hinzu\noutputData.sync_source = 'gitlab';\noutputData.sync_timestamp = new Date().toISOString();\n\nreturn {\n  continue: true,\n  issue_data: outputData\n};"
+      },
+      "name": "Validiere und Extrahiere Issue-Daten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.continue}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Relevant für Synchronisation?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "=Ignoriere Event: {{$json.reason}}",
+        "options": {}
+      },
+      "name": "Ignoriere Event",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        850,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "issue",
+        "operation": "getAll",
+        "url": "=https://gitlab.example.com",
+        "projectId": "={{$json.project_id}}",
+        "additionalFields": {
+          "iids": "={{$json.issue_iid}}",
+          "scope": "all"
+        }
+      },
+      "name": "GitLab Get Issue Details",
+      "description": "Verwendet RXAP GitLab Nodes für erweiterte Funktionalität",
+      "type": "n8n-rxap-packages-nodes-gitlab.gitlab",
+      "typeVersion": 1,
+      "position": [
+        850,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Referenz-Mapping zwischen GitLab und OpenProject Ids\nlet referenceMappings = {};\ntry {\n  // In der Praxis würde dies aus einer Datenbank oder Umgebungsvariable lesen\n  const mappingsStr = process.env.REFERENCE_MAPPINGS || '{}';\n  referenceMappings = JSON.parse(mappingsStr);\n} catch (error) {\n  console.error('Fehler beim Lesen der Referenz-Mappings:', error);\n}\n\n// Prüfe, ob bereits ein Work Package für dieses Issue existiert\nconst gitlabIssueId = $input.item.json.id;\nconst gitlabKey = `gitlab-${gitlabIssueId}`;\n\nlet openProjectId = null;\nlet needsCreation = true;\n\nif (referenceMappings.issues && referenceMappings.issues[gitlabKey]) {\n  openProjectId = referenceMappings.issues[gitlabKey].openproject_id;\n  needsCreation = false;\n}\n\n// Bereite Rückgabedaten vor\nconst enrichedData = {\n  ...$input.item.json,\n  openproject_id: openProjectId,\n  needs_creation: needsCreation,\n  gitlab_issue_id: gitlabIssueId,\n  reference_key: gitlabKey,\n};\n\nreturn enrichedData;"
+      },
+      "name": "Prüfe OpenProject Referenz",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.needs_creation}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Neu Erstellen oder Aktualisieren?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Statische Konfiguration (in Produktion aus Umgebungsvariablen laden)\nreturn {\n  openproject_url: 'https://openproject.example.com',\n  openproject_api_token: 'SECURE_API_TOKEN_HERE',\n  gitlab_url: 'https://gitlab.example.com',\n  gitlab_api_token: 'GITLAB_SECURE_TOKEN_HERE',\n  github_url: 'https://github.com',\n  github_api_token: 'GITHUB_SECURE_TOKEN_HERE'\n};"
+      },
+      "name": "API Konfiguration",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        250,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mapping von GitLab-Projekt zu OpenProject-Projekt\n// In Produktion aus Datenbank oder Konfigurationsdatei laden\nconst projectMapping = {\n  // GitLab-Projekt-ID → OpenProject-Projekt-ID\n  '123': '456',\n  '124': '457',\n  // ... weitere Mappings\n};\n\n// Holt die OpenProject-Projekt-ID für das aktuelle GitLab-Projekt\nconst gitlabProjectId = $input.item.json.project_id?.toString();\nconst openProjectProjectId = projectMapping[gitlabProjectId] || '1'; // Fallback-ID\n\nreturn {\n  openproject_project_id: openProjectProjectId,\n  gitlab_project_id: gitlabProjectId\n};"
+      },
+      "name": "Projekt-Mapping",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        400,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mapping von GitLab-Status zu OpenProject-Status\n// In Produktion aus Konfigurationsdatei laden\nconst statusMapping = {\n  'opened': '1', // OpenProject-Status-ID für 'In Bearbeitung'\n  'closed': '5'  // OpenProject-Status-ID für 'Geschlossen'\n};\n\n// Holt die OpenProject-Status-ID für den aktuellen GitLab-Status\nconst gitlabStatus = $input.item.json.state;\nconst openProjectStatusId = statusMapping[gitlabStatus] || '1'; // Fallback-Status\n\nreturn {\n  status_id: openProjectStatusId,\n  gitlab_status: gitlabStatus\n};"
+      },
+      "name": "Status-Mapping",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        550,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mapping von GitLab-Labels zu OpenProject-Typen\n// In Produktion aus Konfigurationsdatei laden\nconst typeMapping = {\n  'bug': '1',       // OpenProject-Typ-ID für 'Fehler'\n  'feature': '2',   // OpenProject-Typ-ID für 'Feature'\n  'task': '3'       // OpenProject-Typ-ID für 'Aufgabe'\n};\n\n// Holt die OpenProject-Typ-ID basierend auf GitLab-Labels\nconst gitlabLabels = $input.item.json.labels || [];\nlet openProjectTypeId = '3'; // Standard: Aufgabe\n\n// Sucht nach einem passenden Label\nfor (const label of gitlabLabels) {\n  if (typeMapping[label]) {\n    openProjectTypeId = typeMapping[label];\n    break;\n  }\n}\n\nreturn {\n  work_package_type: openProjectTypeId,\n  gitlab_labels: gitlabLabels\n};"
+      },
+      "name": "Typ-Mapping",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        700,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "workPackage",
+        "operation": "create",
+        "subject": "={{$json.title}}",
+        "projectId": "={{$node[\"Projekt-Mapping\"].json.openproject_project_id}}",
+        "description": "=**GitLab Issue #{{$json.iid}}**\n\n{{$json.description}}\n\n---\n*Synchronisiert von GitLab - [Original-Issue]({{$json.web_url}})*",
+        "typeId": "={{$node[\"Typ-Mapping\"].json.work_package_type}}",
+        "statusId": "={{$node[\"Status-Mapping\"].json.status_id}}",
+        "additionalFields": {
+          "customField1": "gitlab-issue-{{$json.id}}"
+        }
+      },
+      "name": "Erstelle OpenProject Work Package",
+      "description": "Verwendet vogl-electronic/n8n-nodes-openproject",
+      "type": "vogl-electronic.openproject",
+      "typeVersion": 1,
+      "position": [
+        1450,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "workPackage",
+        "operation": "update",
+        "id": "={{$json.openproject_id}}",
+        "subject": "={{$json.title}}",
+        "description": "=**GitLab Issue #{{$json.iid}}**\n\n{{$json.description}}\n\n---\n*Aktualisiert von GitLab - [Original-Issue]({{$json.web_url}})*",
+        "statusId": "={{$node[\"Status-Mapping\"].json.status_id}}",
+        "lockVersion": 1
+      },
+      "name": "Aktualisiere OpenProject Work Package",
+      "description": "Verwendet vogl-electronic/n8n-nodes-openproject",
+      "type": "vogl-electronic.openproject",
+      "typeVersion": 1,
+      "position": [
+        1450,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.success}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Operation erfolgreich?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extrahiere Work Package ID aus der erfolgreichen Antwort\nconst responseData = $input.item.json;\nlet openProjectId = null;\n\n// Bei Erstellung kommt die ID direkt, bei Update ist sie bereits bekannt\nif ($input.item.json.id) {\n  openProjectId = $input.item.json.id;\n} else if ($input.item.json.openproject_id) {\n  openProjectId = $input.item.json.openproject_id;\n}\n\n// Aktualisiere das Referenz-Mapping\nlet referenceMappings = {};\ntry {\n  // In der Praxis würde dies aus einer Datenbank oder Umgebungsvariable lesen\n  const mappingsStr = process.env.REFERENCE_MAPPINGS || '{}';\n  referenceMappings = JSON.parse(mappingsStr);\n} catch (error) {\n  console.error('Fehler beim Lesen der Referenz-Mappings:', error);\n  referenceMappings = {};\n}\n\n// Stelle sicher, dass die issues-Struktur existiert\nif (!referenceMappings.issues) {\n  referenceMappings.issues = {};\n}\n\n// Speichere die Referenz\nconst gitlabKey = $input.item.json.reference_key || `gitlab-${$input.item.json.gitlab_issue_id}`;\nreferenceMappings.issues[gitlabKey] = {\n  openproject_id: openProjectId,\n  last_sync: new Date().toISOString(),\n  sync_source: 'gitlab'\n};\n\n// In der Praxis würde dies in Datenbank oder Umgebungsvariable speichern\ntry {\n  process.env.REFERENCE_MAPPINGS = JSON.stringify(referenceMappings);\n} catch (error) {\n  console.error('Fehler beim Speichern der Referenz-Mappings:', error);\n}\n\nreturn {\n  success: true,\n  openproject_id: openProjectId,\n  gitlab_id: $input.item.json.gitlab_issue_id || $input.item.json.id,\n  reference_key: gitlabKey,\n  action: $input.item.json.needs_creation ? 'created' : 'updated'\n};"
+      },
+      "name": "Speichere Referenz-Mapping",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1850,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Protokolliere den Fehler\nconsole.error('Fehler bei OpenProject API-Anfrage:', $input.item.json);\n\nreturn {\n  success: false,\n  errorMessage: $input.item.json.message || 'Unbekannter Fehler',\n  gitlab_id: $input.item.json.gitlab_issue_id || $input.item.json.id\n};"
+      },
+      "name": "Protokolliere Fehler",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1850,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "channel": "C024BE91L",
+        "text": "⚠️ Fehler bei der GitLab-OpenProject Synchronisation!",
+        "attachments": [
+          {
+            "color": "#ff0000",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Fehler bei der Synchronisation eines GitLab-Issues!*\n• GitLab Issue ID: `{{ $json.gitlab_id }}`\n• Fehlermeldung: {{ $json.errorMessage }}\n\nBitte manuell überprüfen."
+                }
+              }
+            ]
+          }
+        ],
+        "otherOptions": {
+          "unfurlLinks": true,
+          "unfurlMedia": true
+        }
+      },
+      "name": "Benachrichtige über Fehler",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        2050,
+        400
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "1",
+          "name": "Slack-Konto"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getById",
+        "id": "={{$json.openproject_id}}",
+        "returnAll": true
+      },
+      "name": "Hole aktuelles OpenProject Work Package",
+      "description": "Verwendet vogl-electronic/n8n-nodes-openproject",
+      "type": "vogl-electronic.openproject",
+      "typeVersion": 1,
+      "position": [
+        2050,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "owner": "organization",
+        "repository": "repository-name",
+        "title": "={{$json.subject}}",
+        "body": "=## Synchronisiertes Issue von GitLab/OpenProject\n\n{{$json.description.raw}}\n\n---\n\n* OpenProject Work Package: [#{{$json.id}}]({{$json._links.self.href}})\n* Status: {{$json.status.name}}\n* Typ: {{$json.type.name}}\n* Projekt: {{$json.project.name}}\n* Erstellt am: {{$json.createdAt}}\n\n---\nDieses Issue wurde automatisch synchronisiert.",
+        "labels": [
+          "sync-from-gitlab",
+          "={{$json.status.name}}",
+          "={{$json.type.name}}"
+        ]
+      },
+      "name": "Erstelle GitHub Issue",
+      "description": "Verwendet jeffdanielperso/n8n-nodes-github",
+      "type": "jeffdanielperso.github",
+      "typeVersion": 1,
+      "position": [
+        2250,
+        200
+      ]
+    }
+  ],
+  "connections": {
+    "GitLab Issue Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validiere und Extrahiere Issue-Daten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validiere und Extrahiere Issue-Daten": {
+      "main": [
+        [
+          {
+            "node": "Relevant für Synchronisation?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Relevant für Synchronisation?": {
+      "main": [
+        [
+          {
+            "node": "Ignoriere Event",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GitLab Get Issue Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitLab Get Issue Details": {
+      "main": [
+        [
+          {
+            "node": "Prüfe OpenProject Referenz",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prüfe OpenProject Referenz": {
+      "main": [
+        [
+          {
+            "node": "Neu Erstellen oder Aktualisieren?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Neu Erstellen oder Aktualisieren?": {
+      "main": [
+        [
+          {
+            "node": "Erstelle OpenProject Work Package",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aktualisiere OpenProject Work Package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API Konfiguration": {
+      "main": [
+        [
+          {
+            "node": "Projekt-Mapping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Projekt-Mapping": {
+      "main": [
+        [
+          {
+            "node": "Status-Mapping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Status-Mapping": {
+      "main": [
+        [
+          {
+            "node": "Typ-Mapping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Erstelle OpenProject Work Package": {
+      "main": [
+        [
+          {
+            "node": "Operation erfolgreich?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aktualisiere OpenProject Work Package": {
+      "main": [
+        [
+          {
+            "node": "Operation erfolgreich?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Operation erfolgreich?": {
+      "main": [
+        [
+          {
+            "node": "Speichere Referenz-Mapping",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Protokolliere Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Protokolliere Fehler": {
+      "main": [
+        [
+          {
+            "node": "Benachrichtige über Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Speichere Referenz-Mapping": {
+      "main": [
+        [
+          {
+            "node": "Hole aktuelles OpenProject Work Package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hole aktuelles OpenProject Work Package": {
+      "main": [
+        [
+          {
+            "node": "Erstelle GitHub Issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
