@@ -1,0 +1,292 @@
+{
+  "name": "GitHub-GitLab-Community-Bridge",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "github-webhook",
+        "responseMode": "onReceived",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "aef7e1bd-c1c0-42e1-b0d4-9621ba91d961",
+      "name": "GitHub Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "github-issue-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrahiere und validiere die Issue-Daten aus dem GitHub Webhook\nconst payload = $input.item.json.body || $input.item.json;\n\n// GitHub sendet einen X-GitHub-Event Header, den wir nutzen können\nconst eventType = $input.item.headers['x-github-event'] || '';\n\n// Konzentration auf Issues und Issue Comments\nif (eventType !== 'issues' && eventType !== 'issue_comment') {\n  console.log(`Ignoriere GitHub Event vom Typ: ${eventType}`);\n  return {\n    continue: false,\n    reason: `Ignoriere GitHub Event vom Typ: ${eventType}`\n  };\n}\n\n// Extrahiere relevante Daten aus dem Payload\nlet issueData = {};\n\nif (eventType === 'issues') {\n  // Bei Issue Events\n  const issue = payload.issue;\n  const repository = payload.repository;\n  const action = payload.action;\n  \n  if (!issue || !repository) {\n    console.error('Unvollständige Issue-Daten erhalten:', JSON.stringify(payload, null, 2));\n    return {\n      continue: false,\n      reason: 'Unvollständige Issue-Daten'\n    };\n  }\n  \n  // Prüfe, ob es sich um ein relevantes Event handelt (opened, edited, closed)\n  if (!['opened', 'edited', 'closed', 'reopened', 'labeled'].includes(action)) {\n    return {\n      continue: false,\n      reason: `Ignoriere Issue Action vom Typ: ${action}`\n    };\n  }\n  \n  // Sammle alle relevanten Issue-Daten\n  issueData = {\n    issue_id: issue.id,\n    issue_number: issue.number,\n    repository_id: repository.id,\n    repository_name: repository.full_name,\n    title: issue.title,\n    description: issue.body || '',\n    state: issue.state,\n    created_at: issue.created_at,\n    updated_at: issue.updated_at,\n    labels: (issue.labels || []).map(label => label.name),\n    assignees: (issue.assignees || []).map(assignee => assignee.login),\n    author: issue.user ? issue.user.login : 'unknown',\n    url: issue.html_url,\n    action: action,\n    // Füge Synchronisations-Marker hinzu\n    sync_source: 'github',\n    sync_timestamp: new Date().toISOString(),\n    event_type: 'issue'\n  };\n} else if (eventType === 'issue_comment') {\n  // Bei Kommentar-Events\n  const issue = payload.issue;\n  const comment = payload.comment;\n  const repository = payload.repository;\n  const action = payload.action;\n  \n  if (!issue || !comment || !repository) {\n    console.error('Unvollständige Kommentar-Daten erhalten:', JSON.stringify(payload, null, 2));\n    return {\n      continue: false,\n      reason: 'Unvollständige Kommentar-Daten'\n    };\n  }\n  \n  // Nur bei neuen oder bearbeiteten Kommentaren\n  if (!['created', 'edited'].includes(action)) {\n    return {\n      continue: false,\n      reason: `Ignoriere Kommentar Action vom Typ: ${action}`\n    };\n  }\n  \n  // Sammle alle relevanten Kommentar-Daten\n  issueData = {\n    issue_id: issue.id,\n    issue_number: issue.number,\n    repository_id: repository.id,\n    repository_name: repository.full_name,\n    comment_id: comment.id,\n    comment_body: comment.body || '',\n    author: comment.user ? comment.user.login : 'unknown',\n    created_at: comment.created_at,\n    updated_at: comment.updated_at,\n    url: comment.html_url,\n    action: action,\n    // Füge Synchronisations-Marker hinzu\n    sync_source: 'github',\n    sync_timestamp: new Date().toISOString(),\n    event_type: 'comment'\n  };\n}\n\n// Log für Debugging\nconsole.log(`Verarbeite GitHub ${issueData.event_type} für ${issueData.repository_name}#${issueData.issue_number}`);\n\nreturn {\n  continue: true,\n  githubData: issueData\n};"
+      },
+      "id": "33f9faed-32c7-48f8-8c3a-e7e2c471bad6",
+      "name": "Validiere GitHub Event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.continue}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "c4c3e7bb-ce0e-436c-a78a-37cd2a4ac6ef",
+      "name": "Ist GitHub Event relevant?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "=Ignoriere GitHub Event: {{$json.reason}}",
+        "options": {}
+      },
+      "id": "1dbf7ae5-b56e-495e-9e29-c4cd7cfe72b2",
+      "name": "Ignoriere Event",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        900,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Prüfe, ob das GitHub Event eine Relevanz für die interne Entwicklung hat\n// Dies kann auf verschiedenen Faktoren basieren, wie z.B. Labels, Inhalt, etc.\n\nconst githubData = $input.item.json.githubData;\n\n// Hole Konfiguration für relevante Kriterien\nconst config = $node[\"Synchronisations-Konfiguration\"].json;\n\nlet isRelevant = false;\nlet relevanceReason = \"Nicht relevant\";\n\n// Wenn es sich um ein Issue handelt\nif (githubData.event_type === 'issue') {\n  // Prüfe, ob das Repository in der Whitelist ist\n  if (config.monitored_repositories.includes(githubData.repository_name)) {\n    // Prüfe, ob Labels relevant sind\n    if (config.relevant_labels.some(label => githubData.labels.includes(label))) {\n      isRelevant = true;\n      relevanceReason = \"Relevantes Label gefunden\";\n    }\n    \n    // Prüfe, ob der Titel relevante Schlüsselwörter enthält\n    if (config.relevant_keywords.some(keyword => \n      githubData.title.toLowerCase().includes(keyword.toLowerCase()) || \n      (githubData.description && githubData.description.toLowerCase().includes(keyword.toLowerCase()))\n    )) {\n      isRelevant = true;\n      relevanceReason = \"Relevante Schlüsselwörter gefunden\";\n    }\n    \n    // Prüfe, ob der Autor in der Whitelist ist\n    if (config.trusted_users.includes(githubData.author)) {\n      isRelevant = true;\n      relevanceReason = \"Vertrauenswürdiger Benutzer\";\n    }\n  }\n} \n// Wenn es sich um einen Kommentar handelt\nelse if (githubData.event_type === 'comment') {\n  // Prüfe, ob der Autor in der Whitelist ist\n  if (config.trusted_users.includes(githubData.author)) {\n    isRelevant = true;\n    relevanceReason = \"Kommentar von vertrauenswürdigem Benutzer\";\n  }\n  \n  // Prüfe, ob der Kommentar bestimmte Trigger-Wörter enthält\n  if (config.comment_triggers.some(trigger => \n    githubData.comment_body.toLowerCase().includes(trigger.toLowerCase())\n  )) {\n    isRelevant = true;\n    relevanceReason = \"Kommentar enthält Trigger-Wörter\";\n  }\n}\n\n// Füge die Relevanz-Informationen hinzu\nreturn {\n  ...githubData,\n  is_relevant: isRelevant,\n  relevance_reason: relevanceReason\n};"
+      },
+      "id": "87d9fa8f-d10e-4f59-811f-a1e6dec3e3e2",
+      "name": "Prüfe Relevanz für interne Entwicklung",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        900,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.is_relevant}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "f0f73c21-a7de-4d01-aaa2-eb825c5cb0ea",
+      "name": "Ist relevant für GitLab?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Statische Konfiguration (sollte in Produktion aus Umgebungsvariablen stammen)\nreturn {\n  // OpenProject API Konfiguration\n  openproject_api_url: 'https://openproject.example.com/api/v3',\n  openproject_api_token: 'YOUR_OPENPROJECT_API_TOKEN',\n  \n  // GitLab API Konfiguration\n  gitlab_api_url: 'https://gitlab.example.com/api/v4',\n  gitlab_api_token: 'YOUR_GITLAB_API_TOKEN',\n  \n  // GitHub API Konfiguration\n  github_api_url: 'https://api.github.com',\n  github_api_token: 'YOUR_GITHUB_API_TOKEN',\n  github_owner: 'your-organization',\n  \n  // Relevanz-Konfiguration\n  monitored_repositories: [\n    'organization/repo1',\n    'organization/repo2',\n    'organization/repo3'\n  ],\n  relevant_labels: [\n    'bug',\n    'feature',\n    'enhancement',\n    'critical',\n    'internal'\n  ],\n  relevant_keywords: [\n    'intern',\n    'wichtig',\n    'priorität',\n    'core',\n    'backend',\n    'api'\n  ],\n  trusted_users: [\n    'trusted-contributor1',\n    'trusted-contributor2',\n    'maintainer1'\n  ],\n  comment_triggers: [\n    '@internal',\n    'please implement',\n    'needs attention',\n    'critical bug',\n    'security issue'\n  ],\n  \n  // Repository-Mapping\n  repository_mapping: {\n    'organization/repo1': 123, // GitLab Projekt-ID\n    'organization/repo2': 124,\n    'organization/repo3': 125\n  },\n  \n  // Logging-Konfiguration\n  debug_mode: true,\n  log_details: true,\n  \n  // Weitere Konfigurationen\n  sync_comments: true,\n  sync_attachments: false,\n  sync_milestones: true\n};"
+      },
+      "id": "44c5fffe-b04a-462a-a4ef-5a097ade7a64",
+      "name": "Synchronisations-Konfiguration",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Lade das Referenz-Mapping zwischen GitHub und GitLab\nlet refMapping = {};\ntry {\n  // In Produktion aus Datenbank oder Umgebungsvariable laden\n  const storedMapping = process.env.GITHUB_GITLAB_MAPPING;\n  if (storedMapping) {\n    refMapping = JSON.parse(storedMapping);\n  }\n} catch (error) {\n  console.error('Fehler beim Laden des GitHub-GitLab-Mappings:', error);\n  refMapping = { issues: {} };\n}\n\n// Initialisiere Structure falls nötig\nif (!refMapping.issues) {\n  refMapping.issues = {};\n}\n\n// Erzeuge eindeutigen Key für das GitHub Issue\nconst githubRepoId = $input.item.json.repository_id;\nconst githubIssueNumber = $input.item.json.issue_number;\nconst refKey = `github-${githubRepoId}-${githubIssueNumber}`;\n\n// Prüfe, ob bereits ein GitLab Issue für dieses GitHub Issue existiert\nlet gitlabIssueId = null;\nlet gitlabIssueIid = null;\nlet needsCreation = true;\n\nif (refMapping.issues[refKey]) {\n  gitlabIssueId = refMapping.issues[refKey].gitlab_issue_id;\n  gitlabIssueIid = refMapping.issues[refKey].gitlab_issue_iid;\n  needsCreation = false;\n  console.log(`Gefundenes Mapping für GitHub Issue ${githubIssueNumber} -> GitLab Issue ${gitlabIssueIid}`);\n} else {\n  console.log(`Kein Mapping gefunden für GitHub Issue ${githubIssueNumber}, erstelle neues GitLab Issue`);\n}\n\n// Ermittle die GitLab Projekt-ID basierend auf dem Repository\nconst config = $node[\"Synchronisations-Konfiguration\"].json;\nconst gitlabProjectId = config.repository_mapping[$input.item.json.repository_name] || null;\n\nif (!gitlabProjectId) {\n  console.error(`Kein GitLab Projekt-Mapping gefunden für Repository ${$input.item.json.repository_name}`);\n  return {\n    continue: false,\n    error: `Kein GitLab Projekt-Mapping gefunden für Repository ${$input.item.json.repository_name}`\n  };\n}\n\n// Gib Ergebnis zurück mit allen relevanten Daten\nreturn {\n  ...$input.item.json,\n  gitlab_project_id: gitlabProjectId,\n  gitlab_issue_id: gitlabIssueId,\n  gitlab_issue_iid: gitlabIssueIid,\n  ref_key: refKey,\n  needs_creation: needsCreation,\n  event_needs_sync: $input.item.json.event_type === 'issue' || needsCreation\n};"
+      },
+      "id": "52e7ab55-4b63-4e8d-908a-51bb9b9e2af5",
+      "name": "GitLab-Referenz prüfen",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.needs_creation}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "e437a5e8-b45c-4b0a-9dd1-bc90e6b12eae",
+      "name": "Neues GitLab Issue erstellen?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.event_type}}",
+              "value2": "comment"
+            }
+          ]
+        }
+      },
+      "id": "6fc7ba66-1c5d-45f5-90a4-94433edee7e9",
+      "name": "Ist es ein Kommentar?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$node[\"Synchronisations-Konfiguration\"].json.gitlab_api_url}}/projects/{{$json.gitlab_project_id}}/issues",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "POST",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "PRIVATE-TOKEN",
+              "value": "={{$node[\"Synchronisations-Konfiguration\"].json.gitlab_api_token}}"
+            }
+          ]
+        },
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "title",
+              "value": "=[GitHub] {{$json.title}}"
+            },
+            {
+              "name": "description",
+              "value": "=**Synchronisiert von GitHub Issue: [{{$json.repository_name}}#{{$json.issue_number}}]({{$json.url}})**\n\n{{$json.description}}\n\n---\n*Erstellt von: {{$json.author}} am {{$json.created_at}}*"
+            },
+            {
+              "name": "labels",
+              "value": "=github,{{$json.labels.join(',')}}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "fullResponse": true
+          }
+        }
+      },
+      "id": "34fb7b99-2099-43c5-96cb-a61fcca35e86",
+      "name": "Erstelle GitLab Issue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1780,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$node[\"Synchronisations-Konfiguration\"].json.gitlab_api_url}}/projects/{{$json.gitlab_project_id}}/issues/{{$json.gitlab_issue_iid}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "PUT",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "PRIVATE-TOKEN",
+              "value": "={{$node[\"Synchronisations-Konfiguration\"].json.gitlab_api_token}}"
+            }
+          ]
+        },
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "title",
+              "value": "=[GitHub] {{$json.title}}"
+            },
+            {
+              "name": "description",
+              "value": "=**Synchronisiert von GitHub Issue: [{{$json.repository_name}}#{{$json.issue_number}}]({{$json.url}})**\n\n{{$json.description}}\n\n---\n*Aktualisiert von: {{$json.author}} am {{$json.updated_at}}*"
+            },
+            {
+              "name": "state_event",
+              "value": "={{$json.state === 'closed' ? 'close' : 'reopen'}}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "fullResponse": true
+          }
+        }
+      },
+      "id": "00a51057-19f4-4583-8d59-71b7dd0b3a4c",
+      "name": "Aktualisiere GitLab Issue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1780,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$node[\"Synchronisations-Konfiguration\"].json.gitlab_api_url}}/projects/{{$json.gitlab_project_id}}/issues/{{$json.gitlab_issue_iid}}/notes",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "POST",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "PRIVATE-TOKEN",
+              "value": "={{$node[\"Synchronisations-Konfiguration\"].json.gitlab_api_token}}"
+            }
+          ]
+        },
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "=**Kommentar von @{{$json.author}} auf GitHub:**\n\n{{$json.comment_body}}\n\n---\n*[Original Kommentar]({{$json.url}})*"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "fullResponse": true
+          }
+        }
+      },
+      "id": "a54c9e91-d1f7-420d-8b75-8ec4e21f9a22",
+      "name": "Füge Kommentar hinzu",
+      "type": "n8
