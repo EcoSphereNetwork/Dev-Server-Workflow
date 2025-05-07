@@ -1,0 +1,129 @@
+{
+  "resolvers": ["openhands-resolver-mcp"],
+  "mcp": {
+    "servers": [
+      {
+        "name": "github",
+        "url": "http://github-mcp:3001",
+        "description": "GitHub MCP Server für Repository-Verwaltung und Issue-Tracking"
+      },
+      {
+        "name": "github-chat",
+        "url": "http://github-chat-mcp:3002",
+        "description": "GitHub Chat MCP Server für Diskussionen und Kommentare"
+      },
+      {
+        "name": "gitlab",
+        "url": "http://gitlab-mcp:3003",
+        "description": "GitLab MCP Server für Repository-Verwaltung und Issue-Tracking"
+      },
+      {
+        "name": "memory",
+        "url": "http://memory-mcp:3004",
+        "description": "Memory MCP Server für persistente Speicherung von Informationen"
+      },
+      {
+        "name": "basic-memory",
+        "url": "http://basic-memory-mcp:3005",
+        "description": "Basic Memory MCP Server für einfache Speicheroperationen"
+      },
+      {
+        "name": "time",
+        "url": "http://time-mcp:3006",
+        "description": "Time MCP Server für Zeitoperationen und Zeitplanung"
+      },
+      {
+        "name": "wolfram-alpha",
+        "url": "http://wolfram-alpha-mcp:3007",
+        "description": "Wolfram Alpha MCP Server für mathematische und wissenschaftliche Berechnungen"
+      },
+      {
+        "name": "discord",
+        "url": "http://discord-mcp:3008",
+        "description": "Discord MCP Server für Discord-Integration"
+      },
+      {
+        "name": "fetch",
+        "url": "http://fetch-mcp:3009",
+        "description": "Fetch MCP Server für HTTP-Anfragen und Web-Scraping"
+      },
+      {
+        "name": "inspector",
+        "url": "http://inspector-mcp:3010",
+        "description": "Inspector MCP Server für Debugging und Inspektion"
+      },
+      {
+        "name": "inspector-ui",
+        "url": "http://mcp-inspector-ui:6277",
+        "description": "MCP Inspector UI für visuelle Inspektion und Debugging von MCP-Servern"
+      },
+      {
+        "name": "sequential-thinking",
+        "url": "http://sequential-thinking-mcp:3011",
+        "description": "Sequential Thinking MCP Server für strukturiertes Denken und Problemlösung"
+      },
+      {
+        "name": "puppeteer",
+        "url": "http://puppeteer-mcp:3012",
+        "description": "Puppeteer MCP Server für Browser-Automatisierung"
+      },
+      {
+        "name": "3d-printer",
+        "url": "http://3d-printer-mcp:3013",
+        "description": "3D Printer MCP Server für 3D-Druck-Operationen"
+      },
+      {
+        "name": "desktop-commander",
+        "url": "http://desktop-commander-mcp:3014",
+        "description": "Desktop Commander MCP Server für Dateisystem- und Terminaloperationen"
+      },
+      {
+        "name": "ollama",
+        "url": "http://ollama-mcp-bridge:3015",
+        "description": "Ollama MCP Bridge für lokale LLM-Integration"
+      },
+      {
+        "name": "postgresql",
+        "url": "http://postgresql:3016",
+        "description": "PostgreSQL MCP Server für Datenbankoperationen"
+      },
+      {
+        "name": "elasticsearch",
+        "url": "http://elasticsearch:3017",
+        "description": "Elasticsearch MCP Server für Volltextsuche"
+      },
+      {
+        "name": "sqlite",
+        "url": "http://sqlite:3018",
+        "description": "SQLite MCP Server für lokale Datenbankoperationen"
+      }
+    ]
+  },
+  "docker": {
+    "enabled": true,
+    "socket": "tcp://docker-socket-proxy:2375",
+    "allowedOperations": ["list", "inspect", "logs"],
+    "disallowedOperations": ["remove", "kill", "exec"]
+  },
+  "filesystem": {
+    "enabled": true,
+    "root": "/workspace",
+    "allowedPaths": ["/workspace"],
+    "disallowedPaths": ["/workspace/.git", "/workspace/node_modules"]
+  },
+  "logging": {
+    "level": "info",
+    "format": "json",
+    "file": "/app/data/openhands.log"
+  },
+  "security": {
+    "enableTelemetry": false,
+    "allowRemoteCodeExecution": false,
+    "allowShellCommands": false
+  },
+  "ui": {
+    "theme": "dark",
+    "showToolbar": true,
+    "defaultLayout": "split"
+  }
+}
