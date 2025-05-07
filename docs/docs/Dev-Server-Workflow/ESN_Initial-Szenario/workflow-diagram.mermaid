@@ -1,0 +1,88 @@
+flowchart TB
+    subgraph "Data Sources"
+        GH[GitHub\nInterne Entwicklung]
+        GL[GitLab\nCommunity & Release]
+        OP[OpenProject\nOrganisation]
+        AF[AppFlowy\nDokumentation]
+    end
+
+    subgraph "OpenHands Instanzen"
+        OH1[OpenHands 1]
+        OH2[OpenHands 2]
+        OH3[OpenHands 3]
+        OHN[OpenHands 4-10]
+    end
+
+    subgraph "MCP Server-Client System"
+        MC1[MCP Server 1]
+        MC2[MCP Server 2]
+        TS[Task Scheduler]
+        IM[Instance Manager]
+        SM[Status Monitor]
+    end
+
+    subgraph "n8n Workflow Module"
+        MOD1[GitHub/GitLab\nIntegration]
+        MOD2[OpenProject\nIntegration]
+        MOD3[AppFlowy\nIntegration]
+        MOD4[OpenHands\nIntegration]
+        MOD5[MCP Server\nIntegration]
+        MOD6[LLM Agents\nIntegration]
+        IH[Integration Hub]
+    end
+
+    subgraph "LLM Services"
+        CR[Code Review]
+        IA[Issue Analyse]
+        DG[Dokumentation Generator]
+        SR[Status Reports]
+        WO[Workflow-Optimierung]
+    end
+
+    %% Verbindungen zwischen den Gruppen
+    GH <--> MOD1
+    GL <--> MOD1
+    OP <--> MOD2
+    AF <--> MOD3
+    
+    MOD1 <--> IH
+    MOD2 <--> IH
+    MOD3 <--> IH
+    MOD4 <--> IH
+    MOD5 <--> IH
+    MOD6 <--> IH
+    
+    IH <--> TS
+    IH <--> IM
+    IH <--> SM
+    
+    TS <--> MC1
+    TS <--> MC2
+    IM <--> MC1
+    IM <--> MC2
+    SM <--> MC1
+    SM <--> MC2
+    
+    MC1 <--> OH1
+    MC1 <--> OH2
+    MC2 <--> OH3
+    MC2 <--> OHN
+    
+    IH <--> CR
+    IH <--> IA
+    IH <--> DG
+    IH <--> SR
+    IH <--> WO
+
+    %% Datenfluss
+    classDef source fill:#f9f,stroke:#333,stroke-width:2px
+    classDef mcp fill:#bbf,stroke:#333,stroke-width:2px
+    classDef oh fill:#bfb,stroke:#333,stroke-width:2px
+    classDef n8n fill:#ffb,stroke:#333,stroke-width:2px
+    classDef llm fill:#fbf,stroke:#333,stroke-width:2px
+    
+    class GH,GL,OP,AF source
+    class MC1,MC2,TS,IM,SM mcp
+    class OH1,OH2,OH3,OHN oh
+    class MOD1,MOD2,MOD3,MOD4,MOD5,MOD6,IH n8n
+    class CR,IA,DG,SR,WO llm

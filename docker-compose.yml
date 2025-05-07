@@ -33,11 +33,15 @@ services:
       - N8N_API_KEY=${N8N_API_KEY:-}
       - MCP_SERVER_PORT=3000
       - MCP_SERVER_HOST=0.0.0.0
+      - PYTHONPATH=/app/src
     depends_on:
       - n8n
     networks:
       - n8n-network
-    command: python src/n8n-mcp-server.py
+    command: python src/n8n_mcp_server.py
+    volumes:
+      - ./docker-entrypoint.sh:/docker-entrypoint.sh
+    entrypoint: ["/bin/bash", "/docker-entrypoint.sh"]
 
   setup:
     build:
@@ -50,17 +54,20 @@ services:
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
       - OPENPROJECT_URL=${OPENPROJECT_URL:-}
       - OPENPROJECT_TOKEN=${OPENPROJECT_TOKEN:-}
+      - PYTHONPATH=/app/src
     depends_on:
       - n8n
     networks:
       - n8n-network
     volumes:
       - ./.env:/app/.env
+      - ./docker-entrypoint.sh:/docker-entrypoint.sh
+    entrypoint: ["/bin/bash", "/docker-entrypoint.sh"]
     command: >
       bash -c "
         echo 'Waiting for n8n to start...' &&
         sleep 30 &&
-        python setup.py install --env-file .env --no-install
+        python src/n8n_setup_main.py --env-file .env --workflows github document openhands discord timetracking ai mcp
       "
 
 volumes:

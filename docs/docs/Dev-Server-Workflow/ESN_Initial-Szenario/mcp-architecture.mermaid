@@ -1,0 +1,141 @@
+flowchart TB
+    subgraph "n8n Integration Layer"
+        IH[Integration Hub]
+        ML[Message Layer]
+    end
+
+    subgraph "MCP Services"
+        subgraph "GitHub MCP"
+            GH_MCP[GitHub MCP Server]
+            GH_IM[Instance Manager]
+            GH_TS[Task Scheduler]
+            GH_SM[Status Monitor]
+        end
+
+        subgraph "GitLab MCP"
+            GL_MCP[GitLab MCP Server]
+            GL_IM[Instance Manager]
+            GL_TS[Task Scheduler]
+            GL_SM[Status Monitor]
+        end
+
+        subgraph "OpenProject MCP"
+            OP_MCP[OpenProject MCP Server]
+            OP_IM[Instance Manager]
+            OP_TS[Task Scheduler]
+            OP_SM[Status Monitor]
+        end
+
+        subgraph "AppFlowy MCP"
+            AF_MCP[AppFlowy MCP Server]
+            AF_IM[Instance Manager]
+            AF_TS[Task Scheduler]
+            AF_SM[Status Monitor]
+        end
+    end
+
+    subgraph "Service Resources"
+        subgraph "GitHub Resources"
+            GH_N1[GitHub Node 1]
+            GH_N2[GitHub Node 2]
+            GH_N3[GitHub Node 3]
+        end
+
+        subgraph "GitLab Resources"
+            GL_N1[GitLab Node 1]
+            GL_N2[GitLab Node 2]
+        end
+
+        subgraph "OpenProject Resources"
+            OP_N1[OpenProject Node 1]
+            OP_N2[OpenProject Node 2]
+        end
+
+        subgraph "AppFlowy Resources"
+            AF_N1[AppFlowy Node 1]
+            AF_N2[AppFlowy Node 2]
+        end
+    end
+
+    subgraph "OpenHands Resources"
+        subgraph "OpenHands Pool"
+            OH_P1[OpenHands Service Pool 1]
+            OH_P2[OpenHands Service Pool 2]
+        end
+    end
+
+    subgraph "Shared Services"
+        DB[Distributed Database]
+        MS[Message System]
+        LLM[LLM Service]
+    end
+
+    %% Connections
+    IH <--> ML
+    
+    ML <--> GH_MCP
+    ML <--> GL_MCP
+    ML <--> OP_MCP
+    ML <--> AF_MCP
+    
+    GH_MCP <--> GH_IM
+    GH_MCP <--> GH_TS
+    GH_MCP <--> GH_SM
+    
+    GL_MCP <--> GL_IM
+    GL_MCP <--> GL_TS
+    GL_MCP <--> GL_SM
+    
+    OP_MCP <--> OP_IM
+    OP_MCP <--> OP_TS
+    OP_MCP <--> OP_SM
+    
+    AF_MCP <--> AF_IM
+    AF_MCP <--> AF_TS
+    AF_MCP <--> AF_SM
+    
+    GH_IM <--> GH_N1
+    GH_IM <--> GH_N2
+    GH_IM <--> GH_N3
+    
+    GL_IM <--> GL_N1
+    GL_IM <--> GL_N2
+    
+    OP_IM <--> OP_N1
+    OP_IM <--> OP_N2
+    
+    AF_IM <--> AF_N1
+    AF_IM <--> AF_N2
+    
+    GH_TS <--> OH_P1
+    GL_TS <--> OH_P1
+    OP_TS <--> OH_P2
+    AF_TS <--> OH_P2
+    
+    GH_MCP <--> DB
+    GL_MCP <--> DB
+    OP_MCP <--> DB
+    AF_MCP <--> DB
+    
+    MS <--> GH_MCP
+    MS <--> GL_MCP
+    MS <--> OP_MCP
+    MS <--> AF_MCP
+    
+    LLM <--> GH_MCP
+    LLM <--> GL_MCP
+    LLM <--> OP_MCP
+    LLM <--> AF_MCP
+
+    %% Styles
+    classDef n8n fill:#ffb,stroke:#333,stroke-width:2px
+    classDef mcp fill:#bbf,stroke:#333,stroke-width:2px
+    classDef node fill:#bfb,stroke:#333,stroke-width:2px
+    classDef oh fill:#fbf,stroke:#333,stroke-width:2px
+    classDef shared fill:#fbb,stroke:#333,stroke-width:2px
+    
+    class IH,ML n8n
+    class GH_MCP,GH_IM,GH_TS,GH_SM,GL_MCP,GL_IM,GL_TS,GL_SM,OP_MCP,OP_IM,OP_TS,OP_SM,AF_MCP,AF_IM,AF_TS,AF_SM mcp
+    class GH_N1,GH_N2,GH_N3,GL_N1,GL_N2,OP_N1,OP_N2,AF_N1,AF_N2 node
+    class OH_P1,OH_P2 oh
+    class DB,MS,LLM shared
