@@ -1,0 +1,132 @@
+{
+  "name": "File-Management",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "shared-files",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "file-upload-webhook"
+    },
+    {
+      "parameters": {
+        "filePath": "={{ '/shared/' + $json.body.source + '/' + $json.body.id + '/' + $json.body.filename }}",
+        "binaryData": "={{ $json.body.fileContent }}",
+        "options": {
+          "encoding": "base64"
+        }
+      },
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "id": "save-file-to-shared-storage"
+    },
+    {
+      "parameters": {
+        "resource": "Work Packages",
+        "operation": "Create Work Package",
+        "subject": "={{ 'File uploaded: ' + $json.body.filename }}",
+        "description": "={{ 'A new file has been uploaded to the shared storage.\\n\\nFilename: ' + $json.body.filename + '\\n\\nPath: /shared/' + $json.body.source + '/' + $json.body.id + '/' + $json.body.filename + '\\n\\nUploaded by: ' + $json.body.uploader }}",
+        "_links": {
+          "project": {
+            "href": "/api/v3/projects/1"
+          },
+          "type": {
+            "href": "/api/v3/types/1"
+          }
+        },
+        "additionalFields": {
+          "customField1": "file",
+          "customField2": "={{ $json.body.id }}",
+          "customField3": "={{ $json.body.source }}"
+        }
+      },
+      "type": "n8n-nodes-base.openProject",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "id": "create-file-work-package"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "databaseId": "={{ $env.APPFLOWY_DATABASE_ID }}",
+        "record": "={\n  \"Title\": \"File: \" + $json.body.filename,\n  \"Type\": \"File\",\n  \"Source\": $json.body.source,\n  \"Source ID\": $json.body.id,\n  \"Path\": \"/shared/\" + $json.body.source + \"/\" + $json.body.id + \"/\" + $json.body.filename,\n  \"Uploader\": $json.body.uploader,\n  \"Upload Date\": new Date().toISOString(),\n  \"OpenProject ID\": $json.id\n}"
+      },
+      "type": "n8n-nodes-base.appflowy",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "id": "create-file-record-in-appflowy"
+    },
+    {
+      "parameters": {
+        "mode": "jsonToJson",
+        "jsonInput": "={{ $json }}",
+        "options": {
+          "dotNotation": true
+        },
+        "jsonOutput": "={\n  \"status\": \"success\",\n  \"message\": \"File uploaded successfully\",\n  \"path\": \"/shared/\" + $json.body.source + \"/\" + $json.body.id + \"/\" + $json.body.filename,\n  \"openproject_id\": $json.id,\n  \"appflowy_id\": $json.recordId\n}"
+      },
+      "type": "n8n-nodes-base.itemBinary",
+      "typeVersion": 1,
+      "position": [1120, 300],
+      "id": "prepare-response"
+    }
+  ],
+  "connections": {
+    "file-upload-webhook": {
+      "main": [
+        [
+          {
+            "node": "save-file-to-shared-storage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "save-file-to-shared-storage": {
+      "main": [
+        [
+          {
+            "node": "create-file-work-package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-file-work-package": {
+      "main": [
+        [
+          {
+            "node": "create-file-record-in-appflowy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-file-record-in-appflowy": {
+      "main": [
+        [
+          {
+            "node": "prepare-response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  }
+}
