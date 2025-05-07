@@ -1,0 +1,39 @@
+{
+  "mcp": {
+    "enabled": true,
+    "servers": {
+      "filesystem-mcp": {
+        "url": "http://localhost:3001",
+        "description": "File system operations"
+      },
+      "desktop-commander-mcp": {
+        "url": "http://localhost:3002",
+        "description": "Terminal command execution and desktop operations"
+      },
+      "sequential-thinking-mcp": {
+        "url": "http://localhost:3003",
+        "description": "Structured problem-solving capabilities"
+      },
+      "github-chat-mcp": {
+        "url": "http://localhost:3004",
+        "description": "GitHub discussions and comments interaction"
+      },
+      "github-mcp": {
+        "url": "http://localhost:3005",
+        "description": "GitHub repository management"
+      },
+      "puppeteer-mcp": {
+        "url": "http://localhost:3006",
+        "description": "Web browsing and interaction with web pages"
+      },
+      "basic-memory-mcp": {
+        "url": "http://localhost:3007",
+        "description": "Simple key-value storage for AI agents"
+      },
+      "wikipedia-mcp": {
+        "url": "http://localhost:3008",
+        "description": "Wikipedia search and information retrieval"
+      }
+    }
+  }
+}

@@ -147,22 +147,31 @@ Wenn Sie eine direkte Installation ohne Docker bevorzugen:
 ## 📁 Projektstruktur
 
 ```
-n8n-workflow-integration/
+Dev-Server-Workflow/
+├── docker-mcp-ecosystem/      # Vollständiges MCP-Server-Ökosystem mit Monitoring und Logging
+├── docker-mcp-servers/        # Minimale MCP-Server-Konfiguration für OpenHands und n8n
 ├── docs/                      # Dokumentation
 │   └── docs/                  # Detaillierte Dokumentation nach Themen
+├── scripts/                   # Skripte für Installation, Konfiguration und Wartung
+│   └── mcp/                   # Skripte für MCP-Server-Integration
 ├── src/                       # Quellcode
+│   ├── n8n_mcp_server.py      # MCP-Server-Implementierung für n8n
 │   ├── n8n_setup_main.py      # Haupteinstiegspunkt für die Installation
 │   ├── n8n_setup_utils.py     # Hilfsfunktionen
 │   ├── n8n_setup_install.py   # Funktionen für die Installation
 │   ├── n8n_setup_credentials.py # Funktionen zur Einrichtung von Anmeldedaten
-│   ├── n8n_setup_workflows/   # Workflow-Definitionen
-│   │   ├── n8n_setup_workflows_github.py
-│   │   ├── n8n_setup_workflows_document.py
-│   │   ├── n8n_setup_workflows_openhands.py
-│   │   └── n8n_setup_workflows_special.py
+│   ├── n8n_setup_workflows_github.py # GitHub-Workflow-Definition
+│   ├── n8n_setup_workflows_document.py # Dokumenten-Workflow-Definition
+│   ├── n8n_setup_workflows_openhands.py # OpenHands-Workflow-Definition
+│   ├── n8n_setup_workflows_mcp.py # MCP-Workflow-Definition
+│   ├── n8n_setup_workflows_special.py # Spezielle Workflow-Definitionen
 │   └── env-template           # Vorlage für die .env-Datei
+├── IMPLEMENTATION_PLAN.md     # Detaillierter Implementierungsplan
+├── REPOSITORY_STRUCTURE.md    # Dokumentation der Repository-Struktur
 └── README.md                  # Hauptdokumentation
 ```
+
+Weitere Details zur Repository-Struktur finden Sie in der [REPOSITORY_STRUCTURE.md](REPOSITORY_STRUCTURE.md) Datei.
 
 ## 📊 Workflows
 
@@ -218,6 +227,26 @@ Die generierte Webhook-URL muss in der OpenHands-Konfiguration eingetragen werde
 
 Dieses Repository unterstützt die Integration des Model Context Protocols (MCP) für die Verbindung zwischen OpenHands und n8n. Hiermit können KI-Agenten direkt mit n8n-Workflows interagieren.
 
+### MCP-Server Implementierung
+
+Wir haben folgende MCP-Server implementiert:
+
+1. **Filesystem MCP Server** (`mcp/filesystem`): Ermöglicht Dateisystem-Operationen wie Lesen, Schreiben und Suchen von Dateien.
+2. **Desktop Commander MCP Server** (`mcp/desktop-commander`): Ermöglicht die Ausführung von Terminal-Befehlen und Desktop-Operationen.
+3. **Sequential Thinking MCP Server** (`mcp/sequentialthinking`): Bietet strukturierte Problemlösungsfähigkeiten.
+4. **GitHub Chat MCP Server** (`mcp/github-chat`): Ermöglicht die Interaktion mit GitHub-Diskussionen und -Kommentaren.
+5. **GitHub MCP Server** (`mcp/github`): Bietet GitHub-Repository-Management-Funktionen.
+6. **Puppeteer MCP Server** (`mcp/puppeteer`): Ermöglicht Web-Browsing und Interaktion mit Webseiten.
+7. **Basic Memory MCP Server** (`mcp/basic-memory`): Bietet einfache Schlüssel-Wert-Speicherung für KI-Agenten.
+8. **Wikipedia MCP Server** (`mcp/wikipedia-mcp`): Ermöglicht die Suche und das Abrufen von Informationen aus Wikipedia.
+
+Die MCP-Server sind als Docker-Container implementiert und können mit dem folgenden Befehl gestartet werden:
+
+```bash
+cd docker-mcp-servers
+./setup.sh
+```
+
 ### MCP-Server Konfiguration
 
 1. Aktivieren Sie den MCP-Server:
@@ -234,21 +263,44 @@ python src/n8n_setup_main.py --install --env-file .env --mcp
 
 ### Verfügbare MCP-Tools
 
-Der MCP-Server stellt folgende n8n-Workflows als Tools bereit:
+Die MCP-Server stellen folgende Tools bereit:
 
+#### Filesystem MCP Server
+- **read_file**: Liest den Inhalt einer Datei
+- **write_file**: Schreibt Inhalt in eine Datei
+- **list_directory**: Listet den Inhalt eines Verzeichnisses auf
+- **search_files**: Sucht nach Dateien mit bestimmten Kriterien
+
+#### Desktop Commander MCP Server
+- **execute_command**: Führt einen Terminal-Befehl aus
+- **edit_text**: Bearbeitet Text in einer Datei
+- **open_application**: Öffnet eine Anwendung
+
+#### GitHub MCP Server
+- **create_issue**: Erstellt ein Issue in GitHub
+- **create_pull_request**: Erstellt einen Pull Request
+- **list_repositories**: Listet Repositories auf
+- **get_repository_content**: Ruft den Inhalt eines Repositories ab
+
+#### n8n-Workflows als MCP-Tools
 - **create_github_issue**: Erstellt ein Issue in GitHub
 - **update_work_package**: Aktualisiert ein Arbeitspaket in OpenProject
 - **sync_documentation**: Synchronisiert Dokumentation zwischen AFFiNE/AppFlowy und GitHub
 
 ### Beispielnutzung in OpenHands
 
-OpenHands kann die n8n-Tools wie folgt nutzen:
+OpenHands kann die MCP-Tools wie folgt nutzen:
 
 ```python
 # Beispiel für einen OpenHands-Agent, der ein GitHub-Issue erstellt
 await agent.run("Erstelle ein GitHub-Issue für ein Problem mit der Login-Funktion")
 
 # Der Agent kann das create_github_issue-Tool über die MCP-Schnittstelle verwenden
+
+# Beispiel für einen OpenHands-Agent, der eine Datei liest
+await agent.run("Lies den Inhalt der Datei README.md")
+
+# Der Agent kann das read_file-Tool des Filesystem MCP Servers verwenden
 ```
 
 ## 🔧 Fehlerbehebung
