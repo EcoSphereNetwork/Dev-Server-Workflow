@@ -1,6 +1,37 @@
-# MCP-Server-Ökosystem mit OpenHands-Integration
-
 Dieses Projekt implementiert ein umfassendes MCP-Server-Ökosystem mit Integration von OpenHands als zentralem Verwaltungstool. Es umfasst verschiedene MCP-Server-Container, die Integration des Ollama-MCP-Bridge und die Konfiguration von OpenHands für die Verwaltung des gesamten Systems.
+
+## Verbesserungen gegenüber der vorherigen Version
+
+### 1. Sicherheit und Berechtigungen
+
+- **Docker Socket Proxy**: Statt direktem Zugriff auf die Docker-Socket verwendet OpenHands nun einen Docker-Socket-Proxy, der nur bestimmte API-Endpunkte freigibt.
+- **Eingeschränkte Dateisystem-Berechtigungen**: Container haben nur Zugriff auf spezifische Verzeichnisse statt auf das gesamte Dateisystem.
+- **Container-Härtung**: Sicherheitsoptionen wie `no-new-privileges` und `cap_drop` wurden hinzugefügt, um die Container-Sicherheit zu erhöhen.
+- **Gesundheitschecks**: Alle Container verfügen über Gesundheitschecks, um die Verfügbarkeit zu überwachen.
+
+### 2. Desktop Commander Integration
+
+- **Desktop Commander MCP-Server**: Integration des offiziellen Docker-Images `mcp/desktop-commander` mit eingeschränkten Berechtigungen.
+- **Sichere Konfiguration**: Beschränkung der erlaubten Verzeichnisse und Befehle für den Desktop Commander.
+- **OpenHands-Integration**: Konfiguration von OpenHands für die Nutzung des Desktop Commander.
+
+### 3. Ollama-MCP-Bridge
+
+- **Verbesserte Konfiguration**: Erweiterte Konfigurationsmöglichkeiten für verschiedene Modelle und Parameter.
+- **Tool-Erkennung**: Aktivierung der automatischen Tool-Erkennung für bessere Nutzererfahrung.
+- **Fehlerbehandlung**: Robustere Fehlerbehandlung und Wiederherstellungsmechanismen.
+
+### 4. Nginx-Konfiguration
+
+- **Verbesserte Sicherheit**: Implementierung von Best Practices für Nginx-Sicherheit.
+- **Gesundheitschecks**: Endpunkte für Gesundheitschecks für alle Dienste.
+- **Verbesserte Proxy-Einstellungen**: Optimierte Proxy-Einstellungen für bessere Leistung und Zuverlässigkeit.
+
+### 5. OpenHands-Integration
+
+- **Verbesserte Konfiguration**: Detailliertere Konfiguration für MCP-Server und Berechtigungen.
+- **Sicherheitseinstellungen**: Zusätzliche Sicherheitseinstellungen für OpenHands.
+- **Benutzeroberfläche**: Konfigurationsoptionen für die Benutzeroberfläche.
 
 ## Architektur
 
@@ -33,6 +64,8 @@ Das System besteht aus folgenden Komponenten:
 
 5. **GitLab, OpenProject, AppFlowy**: Integrierte Dienste für Versionskontrolle, Projektmanagement und Dokumentation.
 
+6. **Docker Socket Proxy**: Ein Proxy für die Docker-Socket, der nur bestimmte API-Endpunkte freigibt.
+
 ## Voraussetzungen
 
 - Docker und Docker Compose
@@ -45,7 +78,7 @@ Das System besteht aus folgenden Komponenten:
 1. Repository klonen:
    ```bash
    git clone https://github.com/EcoSphereNetwork/Dev-Server-Workflow.git
-   cd Dev-Server-Workflow/docker-mcp-ecosystem
+   cd Dev-Server-Workflow/docker-mcp-ecosystem-improved
    ```
 
 2. Umgebungsvariablen konfigurieren:
@@ -65,6 +98,7 @@ Das System besteht aus folgenden Komponenten:
    - GitLab: http://gitlab.ecospherenet.work
    - OpenProject: http://openproject.eocspherenet.work
    - AppFlowy: http://appflowy.ecospherenet.work
+   - MCP Inspector UI: http://inspector.ecospherenet.work
 
 ## Verwendung
 
@@ -72,9 +106,69 @@ Das System besteht aus folgenden Komponenten:
 
 OpenHands ist das zentrale Verwaltungstool für das MCP-Server-Ökosystem. Es bietet eine Benutzeroberfläche für die Interaktion mit allen MCP-Servern, dem lokalen Dateisystem und Docker-Containern.
 
-### MCP-Server
+### Desktop Commander
 
-Jeder MCP-Server implementiert das Model Context Protocol und bietet spezifische Funktionen an. Die Server können über OpenHands oder direkt über ihre jeweiligen Endpunkte angesprochen werden.
+Der Desktop Commander MCP-Server ermöglicht die Interaktion mit dem Dateisystem und die Ausführung von Terminalbefehlen. Er bietet folgende Funktionen:
+
+- Dateisystem-Operationen (Lesen, Schreiben, Suchen)
+- Terminalbefehle ausführen
+- Prozessverwaltung
+- Textbearbeitung
+
+Der Desktop Commander ist mit einer detaillierten Konfiguration ausgestattet, die in der Datei `desktop-commander/config.json` definiert ist. Diese Konfiguration umfasst:
+
+- Erlaubte Verzeichnisse: Nur `/workspace` ist standardmäßig erlaubt
+- Blockierte Befehle: Potenziell gefährliche Befehle wie `rm -rf /` sind blockiert
+- Sicherheitseinstellungen: Einschränkungen für Netzwerkzugriff und Ausführung von Binärdateien
+
+### MCP Inspector
+
+Der MCP Inspector ist ein leistungsstarkes Entwicklungswerkzeug für das Testen und Debuggen von MCP-Servern. Er bietet folgende Funktionen:
+
+- Visuelle Benutzeroberfläche für die Interaktion mit MCP-Servern
+- Anzeige und Test von verfügbaren Tools, Ressourcen und Prompts
+- Detaillierte Fehlerinformationen und Logs
+- CLI-Modus für Automatisierung und Scripting
+
+Der MCP Inspector ist unter http://inspector.ecospherenet.work erreichbar und kann für die Entwicklung und das Debugging von MCP-Servern verwendet werden.
+
+Für die Verwendung des MCP Inspectors im CLI-Modus steht das Skript `scripts/mcp-inspector-cli.sh` zur Verfügung:
+
+```bash
+./scripts/mcp-inspector-cli.sh --server github --method tools/list
+```
+
+### Ollama-MCP-Bridge
+
+Die Ollama-MCP-Bridge ermöglicht die Verwendung lokaler LLMs über das MCP-Protokoll. Sie unterstützt verschiedene Modelle wie Qwen2.5, Llama3 und Mistral.
+
+### Verwaltungsskripte
+
+Das MCP-Server-Ökosystem enthält verschiedene Skripte zur Verwaltung und Automatisierung:
+
+- `scripts/setup.sh`: Automatisiert die Einrichtung des MCP-Server-Ökosystems
+- `scripts/manage-mcp-ecosystem.sh`: Ermöglicht die Verwaltung des gesamten Ökosystems
+- `scripts/mcp-server-manager.sh`: Ermöglicht die Verwaltung der MCP-Server
+- `scripts/mcp-inspector-cli.sh`: Ermöglicht die Verwendung des MCP Inspectors im CLI-Modus
+
+Beispiele für die Verwendung der Skripte:
+
+```bash
+# Einrichtung des Ökosystems
+./scripts/setup.sh
+
+# Starten des gesamten Ökosystems
+./scripts/manage-mcp-ecosystem.sh start
+
+# Anzeigen der Logs eines bestimmten Dienstes
+./scripts/manage-mcp-ecosystem.sh logs --service github-mcp
+
+# Auflisten der verfügbaren Tools eines MCP-Servers
+./scripts/mcp-server-manager.sh list-tools --server desktop-commander-mcp
+
+# Aufrufen eines Tools eines MCP-Servers
+./scripts/mcp-server-manager.sh call-tool --server desktop-commander-mcp --tool read_file --args '{"path":"/workspace/README.md"}'
+```
 
 ### n8n-Workflows
 
@@ -86,26 +180,20 @@ n8n ist mit benutzerdefinierten MCP-Nodes konfiguriert, die die Interaktion mit 
 
 Die OpenHands-Konfiguration befindet sich in der Datei `openhands/openhands-config.json`. Hier können die MCP-Server, der Zugriff auf das Dateisystem und Docker konfiguriert werden.
 
+### Ollama-MCP-Bridge
+
+Die Ollama-MCP-Bridge-Konfiguration befindet sich in der Datei `ollama-mcp-bridge/bridge_config.json`. Hier können die LLM-Einstellungen und die MCP-Server-Verbindungen konfiguriert werden.
+
 ### Nginx
 
 Die Nginx-Konfiguration befindet sich im Verzeichnis `nginx/conf.d/`. Hier können die Reverse-Proxy-Einstellungen für die verschiedenen Dienste angepasst werden.
 
-### MCP-Server
+## Sicherheitshinweise
 
-Die Konfiguration der MCP-Server erfolgt über Umgebungsvariablen in der `docker-compose.yml`-Datei.
-
-## Entwicklung
-
-### Hinzufügen eines neuen MCP-Servers
-
-1. Füge einen neuen Service zur `docker-compose.yml` hinzu
-2. Aktualisiere die OpenHands-Konfiguration in `openhands/openhands-config.json`
-3. Aktualisiere die Nginx-Konfiguration in `nginx/conf.d/default.conf`
-4. Starte die Container neu: `docker-compose up -d`
-
-### Anpassen von n8n-Workflows
-
-n8n-Workflows können über die n8n-Benutzeroberfläche erstellt und angepasst werden. Die benutzerdefinierten MCP-Nodes ermöglichen die Interaktion mit den MCP-Servern.
+- **API-Schlüssel**: Alle API-Schlüssel sollten sicher in der `.env`-Datei gespeichert werden.
+- **Docker-Socket-Proxy**: Der Docker-Socket-Proxy beschränkt den Zugriff auf die Docker-API auf bestimmte Endpunkte.
+- **Dateisystem-Berechtigungen**: Container haben nur Zugriff auf spezifische Verzeichnisse.
+- **Container-Härtung**: Sicherheitsoptionen wie `no-new-privileges` und `cap_drop` erhöhen die Container-Sicherheit.
 
 ## Fehlerbehebung
 
@@ -116,11 +204,11 @@ n8n-Workflows können über die n8n-Benutzeroberfläche erstellt und angepasst w
 docker-compose logs [service-name]
 ```
 
-### MCP-Server nicht erreichbar
+### Gesundheitschecks schlagen fehl
 
-Überprüfe die Netzwerkkonfiguration:
+Überprüfe den Status der Gesundheitschecks:
 ```bash
-docker-compose exec nginx nginx -t
+docker-compose ps
 ```
 
 ### OpenHands kann nicht auf MCP-Server zugreifen
