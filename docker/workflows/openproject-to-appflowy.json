@@ -1,0 +1,191 @@
+{
+  "name": "OpenProject Work Package to AppFlowy Document",
+  "nodes": [
+    {
+      "parameters": {
+        "pollInterval": 10,
+        "eventTypes": [
+          "openproject"
+        ]
+      },
+      "name": "OpenProject MCP Trigger",
+      "type": "n8n-nodes-mcp.mcpTrigger",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "credentials": {
+        "mcpApi": {
+          "id": "3",
+          "name": "OpenProject MCP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.event_type }}",
+              "operation": "equal",
+              "value2": "work_package.created"
+            }
+          ]
+        }
+      },
+      "name": "Is Work Package Created?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "callTool",
+        "toolName": "openproject_get_work_packages",
+        "arguments": "={{ {\n  \"project_id\": $json.project_id,\n  \"status_id\": \"\",\n  \"type_id\": \"\",\n  \"assigned_to_id\": \"\",\n  \"subject\": \"\",\n  \"pageSize\": 1\n} }}"
+      },
+      "name": "Get Work Package Details",
+      "type": "n8n-nodes-mcp.mcp",
+      "typeVersion": 1,
+      "position": [
+        650,
+        200
+      ],
+      "credentials": {
+        "mcpApi": {
+          "id": "3",
+          "name": "OpenProject MCP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "callTool",
+        "toolName": "appflowy_create_document",
+        "arguments": "={{ {\n  \"workspace_id\": $env.APPFLOWY_WORKSPACE_ID,\n  \"name\": \"[\" + $json.work_packages[0].id + \"] \" + $json.work_packages[0].subject,\n  \"content\": \"# \" + $json.work_packages[0].subject + \"\\n\\n\" + $json.work_packages[0].description + \"\\n\\n**Status:** \" + $json.work_packages[0].status + \"\\n**Type:** \" + $json.work_packages[0].type + \"\\n**Created:** \" + $json.work_packages[0].created_at + \"\\n\\n[View in OpenProject](\" + $json.work_packages[0].url + \")\"\n} }}"
+      },
+      "name": "Create AppFlowy Document",
+      "type": "n8n-nodes-mcp.mcp",
+      "typeVersion": 1,
+      "position": [
+        850,
+        200
+      ],
+      "credentials": {
+        "mcpApi": {
+          "id": "4",
+          "name": "AppFlowy MCP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "callTool",
+        "toolName": "openproject_update_work_package",
+        "arguments": "={{ {\n  \"id\": $json.work_packages[0].id,\n  \"description\": $json.work_packages[0].description + \"\\n\\n**AppFlowy Document:** [\" + $node[\"Create AppFlowy Document\"].json.document.name + \"](appflowy://document/\" + $node[\"Create AppFlowy Document\"].json.document.id + \")\"\n} }}"
+      },
+      "name": "Update Work Package with Link",
+      "type": "n8n-nodes-mcp.mcp",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        200
+      ],
+      "credentials": {
+        "mcpApi": {
+          "id": "3",
+          "name": "OpenProject MCP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "subject": "New AppFlowy Document Created from OpenProject Work Package",
+        "to": "={{ $env.NOTIFICATION_EMAIL }}",
+        "text": "=A new AppFlowy document has been created from an OpenProject work package.\n\nWork Package: {{ $node[\"Get Work Package Details\"].json.work_packages[0].url }}\nAppFlowy Document: appflowy://document/{{ $node[\"Create AppFlowy Document\"].json.document.id }}\n\nTitle: {{ $node[\"Create AppFlowy Document\"].json.document.name }}"
+      },
+      "name": "Send Email Notification",
+      "type": "n8n-nodes-base.sendEmail",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        200
+      ]
+    }
+  ],
+  "connections": {
+    "OpenProject MCP Trigger": {
+      "main": [
+        [
+          {
+            "node": "Is Work Package Created?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Work Package Created?": {
+      "main": [
+        [
+          {
+            "node": "Get Work Package Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Work Package Details": {
+      "main": [
+        [
+          {
+            "node": "Create AppFlowy Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create AppFlowy Document": {
+      "main": [
+        [
+          {
+            "node": "Update Work Package with Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Work Package with Link": {
+      "main": [
+        [
+          {
+            "node": "Send Email Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "tags": [
+    "mcp",
+    "openproject",
+    "appflowy",
+    "integration"
+  ],
+  "pinData": {}
+}
