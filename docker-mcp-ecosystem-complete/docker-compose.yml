@@ -1,0 +1,573 @@
+version: '3.8'
+
+networks:
+  mcp-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  elasticsearch_data:
+  redis_data:
+  sqlite_data:
+  openhands_data:
+  ollama_data:
+  n8n_data:
+
+services:
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: mcp-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/www:/usr/share/nginx/html:ro
+    networks:
+      - mcp-network
+    depends_on:
+      - openhands
+      - n8n
+      - openproject
+      - gitlab
+      - appflowy
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis für Caching und Kommunikation
+  redis:
+    image: redis:7-alpine
+    container_name: mcp-redis
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_password}
+    volumes:
+      - redis_data:/data
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL Datenbank
+  postgresql:
+    image: postgres:15-alpine
+    container_name: mcp-postgresql
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-mcp}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Elasticsearch
+  elasticsearch:
+    image: mcp/elasticsearch:latest
+    container_name: mcp-elasticsearch
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # SQLite
+  sqlite:
+    image: mcp/sqlite:latest
+    container_name: mcp-sqlite
+    restart: always
+    volumes:
+      - sqlite_data:/data
+    networks:
+      - mcp-network
+
+  # GitHub MCP Server
+  github-mcp:
+    image: mcp/github:latest
+    container_name: mcp-github
+    restart: always
+    environment:
+      - MCP_PORT=3001
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+    networks:
+      - mcp-network
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # GitHub Chat MCP Server
+  github-chat-mcp:
+    image: mcp/github-chat:latest
+    container_name: mcp-github-chat
+    restart: always
+    environment:
+      - MCP_PORT=3002
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+    networks:
+      - mcp-network
+    depends_on:
+      - redis
+
+  # GitLab MCP Server
+  gitlab-mcp:
+    image: mcp/gitlab:latest
+    container_name: mcp-gitlab
+    restart: always
+    environment:
+      - MCP_PORT=3003
+      - GITLAB_TOKEN=${GITLAB_TOKEN}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+    networks:
+      - mcp-network
+    depends_on:
+      - redis
+
+  # Memory MCP Server
+  memory-mcp:
+    image: mcp/memory:latest
+    container_name: mcp-memory
+    restart: always
+    environment:
+      - MCP_PORT=3004
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+    networks:
+      - mcp-network
+    depends_on:
+      - redis
+
+  # Basic Memory MCP Server
+  basic-memory-mcp:
+    image: mcp/basic-memory:latest
+    container_name: mcp-basic-memory
+    restart: always
+    environment:
+      - MCP_PORT=3005
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+    networks:
+      - mcp-network
+    depends_on:
+      - redis
+
+  # Time MCP Server
+  time-mcp:
+    image: mcp/time:latest
+    container_name: mcp-time
+    restart: always
+    environment:
+      - MCP_PORT=3006
+    networks:
+      - mcp-network
+
+  # Wolfram Alpha MCP Server
+  wolfram-alpha-mcp:
+    image: mcp/wolfram-alpha:latest
+    container_name: mcp-wolfram-alpha
+    restart: always
+    environment:
+      - MCP_PORT=3007
+      - WOLFRAM_ALPHA_APPID=${WOLFRAM_ALPHA_APPID}
+    networks:
+      - mcp-network
+
+  # Discord MCP Server
+  discord-mcp:
+    image: mcp/mcp-discord:latest
+    container_name: mcp-discord
+    restart: always
+    environment:
+      - MCP_PORT=3008
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+    networks:
+      - mcp-network
+
+  # Fetch MCP Server
+  fetch-mcp:
+    image: mcp/fetch:latest
+    container_name: mcp-fetch
+    restart: always
+    environment:
+      - MCP_PORT=3009
+    networks:
+      - mcp-network
+
+  # Inspector MCP Server
+  inspector-mcp:
+    image: mcp/inspector:latest
+    container_name: mcp-inspector
+    restart: always
+    environment:
+      - MCP_PORT=3010
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3010/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      
+  # MCP Inspector UI und Proxy
+  mcp-inspector-ui:
+    build:
+      context: ./inspector
+      dockerfile: Dockerfile
+    container_name: mcp-inspector-ui
+    restart: always
+    ports:
+      - "6274:6274"  # UI Port
+      - "6277:6277"  # Proxy Port
+    environment:
+      - CLIENT_PORT=6274
+      - SERVER_PORT=6277
+      - NODE_ENV=production
+    volumes:
+      - ./inspector/config.json:/app/config/config.json:ro
+    networks:
+      - mcp-network
+    depends_on:
+      - github-mcp
+      - github-chat-mcp
+      - gitlab-mcp
+      - memory-mcp
+      - basic-memory-mcp
+      - time-mcp
+      - wolfram-alpha-mcp
+      - discord-mcp
+      - fetch-mcp
+      - inspector-mcp
+      - sequential-thinking-mcp
+      - puppeteer-mcp
+      - 3d-printer-mcp
+      - desktop-commander-mcp
+      - ollama-mcp-bridge
+
+  # Sequential Thinking MCP Server
+  sequential-thinking-mcp:
+    image: mcp/sequentialthinking:latest
+    container_name: mcp-sequential-thinking
+    restart: always
+    environment:
+      - MCP_PORT=3011
+    networks:
+      - mcp-network
+
+  # Puppeteer MCP Server
+  puppeteer-mcp:
+    image: mcp/puppeteer:latest
+    container_name: mcp-puppeteer
+    restart: always
+    environment:
+      - MCP_PORT=3012
+    networks:
+      - mcp-network
+
+  # 3D Printer MCP Server
+  3d-printer-mcp:
+    image: mcp/3d-printer:latest
+    container_name: mcp-3d-printer
+    restart: always
+    environment:
+      - MCP_PORT=3013
+    networks:
+      - mcp-network
+
+  # Desktop Commander MCP Server
+  desktop-commander-mcp:
+    image: mcp/desktop-commander:latest
+    container_name: mcp-desktop-commander
+    restart: always
+    environment:
+      - MCP_PORT=3014
+      - DISPLAY=${DISPLAY}
+      - LOG_LEVEL=info
+      - CONFIG_PATH=/app/config/config.json
+    volumes:
+      # Eingeschränkter Zugriff auf bestimmte Verzeichnisse
+      - ${WORKSPACE_PATH:-/workspace}:/workspace:rw
+      # X11-Socket für GUI-Anwendungen
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
+      # Konfigurationsdatei
+      - ./desktop-commander/config.json:/app/config/config.json:ro
+      # Log-Verzeichnis
+      - ./logs:/var/log:rw
+    networks:
+      - mcp-network
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - FOWNER
+      - SETGID
+      - SETUID
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3014/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Docker Socket Proxy für sicheren Docker-Zugriff
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: mcp-docker-socket-proxy
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      # Nur bestimmte Docker API-Endpunkte erlauben
+      - CONTAINERS=1
+      - IMAGES=1
+      - NETWORKS=1
+      - VOLUMES=1
+      - EXEC=0
+      - POST=0
+    networks:
+      - mcp-network
+
+  # Ollama Server
+  ollama:
+    image: ollama/ollama:latest
+    container_name: mcp-ollama
+    restart: always
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Ollama MCP Bridge
+  ollama-mcp-bridge:
+    build:
+      context: ./ollama-mcp-bridge
+      dockerfile: Dockerfile
+    container_name: mcp-ollama-bridge
+    restart: always
+    environment:
+      - MCP_PORT=3015
+      - OLLAMA_HOST=ollama
+      - OLLAMA_PORT=11434
+      - DEFAULT_MODEL=qwen2.5-coder:7b-instruct
+      - TEMPERATURE=0.7
+      - MAX_TOKENS=4096
+      - TOOL_DETECTION_ENABLED=true
+      - ERROR_RECOVERY_ENABLED=true
+    networks:
+      - mcp-network
+    depends_on:
+      - ollama
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3015/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # OpenHands
+  openhands:
+    build:
+      context: ./openhands
+      dockerfile: Dockerfile
+    container_name: mcp-openhands
+    restart: always
+    ports:
+      - "8080:8080"  # Nicht auf Port 3000
+    volumes:
+      - openhands_data:/app/data
+      # Zugriff auf Docker über den Proxy statt direkt
+      # - /var/run/docker.sock:/var/run/docker.sock
+      # Eingeschränkter Zugriff auf bestimmte Verzeichnisse
+      - ${WORKSPACE_PATH:-/workspace}:/workspace:ro
+    environment:
+      - PORT=8080
+      - MCP_SERVERS=github-mcp:3001,github-chat-mcp:3002,gitlab-mcp:3003,memory-mcp:3004,basic-memory-mcp:3005,time-mcp:3006,wolfram-alpha-mcp:3007,discord-mcp:3008,fetch-mcp:3009,inspector-mcp:3010,sequential-thinking-mcp:3011,puppeteer-mcp:3012,3d-printer-mcp:3013,desktop-commander-mcp:3014,ollama-mcp-bridge:3015,postgresql:3016,elasticsearch:3017,sqlite:3018
+      - DOCKER_HOST=tcp://docker-socket-proxy:2375
+      - LOG_LEVEL=info
+      - ENABLE_TELEMETRY=false
+    networks:
+      - mcp-network
+    depends_on:
+      - redis
+      - docker-socket-proxy
+      - github-mcp
+      - github-chat-mcp
+      - gitlab-mcp
+      - memory-mcp
+      - basic-memory-mcp
+      - time-mcp
+      - wolfram-alpha-mcp
+      - discord-mcp
+      - fetch-mcp
+      - inspector-mcp
+      - sequential-thinking-mcp
+      - puppeteer-mcp
+      - 3d-printer-mcp
+      - desktop-commander-mcp
+      - ollama-mcp-bridge
+      - postgresql
+      - elasticsearch
+      - sqlite
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # n8n - Workflow Automation
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: mcp-n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_HOST=n8n.ecospherenet.work
+      - N8N_EDITOR_BASE_URL=http://n8n.ecospherenet.work
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgresql
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=${POSTGRES_USER:-postgres}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - EXECUTIONS_MODE=regular
+      - GENERIC_TIMEZONE=Europe/Berlin
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-your-secret-encryption-key}
+      - WEBHOOK_URL=http://n8n.ecospherenet.work/
+      - N8N_LOG_LEVEL=info
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_HIRING_BANNER_ENABLED=false
+      - N8N_VERSION_NOTIFICATIONS_ENABLED=false
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n/custom-nodes:/home/node/.n8n/custom:ro
+    networks:
+      - mcp-network
+    depends_on:
+      - postgresql
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # GitLab
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    container_name: mcp-gitlab-instance
+    restart: always
+    hostname: gitlab.ecospherenet.work
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://gitlab.ecospherenet.work'
+        gitlab_rails['gitlab_shell_ssh_port'] = 22
+        gitlab_rails['time_zone'] = 'Europe/Berlin'
+        # Sicherheitseinstellungen
+        gitlab_rails['rack_attack_git_basic_auth'] = { 'enabled' => true, 'ip_whitelist' => ['127.0.0.1'], 'maxretry' => 10, 'findtime' => 60, 'bantime' => 3600 }
+    ports:
+      - "8929:80"
+      - "8930:443"
+      - "8922:22"
+    volumes:
+      - ./gitlab/config:/etc/gitlab:rw
+      - ./gitlab/logs:/var/log/gitlab:rw
+      - ./gitlab/data:/var/opt/gitlab:rw
+    networks:
+      - mcp-network
+    shm_size: '256m'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/-/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 180s
+
+  # OpenProject
+  openproject:
+    image: openproject/community:latest
+    container_name: mcp-openproject
+    restart: always
+    environment:
+      - OPENPROJECT_HOST__NAME=openproject.eocspherenet.work
+      - OPENPROJECT_SECRET_KEY_BASE=${OPENPROJECT_SECRET_KEY_BASE:-secret}
+      - OPENPROJECT_DATABASE_HOST=postgresql
+      - OPENPROJECT_DATABASE_PORT=5432
+      - OPENPROJECT_DATABASE_USERNAME=${POSTGRES_USER:-postgres}
+      - OPENPROJECT_DATABASE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - OPENPROJECT_DATABASE_NAME=openproject
+    volumes:
+      - ./openproject/assets:/var/openproject/assets:rw
+      - ./openproject/pgdata:/var/openproject/pgdata:rw
+    networks:
+      - mcp-network
+    depends_on:
+      - postgresql
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health_checks/default"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 180s
+
+  # AppFlowy
+  appflowy:
+    image: appflowy/appflowy-cloud:latest
+    container_name: mcp-appflowy
+    restart: always
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgresql:5432/appflowy
+      - REDIS_URL=redis://redis:6379
+      - APP_URL=http://appflowy.ecospherenet.work
+    networks:
+      - mcp-network
+    depends_on:
+      - postgresql
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

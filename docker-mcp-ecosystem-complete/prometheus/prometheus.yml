@@ -1,0 +1,62 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+rule_files:
+  - "rules/*.yml"
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+    
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+
+  - job_name: 'postgresql'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  - job_name: 'n8n'
+    static_configs:
+      - targets: ['n8n:5678']
+
+  - job_name: 'mcp-servers'
+    static_configs:
+      - targets:
+        - 'brave-search-mcp:3001'
+        - 'filesystem-mcp:3002'
+        - 'grafana-mcp:3003'
+        - 'hyperbrowser-mcp:3004'
+        - 'wolfram-alpha-mcp:3005'
+        - 'oxylabs-mcp:3006'
+        - 'e2b-mcp:3007'
+        - 'desktop-commander-mcp:3008'
+        - 'sequential-thinking-mcp:3009'
+        - 'memory-mcp:3010'
+        - 'basic-memory-mcp:3011'
+        - 'github-mcp:3012'
+        - 'github-chat-mcp:3013'
+        - 'gitlab-mcp:3014'
+        - 'duckduckgo-mcp:3015'
+        - 'wikipedia-mcp:3016'

@@ -1,0 +1,85 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "curl",
+      "args": ["-s", "http://github-mcp:3001/mcp"],
+      "env": {}
+    },
+    "github-chat": {
+      "command": "curl",
+      "args": ["-s", "http://github-chat-mcp:3002/mcp"],
+      "env": {}
+    },
+    "gitlab": {
+      "command": "curl",
+      "args": ["-s", "http://gitlab-mcp:3003/mcp"],
+      "env": {}
+    },
+    "memory": {
+      "command": "curl",
+      "args": ["-s", "http://memory-mcp:3004/mcp"],
+      "env": {}
+    },
+    "basic-memory": {
+      "command": "curl",
+      "args": ["-s", "http://basic-memory-mcp:3005/mcp"],
+      "env": {}
+    },
+    "time": {
+      "command": "curl",
+      "args": ["-s", "http://time-mcp:3006/mcp"],
+      "env": {}
+    },
+    "wolfram-alpha": {
+      "command": "curl",
+      "args": ["-s", "http://wolfram-alpha-mcp:3007/mcp"],
+      "env": {}
+    },
+    "discord": {
+      "command": "curl",
+      "args": ["-s", "http://discord-mcp:3008/mcp"],
+      "env": {}
+    },
+    "fetch": {
+      "command": "curl",
+      "args": ["-s", "http://fetch-mcp:3009/mcp"],
+      "env": {}
+    },
+    "inspector": {
+      "command": "curl",
+      "args": ["-s", "http://inspector-mcp:3010/mcp"],
+      "env": {}
+    },
+    "sequential-thinking": {
+      "command": "curl",
+      "args": ["-s", "http://sequential-thinking-mcp:3011/mcp"],
+      "env": {}
+    },
+    "puppeteer": {
+      "command": "curl",
+      "args": ["-s", "http://puppeteer-mcp:3012/mcp"],
+      "env": {}
+    },
+    "3d-printer": {
+      "command": "curl",
+      "args": ["-s", "http://3d-printer-mcp:3013/mcp"],
+      "env": {}
+    },
+    "desktop-commander": {
+      "command": "curl",
+      "args": ["-s", "http://desktop-commander-mcp:3014/mcp"],
+      "env": {}
+    },
+    "ollama": {
+      "command": "curl",
+      "args": ["-s", "http://ollama-mcp-bridge:3015/mcp"],
+      "env": {}
+    }
+  },
+  "settings": {
+    "MCP_SERVER_REQUEST_TIMEOUT": 15000,
+    "MCP_REQUEST_TIMEOUT_RESET_ON_PROGRESS": true,
+    "MCP_REQUEST_MAX_TOTAL_TIMEOUT": 120000,
+    "MCP_PROXY_FULL_ADDRESS": ""
+  }
+}
