@@ -19,6 +19,7 @@ Dieses Repository enthält mehrere Skripte zur Einrichtung und Konfiguration von
 - `create-configs.sh`: Skript zum Erstellen der Konfigurationsdateien
 - `create-scripts.sh`: Skript zum Erstellen der Start-Skripte
 - `install-mcp.sh`: Hauptinstallationsskript
+- `fix-mcp-errors.sh`: Skript zur Behebung von Installationsproblemen und Änderung des OpenHands-Ports
 
 ## Einfache Installation
 
@@ -114,6 +115,21 @@ Dieses Skript konfiguriert:
 - Die Claude Desktop Konfiguration für den neuen Port
 
 ## Fehlerbehebung
+
+### Behebung von Installationsproblemen
+
+Wenn du Probleme mit der Installation hast, kannst du das Fehlerbehebungsskript ausführen:
+
+```bash
+./fix-mcp-errors.sh
+```
+
+Dieses Skript behebt folgende Probleme:
+- Ollama-Service-Probleme
+- Ollama-Modell-Download-Probleme
+- TypeScript-Installationsprobleme
+- Ollama-MCP-Bridge-Pfadprobleme
+- Konfiguriert OpenHands, um auf Port 3333 zu laufen
 
 ### Claude Desktop erkennt die MCP-Server nicht
 
