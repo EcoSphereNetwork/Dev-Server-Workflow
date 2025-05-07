@@ -52,7 +52,7 @@ OPENHANDS_STATE_DIR="/home/sam/.openhands-state"
 OPENHANDS_WORKSPACE_DIR="/home/sam/openhands-workspace"
 OPENHANDS_CONFIG_DIR="/home/sam/.config/openhands"
 ENVEOF
-    
+
     echo "Bitte fülle die API-Keys in der .env-Datei aus und starte das Script erneut."
     echo "Datei erstellt: $ENV_FILE"
     exit 1
