@@ -239,3 +239,24 @@
     "save-report-to-appflowy": {
       "main": [
         [
+          {
+            "node": "create-report-work-package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-report-work-package": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  }
+}
