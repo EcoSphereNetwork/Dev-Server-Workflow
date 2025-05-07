@@ -308,3 +308,298 @@
     "saveManualExecutions": true
   }
 }
+{
+  "name": "Integration-Hub",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "event",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "integration-webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.source_type }}",
+              "operation": "equal",
+              "value2": "github"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "id": "route-by-source"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.source_type }}",
+              "operation": "equal",
+              "value2": "gitlab"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 160],
+      "id": "check-gitlab"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.source_type }}",
+              "operation": "equal",
+              "value2": "openproject"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 320],
+      "id": "check-openproject"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.source_type }}",
+              "operation": "equal",
+              "value2": "appflowy"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 480],
+      "id": "check-appflowy"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.source_type }}",
+              "operation": "equal",
+              "value2": "mcp_server"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 640],
+      "id": "check-mcp"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.source_type }}",
+              "operation": "equal",
+              "value2": "affine"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 800],
+      "id": "check-affine"
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "=http://localhost:5678/webhook/llm-analyze",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "id": "send-to-llm-agent"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://localhost:5678/webhook/github-to-openproject",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [900, 160],
+      "id": "forward-to-github-handler"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://localhost:5678/webhook/gitlab-to-openproject",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [900, 440],
+      "id": "forward-to-gitlab-handler"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://localhost:5678/webhook/openproject-to-appflowy",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [900, 580],
+      "id": "forward-to-openproject-handler"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://localhost:5678/webhook/appflowy-to-openproject",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [900, 720],
+      "id": "forward-to-appflowy-handler"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://localhost:5678/webhook/mcp-to-openproject",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [900, 860],
+      "id": "forward-to-mcp-handler"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://localhost:5678/webhook/affine-to-openproject",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [900, 1000],
+      "id": "forward-to-affine-handler"
+    }
+  ],
+  "connections": {
+    "integration-webhook": {
+      "main": [
+        [
+          {
+            "node": "route-by-source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "route-by-source": {
+      "main": [
+        [
+          {
+            "node": "forward-to-github-handler",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "send-to-llm-agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "check-gitlab",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-gitlab": {
+      "main": [
+        [
+          {
+            "node": "forward-to-gitlab-handler",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "send-to-llm-agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "check-openproject",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-openproject": {
+      "main": [
+        [
+          {
+            "node": "forward-to-openproject-handler",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "send-to-llm-agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "check-appflowy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-appflowy": {
+      "main": [
