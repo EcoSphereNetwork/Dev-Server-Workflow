@@ -1,0 +1,141 @@
+{
+  "name": "OpenHands-to-AppFlowy",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "openhands-to-appflowy",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "openhands-to-appflowy-webhook"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "databaseId": "={{ $env.APPFLOWY_DATABASE_ID }}",
+        "record": "={\n  \"Title\": $json.title,\n  \"Description\": $json.description,\n  \"Source\": \"openhands\",\n  \"Source ID\": $json.source_id,\n  \"Instance\": $json.instance_name,\n  \"URL\": $json.url,\n  \"Status\": $json.status,\n  \"Creator\": $json.creator,\n  \"Priority\": $json.priority || \"medium\",\n  \"Labels\": $json.labels ? $json.labels.join(\", \") : \"\",\n  \"Last Updated\": new Date().toISOString()\n}"
+      },
+      "type": "n8n-nodes-base.appflowy",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "id": "create-appflowy-record"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.success }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "id": "check-appflowy-success"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Generate documentation from issue\nconst issue = $input.item.json;\n\n// Check if this is a documentation request\nconst needsDocs = issue.labels?.some(label => \n  ['documentation', 'docs', 'guide', 'tutorial'].includes(label.toLowerCase())\n) || \n  issue.description?.toLowerCase().includes('#documentation') ||\n  issue.description?.toLowerCase().includes('#docs');\n\nif (!needsDocs) {\n  // Not a documentation request, skip\n  return [];\n}\n\n// Generate documentation structure based on issue content\nconst docTitle = `Documentation: ${issue.title}`;\nlet docContent = `# ${issue.title}\\n\\n`;\n\n// Parse description for documentation sections\nconst description = issue.description || '';\nconst sections = description.split(/\\n\\s*##\\s*/).map(section => section.trim());\n\n// First part is the introduction\ndocContent += `## Overview\\n\\n${sections[0]}\\n\\n`;\n\n// Add standard documentation sections\ndocContent += `## Purpose\\n\\nThis document explains how to use the functionality described in issue #${issue.source_id}.\\n\\n`;\ndocContent += `## Prerequisites\\n\\n- List any requirements or prerequisites here\\n\\n`;\ndocContent += `## Steps\\n\\n1. First step\\n2. Second step\\n3. Third step\\n\\n`;\ndocContent += `## Examples\\n\\n\\`\\`\\`\\nExample code or usage here\\n\\`\\`\\`\\n\\n`;\ndocContent += `## Related Information\\n\\n- [Original Issue](${issue.url})\\n- [Other relevant links]\\n\\n`;\ndocContent += `## Last Updated\\n\\n${new Date().toISOString().split('T')[0]}\\n\\n`;\n\nreturn [{\n  json: {\n    ...issue,\n    doc_title: docTitle,\n    doc_content: docContent\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [900, 200],
+      "id": "generate-documentation"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "databaseId": "={{ $env.APPFLOWY_DOCS_DATABASE_ID }}",
+        "record": "={\n  \"Title\": $json.doc_title,\n  \"Content\": $json.doc_content,\n  \"Type\": \"Documentation\",\n  \"Related Issue\": $json.source_id,\n  \"Status\": \"Draft\",\n  \"Author\": \"Auto-generated\",\n  \"Created Date\": new Date().toISOString(),\n  \"Tags\": $json.labels ? $json.labels.join(\", \") : \"\"\n}"
+      },
+      "type": "n8n-nodes-base.appflowy",
+      "typeVersion": 1,
+      "position": [1120, 200],
+      "id": "create-documentation-record"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.instance_url }}/api/issues/{{ $json.source_id }}/link",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "httpHeaderAuth": {
+          "name": "Authorization",
+          "value": "=Bearer {{ $getNodeParameter('instances').find(i => i.id === $json.instance_id).apiKey }}"
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"link_type\": \"appflowy_record\",\n  \"url\": \"appflowy://database/{{ $env.APPFLOWY_DATABASE_ID }}/record/{{ $json.recordId }}\",\n  \"title\": \"AppFlowy Record\",\n  \"description\": \"Issue tracked in AppFlowy\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [900, 400],
+      "id": "update-openhands-with-appflowy-link"
+    }
+  ],
+  "connections": {
+    "openhands-to-appflowy-webhook": {
+      "main": [
+        [
+          {
+            "node": "create-appflowy-record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-appflowy-record": {
+      "main": [
+        [
+          {
+            "node": "check-appflowy-success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-appflowy-success": {
+      "main": [
+        [
+          {
+            "node": "generate-documentation",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "update-openhands-with-appflowy-link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "generate-documentation": {
+      "main": [
+        [
+          {
+            "node": "create-documentation-record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  }
+}
