@@ -1,0 +1,105 @@
+{
+  "resolvers": ["openhands-resolver-mcp"],
+  "mcp": {
+    "servers": [
+      {
+        "name": "github",
+        "url": "http://github-mcp:3001",
+        "description": "GitHub MCP Server"
+      },
+      {
+        "name": "github-chat",
+        "url": "http://github-chat-mcp:3002",
+        "description": "GitHub Chat MCP Server"
+      },
+      {
+        "name": "gitlab",
+        "url": "http://gitlab-mcp:3003",
+        "description": "GitLab MCP Server"
+      },
+      {
+        "name": "memory",
+        "url": "http://memory-mcp:3004",
+        "description": "Memory MCP Server"
+      },
+      {
+        "name": "basic-memory",
+        "url": "http://basic-memory-mcp:3005",
+        "description": "Basic Memory MCP Server"
+      },
+      {
+        "name": "time",
+        "url": "http://time-mcp:3006",
+        "description": "Time MCP Server"
+      },
+      {
+        "name": "wolfram-alpha",
+        "url": "http://wolfram-alpha-mcp:3007",
+        "description": "Wolfram Alpha MCP Server"
+      },
+      {
+        "name": "discord",
+        "url": "http://discord-mcp:3008",
+        "description": "Discord MCP Server"
+      },
+      {
+        "name": "fetch",
+        "url": "http://fetch-mcp:3009",
+        "description": "Fetch MCP Server"
+      },
+      {
+        "name": "inspector",
+        "url": "http://inspector-mcp:3010",
+        "description": "Inspector MCP Server"
+      },
+      {
+        "name": "sequential-thinking",
+        "url": "http://sequential-thinking-mcp:3011",
+        "description": "Sequential Thinking MCP Server"
+      },
+      {
+        "name": "puppeteer",
+        "url": "http://puppeteer-mcp:3012",
+        "description": "Puppeteer MCP Server"
+      },
+      {
+        "name": "3d-printer",
+        "url": "http://3d-printer-mcp:3013",
+        "description": "3D Printer MCP Server"
+      },
+      {
+        "name": "desktop-commander",
+        "url": "http://desktop-commander-mcp:3014",
+        "description": "Desktop Commander MCP Server"
+      },
+      {
+        "name": "ollama",
+        "url": "http://ollama-mcp-bridge:3015",
+        "description": "Ollama MCP Bridge"
+      },
+      {
+        "name": "postgresql",
+        "url": "http://postgresql:3016",
+        "description": "PostgreSQL MCP Server"
+      },
+      {
+        "name": "elasticsearch",
+        "url": "http://elasticsearch:3017",
+        "description": "Elasticsearch MCP Server"
+      },
+      {
+        "name": "sqlite",
+        "url": "http://sqlite:3018",
+        "description": "SQLite MCP Server"
+      }
+    ]
+  },
+  "docker": {
+    "enabled": true,
+    "socket": "/var/run/docker.sock"
+  },
+  "filesystem": {
+    "enabled": true,
+    "root": "/workspace"
+  }
+}
