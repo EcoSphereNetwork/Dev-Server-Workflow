@@ -111,3 +111,89 @@
         "additionalFields": {
           "customField7": "={{ $json.result.code_quality_score }}",
           "customField8": "={{ $json.result.meets_requirements ?
+"parameters": {
+        "resource": "Work Packages",
+        "operation": "Update Work Package",
+        "id": "={{ $json._embedded.elements[0].id }}",
+        "description": "={{ $json._embedded.elements[0].description.raw + '\\n\\n## Code Review Results\\n\\n' + 'Quality Score: ' + $json.result.code_quality_score + '/10\\n\\n' + 'Summary: ' + $json.result.summary }}",
+        "additionalFields": {
+          "customField7": "={{ $json.result.code_quality_score }}",
+          "customField8": "={{ $json.result.meets_requirements ? 'approved' : 'changes_requested' }}"
+        }
+      },
+      "type": "n8n-nodes-base.openProject",
+      "typeVersion": 1,
+      "position": [1340, 400],
+      "id": "update-openproject-with-review"
+    }
+  ],
+  "connections": {
+    "code-review-webhook": {
+      "main": [
+        [
+          {
+            "node": "analyze-code-with-llm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "analyze-code-with-llm": {
+      "main": [
+        [
+          {
+            "node": "parse-llm-response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parse-llm-response": {
+      "main": [
+        [
+          {
+            "node": "post-review-to-openhands",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "find-openproject-workpackage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "find-openproject-workpackage": {
+      "main": [
+        [
+          {
+            "node": "check-openproject-exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-openproject-exists": {
+      "main": [
+        [
+          {
+            "node": "update-openproject-with-review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  }
+}
