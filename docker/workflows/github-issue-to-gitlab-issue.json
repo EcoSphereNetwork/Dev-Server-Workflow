@@ -1,0 +1,199 @@
+{
+  "name": "GitHub Issue to GitLab Issue",
+  "nodes": [
+    {
+      "parameters": {
+        "pollInterval": 10,
+        "eventTypes": [
+          "github"
+        ]
+      },
+      "name": "GitHub MCP Trigger",
+      "type": "n8n-nodes-mcp.mcpTrigger",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "credentials": {
+        "mcpApi": {
+          "id": "1",
+          "name": "GitHub MCP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.event_type }}",
+              "operation": "equal",
+              "value2": "issue.created"
+            }
+          ]
+        }
+      },
+      "name": "Is Issue Created?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "callTool",
+        "toolName": "github_get_issues",
+        "arguments": "={{ {\n  \"repository\": $json.repository.full_name,\n  \"state\": \"open\",\n  \"labels\": \"\",\n  \"sort\": \"created\",\n  \"direction\": \"desc\",\n  \"per_page\": 1\n} }}"
+      },
+      "name": "Get GitHub Issue Details",
+      "type": "n8n-nodes-mcp.mcp",
+      "typeVersion": 1,
+      "position": [
+        650,
+        200
+      ],
+      "credentials": {
+        "mcpApi": {
+          "id": "1",
+          "name": "GitHub MCP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "callTool",
+        "toolName": "gitlab_create_issue",
+        "arguments": "={{ {\n  \"project_id\": $env.GITLAB_PROJECT_ID,\n  \"title\": $json.issues[0].title,\n  \"description\": \"**Imported from GitHub**\\n\\nOriginal issue: \" + $json.issues[0].url + \"\\n\\n\" + $json.issues[0].body,\n  \"labels\": \"imported,github\"\n} }}"
+      },
+      "name": "Create GitLab Issue",
+      "type": "n8n-nodes-mcp.mcp",
+      "typeVersion": 1,
+      "position": [
+        850,
+        200
+      ],
+      "credentials": {
+        "mcpApi": {
+          "id": "2",
+          "name": "GitLab MCP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.github.com/repos/{{ $json.repository.full_name }}/issues/{{ $json.issues[0].number }}/comments",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "httpHeaderAuth": {
+          "name": "Authorization",
+          "value": "=token {{ $env.GITHUB_TOKEN }}"
+        },
+        "options": {},
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "body",
+              "value": "=This issue has been imported to GitLab: {{ $json.issue.url }}"
+            }
+          ]
+        }
+      },
+      "name": "Add GitHub Comment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "subject": "New GitLab Issue Created from GitHub",
+        "to": "={{ $env.NOTIFICATION_EMAIL }}",
+        "text": "=A new GitLab issue has been created from a GitHub issue.\n\nGitHub Issue: {{ $node[\"Get GitHub Issue Details\"].json.issues[0].url }}\nGitLab Issue: {{ $json.issue.url }}\n\nTitle: {{ $json.issue.title }}"
+      },
+      "name": "Send Email Notification",
+      "type": "n8n-nodes-base.sendEmail",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        200
+      ]
+    }
+  ],
+  "connections": {
+    "GitHub MCP Trigger": {
+      "main": [
+        [
+          {
+            "node": "Is Issue Created?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Issue Created?": {
+      "main": [
+        [
+          {
+            "node": "Get GitHub Issue Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get GitHub Issue Details": {
+      "main": [
+        [
+          {
+            "node": "Create GitLab Issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create GitLab Issue": {
+      "main": [
+        [
+          {
+            "node": "Add GitHub Comment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add GitHub Comment": {
+      "main": [
+        [
+          {
+            "node": "Send Email Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "tags": [
+    "mcp",
+    "github",
+    "gitlab",
+    "integration"
+  ],
+  "pinData": {}
+}

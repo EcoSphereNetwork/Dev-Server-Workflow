@@ -1,0 +1,175 @@
+version: '3.8'
+
+services:
+  # n8n - Workflow Automation
+  n8n:
+    image: n8nio/n8n:latest
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_HOST=localhost
+      - N8N_EDITOR_BASE_URL=http://localhost:5678
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=n8n
+      - DB_POSTGRESDB_PASSWORD=n8n
+      - EXECUTIONS_MODE=regular
+      - GENERIC_TIMEZONE=Europe/Berlin
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_HIRING_BANNER_ENABLED=false
+      - N8N_VERSION_NOTIFICATIONS_ENABLED=false
+      - NODE_ENV=production
+      - N8N_ENCRYPTION_KEY=your-secret-encryption-key
+      - WEBHOOK_URL=http://localhost:5678/
+      - N8N_LOG_LEVEL=info
+      - N8N_CUSTOM_EXTENSIONS=/home/node/.n8n/custom
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./custom-nodes:/home/node/.n8n/custom
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - n8n-network
+
+  # PostgreSQL - Database
+  postgres:
+    image: postgres:14
+    restart: always
+    environment:
+      - POSTGRES_USER=n8n
+      - POSTGRES_PASSWORD=n8n
+      - POSTGRES_DB=n8n
+      - POSTGRES_NON_ROOT_USER=n8n_non_root
+      - POSTGRES_NON_ROOT_PASSWORD=n8n_non_root
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - n8n-network
+
+  # Redis - Cache and Message Broker
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --requirepass redis_password
+    volumes:
+      - redis_data:/data
+    networks:
+      - n8n-network
+
+  # GitHub MCP Server
+  github-mcp:
+    build:
+      context: ./mcp-servers/github
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - MCP_PORT=3001
+      - GITHUB_API_URL=https://api.github.com
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=redis_password
+      - LOG_LEVEL=info
+    volumes:
+      - github_mcp_data:/app/data
+    depends_on:
+      - redis
+    networks:
+      - n8n-network
+
+  # GitLab MCP Server
+  gitlab-mcp:
+    build:
+      context: ./mcp-servers/gitlab
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - MCP_PORT=3002
+      - GITLAB_API_URL=https://gitlab.com/api/v4
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=redis_password
+      - LOG_LEVEL=info
+    volumes:
+      - gitlab_mcp_data:/app/data
+    depends_on:
+      - redis
+    networks:
+      - n8n-network
+
+  # OpenProject MCP Server
+  openproject-mcp:
+    build:
+      context: ./mcp-servers/openproject
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - MCP_PORT=3003
+      - OPENPROJECT_API_URL=https://openproject.example.com/api/v3
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=redis_password
+      - LOG_LEVEL=info
+    volumes:
+      - openproject_mcp_data:/app/data
+    depends_on:
+      - redis
+    networks:
+      - n8n-network
+
+  # AppFlowy MCP Server
+  appflowy-mcp:
+    build:
+      context: ./mcp-servers/appflowy
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - MCP_PORT=3004
+      - APPFLOWY_API_URL=https://appflowy.example.com/api
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=redis_password
+      - LOG_LEVEL=info
+    volumes:
+      - appflowy_mcp_data:/app/data
+    depends_on:
+      - redis
+    networks:
+      - n8n-network
+
+  # Nginx - Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - n8n
+      - github-mcp
+      - gitlab-mcp
+      - openproject-mcp
+      - appflowy-mcp
+    networks:
+      - n8n-network
+
+networks:
+  n8n-network:
+    driver: bridge
+
+volumes:
+  n8n_data:
+  postgres_data:
+  redis_data:
+  github_mcp_data:
+  gitlab_mcp_data:
+  openproject_mcp_data:
+  appflowy_mcp_data:
