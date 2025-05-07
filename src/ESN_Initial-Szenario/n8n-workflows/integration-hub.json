@@ -214,9 +214,97 @@
         ]
       ]
     },
-    "check-gitlab": {
+"check-gitlab": {
       "main": [
         [
           {
             "node": "forward-to-gitlab-handler",
-            "type": "main
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "send-to-llm-agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "check-openproject",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-openproject": {
+      "main": [
+        [
+          {
+            "node": "forward-to-openproject-handler",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "send-to-llm-agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "check-appflowy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-appflowy": {
+      "main": [
+        [
+          {
+            "node": "forward-to-appflowy-handler",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "send-to-llm-agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "check-mcp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-mcp": {
+      "main": [
+        [
+          {
+            "node": "forward-to-mcp-handler",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "send-to-llm-agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  }
+}
