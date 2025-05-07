@@ -149,3 +149,18 @@ Der MCP-Inspektor ist unter http://localhost:6274 erreichbar.
 - Alle Dienste starten: `~/start-all-mcp.sh`
 - OpenHands stoppen: `docker-compose -f ~/openhands-docker-compose.yml down`
 - MCP-Server neu installieren: `npm install -g @modelcontextprotocol/server-name`
+
+### Behebung von Installationsproblemen
+
+Wenn du Probleme mit der Installation hast, kannst du das Fehlerbehebungsskript ausführen:
+
+```bash
+./fix-mcp-errors.sh
+```
+
+Dieses Skript behebt folgende Probleme:
+- Ollama-Service-Probleme
+- Ollama-Modell-Download-Probleme
+- TypeScript-Installationsprobleme
+- Ollama-MCP-Bridge-Pfadprobleme
+- Konfiguriert OpenHands, um auf Port 3333 zu laufen
