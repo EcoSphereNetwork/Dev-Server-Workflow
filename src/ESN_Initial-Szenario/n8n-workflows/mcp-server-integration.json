@@ -161,3 +161,91 @@
             "index": 0
           }
         ],
+"check-if-analyzed": {
+      "main": [
+        [
+          {
+            "node": "find-existing-work-package",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "send-to-llm-agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "find-existing-work-package": {
+      "main": [
+        [
+          {
+            "node": "check-work-package-exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-work-package-exists": {
+      "main": [
+        [
+          {
+            "node": "update-work-package",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "create-work-package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update-work-package": {
+      "main": [
+        [
+          {
+            "node": "update-appflowy-record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-work-package": {
+      "main": [
+        [
+          {
+            "node": "update-appflowy-record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send-to-llm-agent": {
+      "main": [
+        [
+          {
+            "node": "find-existing-work-package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  }
+}
