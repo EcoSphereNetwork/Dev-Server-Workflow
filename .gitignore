@@ -68,4 +68,5 @@ log/
 
 # OS
 .DS_Store
-Thumbs.db
+Thumbs.dbdocker-mcp-ecosystem/ollama-mcp-bridge-repo/
+docker-mcp-ecosystem/openhands-resolver-mcp/
