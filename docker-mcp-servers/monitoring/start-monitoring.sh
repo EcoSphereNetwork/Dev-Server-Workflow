@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script to start the MCP servers
+# Script to start the monitoring stack for MCP servers
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -27,20 +27,14 @@ if ! docker info > /dev/null 2>&1; then
     exit 1
 fi
 
-# Check if .env file exists
-if [ ! -f .env ]; then
-    warn ".env file not found. Creating from .env.example..."
-    if [ -f .env.example ]; then
-        cp .env.example .env
-        log "Created .env file from .env.example. Please edit it with your configuration."
-    else
-        error ".env.example file not found. Please create a .env file manually."
-        exit 1
-    fi
+# Check if MCP network exists
+if ! docker network inspect mcp-network > /dev/null 2>&1; then
+    warn "MCP network does not exist. Creating it..."
+    docker network create mcp-network
 fi
 
-# Start the MCP servers
-log "Starting MCP servers..."
+# Start the monitoring stack
+log "Starting monitoring stack..."
 docker-compose up -d
 
 # Check if all containers are running
@@ -50,10 +44,13 @@ if docker-compose ps | grep -q "Exit"; then
     exit 1
 fi
 
-log "All MCP servers are running."
-log "You can access the MCP Inspector UI at http://localhost:8080"
-log "You can stop the MCP servers with './stop-mcp-servers.sh'"
+log "Monitoring stack is running."
+log "You can access Prometheus at http://localhost:9090"
+log "You can access Grafana at http://localhost:3000 (admin/admin)"
+log "You can access cAdvisor at http://localhost:8081"
 
-# List all running MCP servers
-log "Running MCP servers:"
+# List all running monitoring containers
+log "Running monitoring containers:"
 docker-compose ps
+
+exit 0

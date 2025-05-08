@@ -1,39 +1,59 @@
 {
   "mcp": {
     "enabled": true,
-    "servers": {
-      "filesystem-mcp": {
+    "servers": [
+      {
+        "name": "filesystem-mcp",
         "url": "http://localhost:3001",
         "description": "File system operations"
       },
-      "desktop-commander-mcp": {
+      {
+        "name": "desktop-commander-mcp",
         "url": "http://localhost:3002",
         "description": "Terminal command execution and desktop operations"
       },
-      "sequential-thinking-mcp": {
+      {
+        "name": "sequential-thinking-mcp",
         "url": "http://localhost:3003",
         "description": "Structured problem-solving capabilities"
       },
-      "github-chat-mcp": {
+      {
+        "name": "github-chat-mcp",
         "url": "http://localhost:3004",
         "description": "GitHub discussions and comments interaction"
       },
-      "github-mcp": {
+      {
+        "name": "github-mcp",
         "url": "http://localhost:3005",
         "description": "GitHub repository management"
       },
-      "puppeteer-mcp": {
+      {
+        "name": "puppeteer-mcp",
         "url": "http://localhost:3006",
         "description": "Web browsing and interaction with web pages"
       },
-      "basic-memory-mcp": {
+      {
+        "name": "basic-memory-mcp",
         "url": "http://localhost:3007",
         "description": "Simple key-value storage for AI agents"
       },
-      "wikipedia-mcp": {
+      {
+        "name": "wikipedia-mcp",
         "url": "http://localhost:3008",
         "description": "Wikipedia search and information retrieval"
       }
-    }
+    ],
+    "autoApproveTools": true,
+    "autoApproveToolsList": [
+      "read_file",
+      "write_file",
+      "list_directory",
+      "execute_command",
+      "search_wikipedia",
+      "create_github_issue",
+      "create_github_pr",
+      "update_work_package",
+      "sync_documentation"
+    ]
   }
 }

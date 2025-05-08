@@ -27,6 +27,18 @@ The following MCP servers are included in this implementation:
 
 ## Installation
 
+### Automatic Installation
+
+The easiest way to install and run the MCP servers is to use the provided scripts:
+
+```bash
+cd docker-mcp-servers
+./pull-images.sh     # Pull the Docker images
+./start-mcp-servers.sh  # Start the MCP servers
+```
+
+### Manual Installation
+
 1. Clone this repository
 2. Create a `.env` file based on the `.env.example` template
 3. Run the Docker Compose configuration:
@@ -64,11 +76,59 @@ Each MCP server is configured to run on a specific port:
 
 ## Integration with n8n
 
-The MCP servers can be integrated with n8n workflows using the MCP integration workflow. See the [MCP-Server-Implementation.md](../docs/docs/Dev-Server-Workflow/MCP-Server-Implementation.md) documentation for details.
+The MCP servers can be integrated with n8n using the provided integration script:
+
+```bash
+cd /workspace/Dev-Server-Workflow
+./scripts/integrate-mcp-with-n8n.py --n8n-api-key YOUR_N8N_API_KEY
+```
+
+For more details, see the [MCP-Server-Implementation.md](../docs/docs/Dev-Server-Workflow/MCP-Server-Implementation.md) documentation.
 
 ## Integration with OpenHands
 
-To integrate the MCP servers with OpenHands, configure the OpenHands instance to connect to the MCP servers. See the [MCP-OpenHands.md](../docs/docs/Dev-Server-Workflow/MCP-OpenHands.md) documentation for details.
+The MCP servers can be integrated with OpenHands by copying the `openhands-mcp-config.json` file to your OpenHands configuration directory:
+
+```bash
+cd /workspace/Dev-Server-Workflow
+./scripts/integrate-mcp-with-openhands.py --openhands-config-dir /path/to/openhands/config --github-token YOUR_GITHUB_TOKEN
+```
+
+For more details, see the [MCP-OpenHands.md](../docs/docs/Dev-Server-Workflow/MCP-OpenHands.md) documentation.
+
+## Usage
+
+### Testing the MCP Servers
+
+You can test the MCP servers using the provided test script:
+
+```bash
+./test-mcp-servers.py
+```
+
+To test a specific server:
+
+```bash
+./test-mcp-servers.py --server filesystem-mcp
+```
+
+To test the tools of each server:
+
+```bash
+./test-mcp-servers.py --test-tools
+```
+
+### Stopping the MCP Servers
+
+To stop the MCP servers:
+
+```bash
+./stop-mcp-servers.sh
+```
+
+### MCP Inspector UI
+
+The MCP Inspector UI is available at http://localhost:8080 and provides a web interface for interacting with the MCP servers.
 
 ## Troubleshooting
 
@@ -86,8 +146,10 @@ If you encounter issues with the MCP servers:
 
 3. Check the health status of the MCP servers:
    ```bash
-   docker-compose exec <container-name> curl -f http://localhost:<port>/health
+   ./test-mcp-servers.py
    ```
+
+4. Check the MCP Inspector UI at http://localhost:8080
 
 ## Security Considerations
 

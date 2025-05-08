@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: filesystem-mcp
+  labels:
+    app: filesystem-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: filesystem-mcp
+  template:
+    metadata:
+      labels:
+        app: filesystem-mcp
+    spec:
+      containers:
+      - name: filesystem-mcp
+        image: mcp/filesystem:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3001
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+        env:
+        - name: MCP_PORT
+          value: "3001"
+        - name: ALLOWED_PATHS
+          value: "/workspace"
+        - name: REDIS_HOST
+          value: "redis-mcp"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mcp-secrets
+              key: redis-password
+        - name: LOG_LEVEL
+          value: "info"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+        volumeMounts:
+        - name: workspace
+          mountPath: /workspace
+        - name: filesystem-data
+          mountPath: /data
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+            add:
+            - CHOWN
+            - FOWNER
+            - SETGID
+            - SETUID
+      volumes:
+      - name: workspace
+        emptyDir: {}
+      - name: filesystem-data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: filesystem-mcp
+spec:
+  selector:
+    app: filesystem-mcp
+  ports:
+  - port: 3001
+    targetPort: 3001
+  type: ClusterIP

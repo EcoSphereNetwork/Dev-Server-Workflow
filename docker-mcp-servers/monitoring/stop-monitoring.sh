@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script to stop the MCP servers
+# Script to stop the monitoring stack for MCP servers
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -27,8 +27,10 @@ if ! docker info > /dev/null 2>&1; then
     exit 1
 fi
 
-# Stop the MCP servers
-log "Stopping MCP servers..."
+# Stop the monitoring stack
+log "Stopping monitoring stack..."
 docker-compose down
 
-log "All MCP servers have been stopped."
+log "Monitoring stack has been stopped."
+
+exit 0
