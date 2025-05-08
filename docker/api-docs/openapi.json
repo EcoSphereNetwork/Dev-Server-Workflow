@@ -1,0 +1,684 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Dev-Server API",
+    "description": "API für den Dev-Server",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.ecospherenet.work/v1",
+      "description": "Produktionsserver"
+    },
+    {
+      "url": "http://localhost:3000/v1",
+      "description": "Lokaler Entwicklungsserver"
+    }
+  ],
+  "paths": {
+    "/mcp-servers": {
+      "get": {
+        "summary": "Liste aller MCP-Server",
+        "description": "Gibt eine Liste aller MCP-Server zurück",
+        "operationId": "getMCPServers",
+        "tags": ["MCP-Server"],
+        "responses": {
+          "200": {
+            "description": "Erfolgreiche Anfrage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MCPServer"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Serverfehler",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Neuen MCP-Server erstellen",
+        "description": "Erstellt einen neuen MCP-Server",
+        "operationId": "createMCPServer",
+        "tags": ["MCP-Server"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MCPServerInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "MCP-Server erfolgreich erstellt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MCPServer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ungültige Anfrage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Serverfehler",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mcp-servers/{id}": {
+      "get": {
+        "summary": "MCP-Server abrufen",
+        "description": "Gibt einen MCP-Server anhand seiner ID zurück",
+        "operationId": "getMCPServer",
+        "tags": ["MCP-Server"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID des MCP-Servers"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Erfolgreiche Anfrage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MCPServer"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "MCP-Server nicht gefunden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Serverfehler",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "MCP-Server aktualisieren",
+        "description": "Aktualisiert einen MCP-Server anhand seiner ID",
+        "operationId": "updateMCPServer",
+        "tags": ["MCP-Server"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID des MCP-Servers"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MCPServerInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "MCP-Server erfolgreich aktualisiert",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MCPServer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ungültige Anfrage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "MCP-Server nicht gefunden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Serverfehler",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "MCP-Server löschen",
+        "description": "Löscht einen MCP-Server anhand seiner ID",
+        "operationId": "deleteMCPServer",
+        "tags": ["MCP-Server"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID des MCP-Servers"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "MCP-Server erfolgreich gelöscht"
+          },
+          "404": {
+            "description": "MCP-Server nicht gefunden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Serverfehler",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mcp-servers/{id}/start": {
+      "post": {
+        "summary": "MCP-Server starten",
+        "description": "Startet einen MCP-Server anhand seiner ID",
+        "operationId": "startMCPServer",
+        "tags": ["MCP-Server"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID des MCP-Servers"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "MCP-Server erfolgreich gestartet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MCPServer"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "MCP-Server nicht gefunden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Serverfehler",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mcp-servers/{id}/stop": {
+      "post": {
+        "summary": "MCP-Server stoppen",
+        "description": "Stoppt einen MCP-Server anhand seiner ID",
+        "operationId": "stopMCPServer",
+        "tags": ["MCP-Server"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID des MCP-Servers"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "MCP-Server erfolgreich gestoppt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MCPServer"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "MCP-Server nicht gefunden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Serverfehler",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mcp-servers/{id}/restart": {
+      "post": {
+        "summary": "MCP-Server neustarten",
+        "description": "Startet einen MCP-Server anhand seiner ID neu",
+        "operationId": "restartMCPServer",
+        "tags": ["MCP-Server"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID des MCP-Servers"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "MCP-Server erfolgreich neugestartet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MCPServer"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "MCP-Server nicht gefunden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Serverfehler",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mcp-servers/{id}/logs": {
+      "get": {
+        "summary": "MCP-Server-Logs abrufen",
+        "description": "Gibt die Logs eines MCP-Servers anhand seiner ID zurück",
+        "operationId": "getMCPServerLogs",
+        "tags": ["MCP-Server"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID des MCP-Servers"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100
+            },
+            "description": "Maximale Anzahl der zurückgegebenen Logs"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0
+            },
+            "description": "Offset für die zurückgegebenen Logs"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Erfolgreiche Anfrage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Log"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "MCP-Server nicht gefunden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Serverfehler",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mcp-servers/{id}/tools": {
+      "get": {
+        "summary": "MCP-Server-Tools abrufen",
+        "description": "Gibt die Tools eines MCP-Servers anhand seiner ID zurück",
+        "operationId": "getMCPServerTools",
+        "tags": ["MCP-Server"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID des MCP-Servers"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Erfolgreiche Anfrage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Tool"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "MCP-Server nicht gefunden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Serverfehler",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "MCPServer": {
+        "type": "object",
+        "required": ["id", "name", "type", "status", "host", "port"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Eindeutige ID des MCP-Servers"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name des MCP-Servers"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["n8n", "docker", "prompt", "llm", "other"],
+            "description": "Typ des MCP-Servers"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["running", "stopped", "error"],
+            "description": "Status des MCP-Servers"
+          },
+          "host": {
+            "type": "string",
+            "description": "Host des MCP-Servers"
+          },
+          "port": {
+            "type": "integer",
+            "description": "Port des MCP-Servers"
+          },
+          "description": {
+            "type": "string",
+            "description": "Beschreibung des MCP-Servers"
+          },
+          "tools": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tool"
+            },
+            "description": "Tools des MCP-Servers"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Zeitpunkt der Erstellung des MCP-Servers"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Zeitpunkt der letzten Aktualisierung des MCP-Servers"
+          }
+        }
+      },
+      "MCPServerInput": {
+        "type": "object",
+        "required": ["name", "type", "host", "port"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name des MCP-Servers"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["n8n", "docker", "prompt", "llm", "other"],
+            "description": "Typ des MCP-Servers"
+          },
+          "host": {
+            "type": "string",
+            "description": "Host des MCP-Servers"
+          },
+          "port": {
+            "type": "integer",
+            "description": "Port des MCP-Servers"
+          },
+          "description": {
+            "type": "string",
+            "description": "Beschreibung des MCP-Servers"
+          }
+        }
+      },
+      "Tool": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Eindeutige ID des Tools"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name des Tools"
+          },
+          "description": {
+            "type": "string",
+            "description": "Beschreibung des Tools"
+          },
+          "schema": {
+            "type": "object",
+            "description": "JSON-Schema des Tools"
+          }
+        }
+      },
+      "Log": {
+        "type": "object",
+        "required": ["timestamp", "level", "message"],
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Zeitpunkt des Logs"
+          },
+          "level": {
+            "type": "string",
+            "enum": ["info", "warning", "error", "debug"],
+            "description": "Log-Level"
+          },
+          "message": {
+            "type": "string",
+            "description": "Log-Nachricht"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["code", "message"],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "Fehlercode"
+          },
+          "message": {
+            "type": "string",
+            "description": "Fehlermeldung"
+          }
+        }
+      }
+    }
+  }
+}

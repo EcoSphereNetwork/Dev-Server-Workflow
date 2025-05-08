@@ -20,7 +20,10 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      webviewTag: true, // Erlaube <webview> Tag für die Dienste-Integration
+      allowRunningInsecureContent: false,
+      webSecurity: true
     },
     icon: path.join(__dirname, '../build/icon.png')
   });
@@ -117,9 +120,33 @@ function createWindow() {
           }
         },
         {
+          label: 'MCP-Manager',
+          click() {
+            mainWindow.webContents.send('navigate', '/mcp-manager');
+          }
+        },
+        {
           label: 'Workflows',
           click() {
             mainWindow.webContents.send('navigate', '/workflows');
+          }
+        },
+        {
+          label: 'Dienste',
+          click() {
+            mainWindow.webContents.send('navigate', '/services');
+          }
+        },
+        {
+          label: 'Monitoring',
+          click() {
+            mainWindow.webContents.send('navigate', '/monitoring');
+          }
+        },
+        {
+          label: 'Docker',
+          click() {
+            mainWindow.webContents.send('navigate', '/docker');
           }
         }
       ]

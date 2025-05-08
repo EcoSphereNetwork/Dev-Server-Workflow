@@ -4,12 +4,17 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import { Sidebar, SidebarItem } from '../components/common/Sidebar';
 import Navbar from '../components/common/Navbar';
+import AIAssistant from '../components/AIAssistant';
 import useAuthStore from '../store/auth';
 
 // Icons (simplified for this example)
 const DashboardIcon = () => <span>📊</span>;
 const MCPIcon = () => <span>🖥️</span>;
+const MCPManagerIcon = () => <span>🔌</span>;
 const WorkflowIcon = () => <span>🔄</span>;
+const ServicesIcon = () => <span>🌐</span>;
+const MonitoringIcon = () => <span>📈</span>;
+const DockerIcon = () => <span>🐳</span>;
 const SettingsIcon = () => <span>⚙️</span>;
 const UserIcon = () => <span>👤</span>;
 
@@ -50,6 +55,7 @@ const UserMenu = styled.div`
 
 const MainLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [assistantOpen, setAssistantOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
@@ -78,10 +84,34 @@ const MainLayout: React.FC = () => {
           onClick={() => navigate('/mcp-servers')} 
         />
         <SidebarItem 
+          icon={<MCPManagerIcon />} 
+          label="MCP-Manager" 
+          active={location.pathname.startsWith('/mcp-manager')} 
+          onClick={() => navigate('/mcp-manager')} 
+        />
+        <SidebarItem 
           icon={<WorkflowIcon />} 
           label="Workflows" 
           active={location.pathname.startsWith('/workflows')} 
           onClick={() => navigate('/workflows')} 
+        />
+        <SidebarItem 
+          icon={<ServicesIcon />} 
+          label="Dienste" 
+          active={location.pathname.startsWith('/services')} 
+          onClick={() => navigate('/services')} 
+        />
+        <SidebarItem 
+          icon={<MonitoringIcon />} 
+          label="Monitoring" 
+          active={location.pathname.startsWith('/monitoring')} 
+          onClick={() => navigate('/monitoring')} 
+        />
+        <SidebarItem 
+          icon={<DockerIcon />} 
+          label="Docker" 
+          active={location.pathname.startsWith('/docker')} 
+          onClick={() => navigate('/docker')} 
         />
         <SidebarItem 
           icon={<SettingsIcon />} 
@@ -94,6 +124,19 @@ const MainLayout: React.FC = () => {
       <MainContent>
         <Navbar>
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
+            <button 
+              style={{ 
+                marginRight: '16px', 
+                background: 'none', 
+                border: 'none', 
+                cursor: 'pointer',
+                fontSize: '1.25rem'
+              }}
+              onClick={() => setAssistantOpen(!assistantOpen)}
+              title="KI-Assistent"
+            >
+              🤖
+            </button>
             <UserMenu onClick={() => navigate('/profile')}>
               <UserIcon />
               <span className="user-name">{user?.name || user?.username || 'Benutzer'}</span>
@@ -111,6 +154,11 @@ const MainLayout: React.FC = () => {
           <Outlet />
         </ContentArea>
       </MainContent>
+      
+      <AIAssistant 
+        isOpen={assistantOpen} 
+        onClose={() => setAssistantOpen(!assistantOpen)} 
+      />
     </LayoutContainer>
   );
 };

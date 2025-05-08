@@ -97,6 +97,8 @@ show_help() {
     echo -e "  ${YELLOW}config${NC} ${CYAN}[Option] [Wert]${NC}    Konfiguriert eine Option
                                 Optionen: llm-api-key, github-token, openproject-token,
                                 n8n-api-key, workspace-path, openhands-docker-mcp"
+    echo -e "  ${YELLOW}web-ui${NC} ${CYAN}[Aktion]${NC}         Verwaltet die Web-UI
+                                Aktionen: start, stop, logs, open"
     echo -e "  ${YELLOW}list${NC} ${CYAN}[Ressourcentyp]${NC}      Listet verfügbare Ressourcen auf"
     echo -e "  ${YELLOW}install${NC} ${CYAN}[Komponente]${NC}      Installiert eine Komponente"
     echo -e "  ${YELLOW}switch-llm${NC} ${CYAN}[LLM]${NC}          Wechselt zwischen LLMs (llamafile, claude)"
@@ -725,6 +727,7 @@ show_menu() {
         echo -e "${CYAN}5)${NC} Komponenten installieren"
         echo -e "${CYAN}6)${NC} KI-Assistent"
         echo -e "${CYAN}7)${NC} Konfiguration"
+        echo -e "${CYAN}8)${NC} Web-UI verwalten"
         echo -e "${CYAN}0)${NC} Beenden"
         echo
         read -p "Wählen Sie eine Option: " main_option
@@ -969,6 +972,60 @@ show_menu() {
                                 2) switch_llm "claude" ;;
                                 *) echo -e "${RED}Ungültige Option${NC}"; sleep 1 ;;
                             esac
+                            ;;
+                        0) break ;;
+                        *) echo -e "${RED}Ungültige Option${NC}"; sleep 1 ;;
+                    esac
+                done
+                ;;
+            8)
+                while true; do
+                    clear
+                    echo -e "${GREEN}=== Web-UI verwalten ===${NC}"
+                    echo -e "${CYAN}1)${NC} Web-UI starten"
+                    echo -e "${CYAN}2)${NC} Web-UI stoppen"
+                    echo -e "${CYAN}3)${NC} Web-UI-Logs anzeigen"
+                    echo -e "${CYAN}4)${NC} Web-UI im Browser öffnen"
+                    echo -e "${CYAN}0)${NC} Zurück zum Hauptmenü"
+                    echo
+                    read -p "Wählen Sie eine Option: " webui_option
+                    
+                    case $webui_option in
+                        1)
+                            clear
+                            echo -e "${BLUE}Starte Web-UI...${NC}"
+                            "$WORKSPACE_DIR/cli/start-web-ui.sh"
+                            read -p "Drücken Sie eine Taste, um fortzufahren..." -n 1
+                            ;;
+                        2)
+                            clear
+                            echo -e "${BLUE}Stoppe Web-UI...${NC}"
+                            "$WORKSPACE_DIR/cli/stop-web-ui.sh"
+                            read -p "Drücken Sie eine Taste, um fortzufahren..." -n 1
+                            ;;
+                        3)
+                            clear
+                            echo -e "${BLUE}Web-UI-Logs:${NC}"
+                            if [ -f "$LOGS_DIR/web-ui.log" ]; then
+                                tail -n 50 "$LOGS_DIR/web-ui.log"
+                            else
+                                echo -e "${YELLOW}Keine Logs gefunden${NC}"
+                            fi
+                            echo
+                            read -p "Drücken Sie eine Taste, um fortzufahren..." -n 1
+                            ;;
+                        4)
+                            clear
+                            echo -e "${BLUE}Öffne Web-UI im Browser...${NC}"
+                            if command -v xdg-open > /dev/null; then
+                                xdg-open "http://localhost:8080" &
+                            elif command -v open > /dev/null; then
+                                open "http://localhost:8080" &
+                            else
+                                echo -e "${YELLOW}Kann Browser nicht automatisch öffnen.${NC}"
+                                echo -e "${YELLOW}Bitte öffnen Sie http://localhost:8080 manuell in Ihrem Browser.${NC}"
+                            fi
+                            read -p "Drücken Sie eine Taste, um fortzufahren..." -n 1
                             ;;
                         0) break ;;
                         *) echo -e "${RED}Ungültige Option${NC}"; sleep 1 ;;
