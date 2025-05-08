@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-mcp
+  labels:
+    app: redis-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-mcp
+  template:
+    metadata:
+      labels:
+        app: redis-mcp
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        args:
+        - redis-server
+        - --requirepass
+        - $(REDIS_PASSWORD)
+        - --maxmemory
+        - 512mb
+        - --maxmemory-policy
+        - allkeys-lru
+        ports:
+        - containerPort: 6379
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "768Mi"
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mcp-secrets
+              key: redis-password
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+      volumes:
+      - name: redis-data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-mcp
+spec:
+  selector:
+    app: redis-mcp
+  ports:
+  - port: 6379
+    targetPort: 6379
+  type: ClusterIP

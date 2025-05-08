@@ -1,196 +1,345 @@
-# Workflow-Integration von AFFiNE, AppFlowy, GitLab/GitHub, OpenProject und OpenHands
+# n8n-Workflow-Integration
 
-Diese Dokumentation beschreibt die vollständige Integration der folgenden Tools in einem automatisierten Workflow:
-- **OpenProject**: Zentrales Projektmanagement-Tool
-- **GitLab/GitHub**: Code-Repository und Issue-Tracking
-- **AFFiNE**: Wissensmanagement und Dokumentation
-- **AppFlowy**: Alternativer Open-Source-Wissensmanager
-- **OpenHands**: KI-gestützte Automatisierung für Issue-Lösung
+Diese Dokumentation beschreibt die n8n-Workflows, die das Herzstück der EcoSphere Network Workflow Integration bilden und die nahtlose Zusammenarbeit zwischen verschiedenen Entwicklungstools ermöglichen.
 
-## Übersicht der Architektur
+## Was ist n8n?
 
-Die Integration verwendet n8n als zentrale Workflow-Automatisierungsplattform und setzt auf Webhooks für die Kommunikation zwischen den verschiedenen Systemen. Zusätzlich wird in jedem GitHub-Repository der OpenHands Issue-Resolver eingerichtet, um eine KI-gestützte Lösung für einfache Issues zu ermöglichen.
+[n8n](https://n8n.io/) ist eine quelloffene Workflow-Automatisierungsplattform, die es ermöglicht, verschiedene Dienste und Anwendungen miteinander zu verbinden. Mit n8n können Sie Workflows erstellen, die auf bestimmte Ereignisse reagieren und automatisierte Aktionen ausführen.
 
-![Workflow-Architektur](https://via.placeholder.com/800x400?text=Workflow-Architektur-Diagram)
+## Übersicht der Workflow-Integration
 
-## Voraussetzungen
+Die EcoSphere Network Workflow Integration nutzt n8n, um folgende Systeme zu verbinden:
 
-- GitHub-Organisation oder GitLab-Gruppe mit Repository-Zugriff
-- OpenProject-Instanz mit API-Zugriff
-- AFFiNE oder AppFlowy mit API-Zugriff
-- Docker und Docker Compose für n8n-Installation (optional)
-- Python 3.6+ für die Setup-Skripte
+- **GitHub/GitLab**: Code-Repositories und Issue-Tracking
+- **OpenProject**: Projektmanagement und Arbeitspaketeverwaltung
+- **AFFiNE/AppFlowy**: Wissensmanagement und Dokumentation
+- **OpenHands**: KI-gestützte Issue-Lösung
+- **MCP-Server**: Erweiterbare Tool-Bereitstellung für KI-Agenten
 
-## Einrichtungsschritte
+Die Workflows automatisieren den Informationsfluss zwischen diesen Systemen und sorgen für Konsistenz und Effizienz im Entwicklungsprozess.
 
-### 1. Konfigurationsdatei vorbereiten
+## Architektur der Workflow-Integration
 
-1. Kopieren Sie die `.env-template`-Datei zu `.env`
-2. Füllen Sie alle benötigten Werte aus:
-   - API-Keys für alle Dienste
-   - URLs für Ihre Instanzen
-   - Organisation und Repository-Konfiguration
+Die Workflow-Integration folgt einer Hub-and-Spoke-Architektur, bei der ein zentraler Integration-Hub als Einstiegspunkt für alle Ereignisse dient. Diese Architektur bietet mehrere Vorteile:
 
-### 2. OpenHands in GitHub-Repositories einrichten
+- **Modularität**: Jeder Workflow kann unabhängig entwickelt und gewartet werden
+- **Skalierbarkeit**: Neue Integrationen können einfach hinzugefügt werden
+- **Robustheit**: Fehler in einem Workflow beeinträchtigen nicht die anderen
+- **Wiederverwendbarkeit**: Gemeinsame Funktionen können in wiederverwendbaren Komponenten implementiert werden
 
-Führen Sie das GitHub OpenHands-Resolver Setup-Skript aus:
+### Workflow-Architekturdiagramm
 
-```bash
-pip install PyGithub
-python github_workflow_setup.py --org IHRE_ORG --token GITHUB_TOKEN --llm-api-key IHR_LLM_API_KEY
+```
+                      +-------------------+
+                      |                   |
+                      | Integration Hub   |
+                      |                   |
+                      +--------+----------+
+                               |
+                               v
+        +--------------------------------------------+
+        |                      |                     |
++-------v------+      +--------v-------+    +--------v-------+
+|              |      |                |    |                |
+| GitHub zu    |      | GitLab zu      |    | MCP-Server zu  |
+| OpenProject  |      | OpenProject    |    | OpenProject    |
+|              |      |                |    |                |
++-------+------+      +--------+-------+    +--------+-------+
+        |                      |                     |
+        v                      v                     v
++-------+------------------------+--------------------+------+
+|                                                           |
+|                      OpenProject                          |
+|                                                           |
++----------------------------+------------------------------+
+                             |
+                             v
+                  +----------+-----------+
+                  |                      |
+                  |  AFFiNE / AppFlowy   |
+                  |                      |
+                  +----------------------+
 ```
 
-Dieses Skript richtet den OpenHands Issue-Resolver in allen angegebenen Repositories ein. Zusätzliche Optionen:
-- `--skip-repos`: Comma-separierte Liste von Repositories, die übersprungen werden sollen
-- `--only-repos`: Comma-separierte Liste von Repositories, die ausschließlich verarbeitet werden sollen
+### Datenfluss
 
-### 3. n8n-Workflow-Integration einrichten
+1. **Ereigniserfassung**: Ereignisse werden über Webhooks oder API-Abfragen erfasst
+2. **Normalisierung**: Der Integration-Hub normalisiert die Daten in ein einheitliches Format
+3. **Routing**: Basierend auf dem Ereignistyp werden die Daten an die entsprechenden Workflows weitergeleitet
+4. **Verarbeitung**: Die spezifischen Workflows verarbeiten die Daten und führen die erforderlichen Aktionen aus
+5. **Synchronisierung**: Die Ergebnisse werden mit allen relevanten Systemen synchronisiert
 
-Führen Sie das n8n Workflow Setup-Skript aus:
+## Implementierte Workflows
+
+Die EcoSphere Network Workflow Integration umfasst folgende Hauptworkflows:
+
+### 1. Integration-Hub (integration-hub.json)
+
+**Zweck**: Zentraler Einstiegspunkt für alle Ereignisse, der die Weiterleitung an spezifische Workflows übernimmt.
+
+**Funktionen**:
+- **Ereignisnormalisierung**: Konvertiert verschiedene Ereignisformate in ein einheitliches Format
+- **Intelligentes Routing**: Leitet Ereignisse basierend auf Typ und Inhalt an die richtigen Workflows weiter
+- **Fehlerbehandlung**: Fängt Fehler ab und leitet sie an den Error-Handler-Workflow weiter
+- **Protokollierung**: Protokolliert alle eingehenden Ereignisse für Audit-Zwecke
+
+**Technische Details**:
+- **Webhook-Endpunkt**: `/webhook/event`
+- **Unterstützte Ereignisquellen**: GitHub, GitLab, OpenProject, MCP-Server
+- **Ausgabeformat**: Normalisiertes JSON-Ereignisobjekt
+
+### 2. GitHub zu OpenProject (github-to-openproject.json)
+
+**Zweck**: Synchronisiert GitHub-Issues, Pull Requests und Commits mit OpenProject-Arbeitspaketen.
+
+**Funktionen**:
+- **Bidirektionale Synchronisierung**: Änderungen in beiden Systemen werden synchronisiert
+- **Automatische Arbeitspaketeerstellung**: Erstellt Arbeitspakete in OpenProject für neue GitHub-Issues
+- **Status-Mapping**: Mappt GitHub-Issue-Status auf OpenProject-Arbeitspaket-Status
+- **Kommentar-Synchronisierung**: Synchronisiert Kommentare zwischen beiden Systemen
+
+**Ereignis-Workflow-Beispiel**:
+1. Ein neues Issue wird in GitHub erstellt
+2. Der Integration-Hub empfängt das Ereignis und leitet es an den GitHub-zu-OpenProject-Workflow weiter
+3. Der Workflow erstellt ein entsprechendes Arbeitspaket in OpenProject
+4. Der Workflow aktualisiert das GitHub-Issue mit einem Link zum OpenProject-Arbeitspaket
+
+**Webhook-Endpunkt**: `/webhook/github-to-openproject`
+
+### 3. MCP-Server zu OpenProject (mcp-server-to-openproject.json)
+
+**Zweck**: Integriert MCP-Server-Ereignisse und KI-Agenten-Aktionen mit OpenProject.
+
+**Funktionen**:
+- **KI-Analyse**: Analysiert MCP-Ereignisse mit einem LLM-Agenten
+- **Automatische Kategorisierung**: Kategorisiert Ereignisse basierend auf ihrem Inhalt
+- **Priorisierung**: Weist Ereignissen basierend auf ihrer Wichtigkeit Prioritäten zu
+- **Benachrichtigungen**: Sendet Benachrichtigungen bei kritischen Ereignissen
+
+**Webhook-Endpunkt**: `/webhook/mcp-server-to-openproject`
+
+### 4. Fehlerbehandlung (error-handler.json)
+
+**Zweck**: Zentralisierte Fehlerbehandlung für alle Workflows.
+
+**Funktionen**:
+- **Fehlerklassifizierung**: Kategorisiert Fehler nach Typ und Schweregrad
+- **Automatische Wiederholung**: Versucht fehlgeschlagene Operationen automatisch erneut
+- **Eskalation**: Eskaliert kritische Fehler an das Entwicklungsteam
+- **Fehlerprotokollierung**: Protokolliert detaillierte Fehlerinformationen für die Analyse
+
+**Webhook-Endpunkt**: `/webhook/error-handler`
+
+## Installation und Konfiguration
+
+### Voraussetzungen
+
+- **n8n**: Version 0.214.0 oder höher
+- **Docker und Docker Compose** (für die empfohlene Installationsmethode)
+- **API-Zugangsdaten** für die zu integrierenden Dienste:
+  - GitHub/GitLab Personal Access Token
+  - OpenProject API-Token
+  - AFFiNE/AppFlowy Zugangsdaten
+
+### Installationsmethoden
+
+#### Automatische Installation mit Docker (empfohlen)
+
+Die einfachste Methode zur Installation der Workflows ist die Verwendung von Docker Compose:
 
 ```bash
-pip install requests
-python n8n_workflow_setup.py --install --env-file .env
+# Repository klonen
+git clone https://github.com/EcoSphereNetwork/Dev-Server-Workflow.git
+cd Dev-Server-Workflow
+
+# Docker-Container starten
+docker-compose up -d
 ```
 
-Dieses Skript:
-- Installiert optional n8n via Docker
-- Richtet drei Haupt-Workflows ein:
-  1. GitHub zu OpenProject Integration
-  2. Dokumenten-Synchronisierung
-  3. OpenHands Integration
-- Konfiguriert alle benötigten Credentials
-- Generiert Webhook-URLs für die Integration mit Ihren Tools
+Dies startet n8n und importiert automatisch alle Workflows.
 
-### 4. Webhooks in den Quellsystemen einrichten
+#### Manuelle Installation mit dem Import-Skript
 
-#### GitHub/GitLab Webhooks
+Wenn Sie bereits eine n8n-Instanz haben, können Sie das Import-Skript verwenden:
 
-Richten Sie Webhooks in jedem Repository ein:
-1. Navigieren Sie zu Repository > Settings > Webhooks
-2. Fügen Sie die vom Setup-Skript generierte GitHub-Webhook-URL hinzu
-3. Wählen Sie die Events: `Issues`, `Pull Requests` und `Push`
+```bash
+cd /workspace/Dev-Server-Workflow
+./scripts/import-workflows.py --n8n-api-key YOUR_N8N_API_KEY --n8n-url http://localhost:5678
+```
 
-#### AFFiNE/AppFlowy Webhooks
+#### Manuelle Installation über die n8n-Weboberfläche
 
-Richten Sie entsprechende Webhooks in der Konfiguration von AFFiNE oder AppFlowy ein:
-1. Navigieren Sie zu den Integration-Einstellungen
-2. Fügen Sie die vom Setup-Skript generierte Dokument-Webhook-URL hinzu
-3. Konfigurieren Sie den Webhook für `document_updated` Events
+Sie können die Workflows auch manuell über die n8n-Weboberfläche importieren:
 
-#### OpenHands Integration
+1. Öffnen Sie die n8n-Weboberfläche (standardmäßig http://localhost:5678)
+2. Melden Sie sich an (Standardbenutzer: admin, Passwort: password)
+3. Navigieren Sie zu "Workflows" → "Import from File"
+4. Wählen Sie die JSON-Workflow-Dateien aus dem Verzeichnis `src/ESN_Initial-Szenario/n8n-workflows/`
+5. Konfigurieren Sie die erforderlichen Credentials für jeden Workflow
 
-Damit OpenHands Statusupdates an n8n senden kann:
-1. Erstellen Sie eine Konfigurationsdatei für OpenHands
-2. Fügen Sie die vom Setup-Skript generierte OpenHands-Webhook-URL hinzu
+### Konfiguration der Credentials
 
-## Workflow-Beispiele
+Für die korrekte Funktion der Workflows müssen folgende Credentials in n8n konfiguriert werden:
 
-### 1. Issue-Tracking und Automatische Lösung
+| Credential-Typ | Beschreibung | Erforderliche Berechtigungen |
+|----------------|--------------|------------------------------|
+| **GitHub API** | Für GitHub-Operationen | repo, read:user, read:org |
+| **GitLab API** | Für GitLab-Operationen | api, read_repository, read_user |
+| **OpenProject API** | Für OpenProject-Operationen | api_v3 |
+| **HTTP Basic Auth** | Für AFFiNE/AppFlowy | - |
+| **HTTP Header Auth** | Für MCP-Server | - |
 
-1. Ein Issue wird in GitHub/GitLab erstellt
-2. n8n erkennt das neue Issue und:
-   - Erstellt ein entsprechendes Arbeitspaket in OpenProject
-   - Fügt das Label "fix-me" zum Issue hinzu (für OpenHands)
-3. OpenHands versucht, das Issue zu lösen und erstellt einen PR
-4. n8n erkennt den PR und:
-   - Aktualisiert den Status des Arbeitspakets in OpenProject
-   - Erstellt ein Dokument in AFFiNE/AppFlowy mit den Änderungen
+### Umgebungsvariablen
 
-### 2. Dokumentationsaktualisierung
+Die folgenden Umgebungsvariablen können in n8n konfiguriert werden, um die Workflows anzupassen:
 
-1. Ein Dokument wird in AFFiNE/AppFlowy aktualisiert
-2. n8n erkennt die Änderung und:
-   - Aktualisiert entsprechende README-Dateien in GitHub/GitLab
-   - Aktualisiert verknüpfte Arbeitspakete in OpenProject
+| Variable | Beschreibung | Standardwert |
+|----------|--------------|--------------|
+| `GITHUB_TOKEN` | GitHub Personal Access Token | - |
+| `GITLAB_TOKEN` | GitLab Personal Access Token | - |
+| `OPENPROJECT_URL` | URL der OpenProject-Instanz | http://localhost:8080 |
+| `OPENPROJECT_API_KEY` | API-Schlüssel für OpenProject | - |
+| `APPFLOWY_URL` | URL der AFFiNE/AppFlowy-Instanz | http://localhost:3000 |
+| `MCP_SERVERS_CONFIG` | JSON-Konfiguration der MCP-Server | siehe .env.example |
+| `WEBHOOK_BASE_URL` | Basis-URL für Webhooks | http://localhost:5678 |
 
-## Fehlerbehebung
+## Verwendung und Integration
 
-### GitHub Integration
+### Webhook-Endpunkte
 
-- **Problem**: Webhook wird nicht ausgelöst
-  **Lösung**: Überprüfen Sie die Webhook-Konfiguration in GitHub und stellen Sie sicher, dass das `Content-Type` auf `application/json` gesetzt ist
+Die Workflows stellen folgende Webhook-Endpunkte bereit:
 
-- **Problem**: OpenHands Issue-Resolver reagiert nicht auf Issues
-  **Lösung**: Stellen Sie sicher, dass das Label "fix-me" korrekt hinzugefügt wurde und der LLM-API-Key korrekt konfiguriert ist
+| Workflow | Webhook-Endpunkt | Beschreibung |
+|----------|------------------|--------------|
+| Integration-Hub | `/webhook/event` | Zentraler Einstiegspunkt für alle Ereignisse |
+| GitHub zu OpenProject | `/webhook/github-to-openproject` | Direkter Endpunkt für GitHub-Ereignisse |
+| MCP-Server zu OpenProject | `/webhook/mcp-server-to-openproject` | Direkter Endpunkt für MCP-Server-Ereignisse |
+| Fehlerbehandlung | `/webhook/error-handler` | Endpunkt für Fehlerbehandlung |
 
-### n8n-Workflows
+### GitHub-Webhook einrichten
 
-- **Problem**: Workflow-Ausführungen schlagen fehl
-  **Lösung**: Überprüfen Sie die n8n-Logs und stellen Sie sicher, dass alle Credentials korrekt eingerichtet sind
+Um GitHub-Ereignisse automatisch zu verarbeiten:
 
-- **Problem**: Webhook-URLs sind nicht erreichbar
-  **Lösung**: Stellen Sie sicher, dass n8n öffentlich erreichbar ist oder konfigurieren Sie n8n für Webhook-Tunneling
+1. Gehen Sie zu Ihrem GitHub-Repository → Settings → Webhooks → Add webhook
+2. Geben Sie als Payload URL ein: `http://YOUR_SERVER:5678/webhook/github-to-openproject`
+3. Wählen Sie Content type: `application/json`
+4. Wählen Sie die Ereignisse aus, die den Webhook auslösen sollen (Issues, Pull Requests, Pushes)
+5. Klicken Sie auf "Add webhook"
 
-## Erweiterungsmöglichkeiten
+### Manuelles Testen der Workflows
 
-### Erweiterte Dokumentensynchronisierung
+Sie können die Workflows manuell mit curl testen:
 
-Die bidirektionale Synchronisierung zwischen allen Systemen ermöglicht eine nahtlose Zusammenarbeit, bei der Änderungen in jedem System automatisch in allen anderen reflektiert werden.
+```bash
+# Test des Integration-Hubs
+curl -X POST http://localhost:5678/webhook/event \
+  -H "Content-Type: application/json" \
+  -d '{
+    "source_type": "github",
+    "event_type": "issues",
+    "action": "created",
+    "payload": {
+      "title": "Test Issue",
+      "body": "This is a test issue",
+      "state": "open",
+      "repository": "username/repo",
+      "html_url": "https://github.com/username/repo/issues/1"
+    }
+  }'
+```
 
-**Implementierungsschritte:**
-1. **Webhook-Erweiterung**: Konfigurieren Sie Webhooks in allen Systemen, die Änderungen an Dokumenten erkennen
-2. **Konfliktlösung**: Implementieren Sie eine Strategie zur Konfliktlösung, wenn Dokumente in mehreren Systemen gleichzeitig bearbeitet werden
-3. **Versionshistorie**: Führen Sie eine Versionshistorie ein, die Änderungen aus allen Systemen nachverfolgt
-4. **Metadaten-Synchronisierung**: Synchronisieren Sie nicht nur Inhalte, sondern auch Metadaten wie Tags, Zuordnungen und Status
+### Integration mit MCP-Servern
 
-**n8n-Workflow-Konfiguration:**
-- Erstellen Sie einen dedizierten Workflow für jede Synchronisierungsrichtung
-- Verwenden Sie Funktionsknoten zur Transformation von Datenformaten zwischen den Systemen
-- Setzen Sie "Throttle"-Knoten ein, um Synchronisierungsschleifen zu vermeiden
-- Führen Sie Prüfsummen ein, um unnötige Updates zu vermeiden
+Die Workflows können mit den MCP-Servern integriert werden, um KI-Agenten Zugriff auf die Workflows zu geben:
 
-### KI-gestützte Zusammenfassungen
+1. Stellen Sie sicher, dass die MCP-Server laufen (siehe [MCP-Server-Dokumentation](MCP-Server-Implementation.md))
+2. Konfigurieren Sie die MCP-Server-URLs in der `MCP_SERVERS_CONFIG`-Umgebungsvariable
+3. Aktivieren Sie den MCP-zu-OpenProject-Workflow
 
-Nutzen Sie die OpenHands-Infrastruktur, um automatisch Zusammenfassungen zu generieren und Dokumentation aus Code, Issues und Pull Requests zu erstellen.
+## Fehlerbehebung und Wartung
 
-**Implementierungsschritte:**
-1. **Ereignisidentifikation**: Definieren Sie, welche Events Zusammenfassungen auslösen sollen (z.B. große PRs, Issue-Schließung)
-2. **Prompt-Engineering**: Erstellen Sie spezialisierte Prompts für verschiedene Arten von Zusammenfassungen
-3. **Integrationsendpunkte**: Richten Sie Endpunkte ein, die OpenHands mit den zu verarbeitenden Dokumenten versorgen
-4. **Qualitätssicherung**: Implementieren Sie einen Review-Prozess für generierte Dokumentation
+### Automatische Fehlerbehandlung
 
-**n8n-Workflow-Beispiel:**
-- Verwenden Sie einen zeitgesteuerten Trigger, um wöchentliche Zusammenfassungen von Aktivitäten zu generieren
-- Sammeln Sie Daten aus allen Systemen in einem einheitlichen Format
-- Rufen Sie die OpenHands API auf, um die Zusammenfassung zu generieren
-- Verteilen Sie die Ergebnisse an AFFiNE/AppFlowy und fügen Sie Links in OpenProject ein
+Die Workflows verfügen über einen integrierten Fehlerbehandlungsmechanismus:
 
-### Discord-Integration
+1. **Erkennung**: Fehler werden automatisch erkannt und an den Fehlerbehandlungs-Workflow weitergeleitet
+2. **Wiederholung**: Fehlgeschlagene Operationen werden bis zu dreimal automatisch wiederholt
+3. **Protokollierung**: Fehler werden detailliert protokolliert, einschließlich Stack-Traces und Kontextinformationen
+4. **Benachrichtigung**: Bei kritischen Fehlern werden Benachrichtigungen gesendet
+5. **Dokumentation**: Fehler werden in OpenProject und AFFiNE/AppFlowy dokumentiert
 
-Integration von Discord-Benachrichtigungen für wichtige Workflow-Ereignisse, um Teams in Echtzeit auf dem Laufenden zu halten.
+### Häufige Probleme und Lösungen
 
-**Implementierungsschritte:**
-1. **Discord-Webhook einrichten**: Erstellen Sie einen Webhook in Ihrem Discord-Server
-2. **Ereigniskategorisierung**: Definieren Sie verschiedene Kategorien von Ereignissen und ihre Wichtigkeit
-3. **Nachrichtenformatierung**: Gestalten Sie informative und ansprechende Discord-Nachrichten mit Embeds
-4. **Benutzer-Erwähnungen**: Konfigurieren Sie automatische @mentions basierend auf Zuständigkeiten
+| Problem | Mögliche Ursachen | Lösungen |
+|---------|-------------------|----------|
+| Webhook-Fehler | - Falsche URL<br>- n8n nicht erreichbar<br>- Firewall blockiert Zugriff | - URL überprüfen<br>- n8n-Status prüfen<br>- Firewall-Einstellungen anpassen |
+| Authentifizierungsfehler | - Ungültiger API-Schlüssel<br>- Fehlende Berechtigungen<br>- Abgelaufener Token | - API-Schlüssel erneuern<br>- Berechtigungen prüfen<br>- Token aktualisieren |
+| Datenverarbeitungsfehler | - Unerwartetes Datenformat<br>- Fehlende Pflichtfelder<br>- Inkonsistente Daten | - Datenformat überprüfen<br>- Pflichtfelder ergänzen<br>- Daten bereinigen |
 
-**n8n-Workflow-Konfiguration:**
-- Fügen Sie Discord-Webhook-Knoten zu allen relevanten Workflows hinzu
-- Verwenden Sie Bedingungsknoten, um zu entscheiden, welche Ereignisse eine Benachrichtigung auslösen
-- Erstellen Sie benutzerdefinierte Funktionen zur Formatierung ansprechender Nachrichten
-- Implementieren Sie eine Throttling-Logik, um Benachrichtigungsflut zu vermeiden
+### Workflow-Überwachung
 
-### Zeiterfassung
+Die Workflows können mit den integrierten n8n-Tools überwacht werden:
 
-Integrieren Sie die Zeiterfassung zwischen OpenProject und GitHub/GitLab, um Entwicklungsaufwand direkt mit Projektmanagement zu verknüpfen.
+1. **Ausführungsverlauf**: Zeigt alle Workflow-Ausführungen und deren Status
+2. **Workflow-Editor**: Ermöglicht das Debuggen und Testen von Workflows
+3. **Logs**: Zeigt detaillierte Logs für jede Workflow-Ausführung
 
-**Implementierungsschritte:**
-1. **Zeit-Tracking-Trigger**: Erfassen Sie Zeit-Tracking-Ereignisse aus Commit-Nachrichten oder speziellen Kommentaren
-2. **Synchronisierungslogik**: Implementieren Sie bidirektionale Synchronisierung von Zeiteinträgen
-3. **Berichterstellung**: Automatisieren Sie die Generierung von Zeitberichten und deren Verteilung
-4. **Validierung**: Richten Sie Validierungsregeln für Zeiteinträge ein
+## Erweiterung und Anpassung
 
-**Umsetzungsbeispiel:**
-- Überwachen Sie Commit-Nachrichten auf Zeit-Tracking-Muster (z.B. "#time 2h")
-- Extrahieren Sie die aufgewendete Zeit und verbinden Sie sie mit dem entsprechenden Arbeitspaket
-- Erstellen Sie automatisch Zeitbuchungen in OpenProject
-- Generieren Sie wöchentliche Zeitberichte und verteilen Sie diese an Projektmanager
+### Hinzufügen neuer Integrationen
 
-## Ressourcen
+Um eine neue Integration hinzuzufügen:
 
-- [OpenProject API Dokumentation](https://www.openproject.org/docs/api/)
-- [GitHub API Dokumentation](https://docs.github.com/en/rest)
-- [n8n Dokumentation](https://docs.n8n.io/)
-- [OpenHands Repository](https://github.com/All-Hands-AI/OpenHands)
+1. **Workflow erstellen**: Erstellen Sie einen neuen n8n-Workflow für die Integration
+2. **Hub erweitern**: Fügen Sie die neue Quelle zum Integration-Hub hinzu
+3. **Normalisierung implementieren**: Erstellen Sie eine Normalisierungsfunktion für das neue Datenformat
+4. **Testen**: Testen Sie die Integration mit realen Daten
+5. **Dokumentieren**: Aktualisieren Sie die Dokumentation mit der neuen Integration
+
+### Anpassen der Datenverarbeitung
+
+Die Datenverarbeitung kann in den Function-Nodes angepasst werden:
+
+```javascript
+// Beispiel für eine angepasste Normalisierungsfunktion im Integration-Hub
+function normalizeEvent(items) {
+  const event = items[0].json;
+  
+  // Angepasste Normalisierungslogik hier implementieren
+  
+  return {
+    json: {
+      normalized_event: {
+        // Normalisierte Daten
+      }
+    }
+  };
+}
+```
+
+### Erweiterte Funktionen implementieren
+
+Die Workflows können mit zusätzlichen Funktionen erweitert werden:
+
+- **Automatisierte Tests**: Implementieren Sie automatisierte Tests für die Workflows
+- **Benutzerdefinierte Dashboards**: Erstellen Sie Dashboards zur Visualisierung der Workflow-Aktivitäten
+- **Erweiterte Benachrichtigungen**: Fügen Sie zusätzliche Benachrichtigungskanäle hinzu (Slack, Discord, E-Mail)
+- **KI-gestützte Verarbeitung**: Integrieren Sie KI-Modelle für erweiterte Datenanalyse und -verarbeitung
+
+## Referenzen und weiterführende Dokumentation
+
+### Externe Dokumentation
+
+- [n8n-Dokumentation](https://docs.n8n.io/) - Offizielle Dokumentation der n8n-Plattform
+- [OpenProject API-Dokumentation](https://www.openproject.org/docs/api/) - API-Referenz für OpenProject
+- [GitHub API-Dokumentation](https://docs.github.com/en/rest) - GitHub REST API-Referenz
+- [GitLab API-Dokumentation](https://docs.gitlab.com/ee/api/) - GitLab API-Referenz
+- [Model Context Protocol Dokumentation](https://github.com/modelcontextprotocol/protocol) - MCP-Spezifikation
+
+### Interne Dokumentation
+
+- [MCP-Server-Implementierung](MCP-Server-Implementation.md) - Details zur MCP-Server-Implementierung
+- [Installation und Konfiguration](Installation-Guide.md) - Ausführliche Installationsanleitung
+- [GitHub-Integration](GitHub-Integration.md) - Spezifische Dokumentation zur GitHub-Integration
+- [OpenHands-Integration](MCP-OpenHands.md) - Integration mit OpenHands
+- [Fehlerbehebung](Troubleshooting.md) - Ausführliche Fehlerbehebungsanleitung

@@ -16,11 +16,19 @@ services:
     image: redis:7-alpine
     container_name: mcp-redis
     restart: always
-    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_password}
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_password} --maxmemory 512mb --maxmemory-policy allkeys-lru
     volumes:
       - redis_data:/data
     networks:
       - mcp-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 768M
+        reservations:
+          cpus: '0.2'
+          memory: 256M
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
@@ -38,9 +46,12 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+      - LOG_LEVEL=info
     volumes:
       - ${WORKSPACE_PATH:-/workspace}:/workspace:rw
       - filesystem_data:/data
+    ports:
+      - "3001:3001"
     networks:
       - mcp-network
     depends_on:
@@ -54,6 +65,14 @@ services:
       - FOWNER
       - SETGID
       - SETUID
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
       interval: 30s
@@ -70,7 +89,7 @@ services:
       - DISPLAY=${DISPLAY}
       - LOG_LEVEL=info
       - ALLOWED_DIRECTORIES=["/workspace"]
-      - BLOCKED_COMMANDS=["rm -rf /", "sudo", "su"]
+      - BLOCKED_COMMANDS=["rm -rf /", "sudo", "su", "dd", "mkfs", "format", "fdisk", "shutdown", "reboot", "halt", "poweroff"]
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
@@ -79,6 +98,8 @@ services:
       - ${WORKSPACE_PATH:-/workspace}:/workspace:rw
       # X11 socket for GUI applications
       - /tmp/.X11-unix:/tmp/.X11-unix:ro
+    ports:
+      - "3002:3002"
     networks:
       - mcp-network
     depends_on:
@@ -92,6 +113,14 @@ services:
       - FOWNER
       - SETGID
       - SETUID
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 768M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
       interval: 30s
@@ -108,10 +137,23 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+      - LOG_LEVEL=info
+      - MAX_THINKING_STEPS=10
+      - THINKING_TIMEOUT=60
+    ports:
+      - "3003:3003"
     networks:
       - mcp-network
     depends_on:
       - redis
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3003/health"]
       interval: 30s
@@ -129,10 +171,26 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+      - LOG_LEVEL=info
+      - CACHE_ENABLED=true
+      - CACHE_TTL=3600
+      - RATE_LIMIT_ENABLED=true
+      - RATE_LIMIT_REQUESTS=60
+      - RATE_LIMIT_PERIOD=60
+    ports:
+      - "3004:3004"
     networks:
       - mcp-network
     depends_on:
       - redis
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3004/health"]
       interval: 30s
@@ -150,10 +208,27 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+      - LOG_LEVEL=info
+      - CACHE_ENABLED=true
+      - CACHE_TTL=3600
+      - RATE_LIMIT_ENABLED=true
+      - RATE_LIMIT_REQUESTS=60
+      - RATE_LIMIT_PERIOD=60
+      - ALLOWED_REPOS=EcoSphereNetwork/*
+    ports:
+      - "3005:3005"
     networks:
       - mcp-network
     depends_on:
       - redis
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3005/health"]
       interval: 30s
@@ -170,10 +245,29 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+      - LOG_LEVEL=info
+      - PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+      - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+      - PUPPETEER_ARGS=--no-sandbox,--disable-setuid-sandbox,--disable-dev-shm-usage,--disable-gpu,--disable-extensions
+      - MAX_CONCURRENT_BROWSERS=5
+      - BROWSER_TIMEOUT=60000
+      - ALLOWED_DOMAINS=github.com,gitlab.com,openproject.org,wikipedia.org
+    ports:
+      - "3006:3006"
     networks:
       - mcp-network
     depends_on:
       - redis
+    security_opt:
+      - seccomp=unconfined
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3006/health"]
       interval: 30s
@@ -190,12 +284,26 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+      - LOG_LEVEL=info
+      - STORAGE_TYPE=redis
+      - MAX_MEMORY_SIZE=100MB
+      - MEMORY_EXPIRATION=86400
     volumes:
       - basic_memory_data:/data
+    ports:
+      - "3007:3007"
     networks:
       - mcp-network
     depends_on:
       - redis
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3007/health"]
       interval: 30s
@@ -212,14 +320,69 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+      - LOG_LEVEL=info
+      - CACHE_ENABLED=true
+      - CACHE_TTL=86400
+      - DEFAULT_LANGUAGE=en
+      - RATE_LIMIT_ENABLED=true
+      - RATE_LIMIT_REQUESTS=30
+      - RATE_LIMIT_PERIOD=60
+      - MAX_SEARCH_RESULTS=10
     volumes:
       - wikipedia_data:/data
+    ports:
+      - "3008:3008"
     networks:
       - mcp-network
     depends_on:
       - redis
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.2'
+          memory: 256M
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3008/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      
+  # MCP Inspector UI
+  mcp-inspector:
+    image: mcp/inspector:latest
+    container_name: mcp-inspector
+    restart: always
+    environment:
+      - PORT=8080
+      - MCP_SERVERS=filesystem-mcp:3001,desktop-commander-mcp:3002,sequential-thinking-mcp:3003,github-chat-mcp:3004,github-mcp:3005,puppeteer-mcp:3006,basic-memory-mcp:3007,wikipedia-mcp:3008
+      - LOG_LEVEL=info
+      - REFRESH_INTERVAL=30
+    ports:
+      - "8080:8080"
+    networks:
+      - mcp-network
+    depends_on:
+      - filesystem-mcp
+      - desktop-commander-mcp
+      - sequential-thinking-mcp
+      - github-chat-mcp
+      - github-mcp
+      - puppeteer-mcp
+      - basic-memory-mcp
+      - wikipedia-mcp
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3

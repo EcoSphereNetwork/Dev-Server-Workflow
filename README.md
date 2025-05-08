@@ -100,7 +100,7 @@ Die Docker-Installation ist der einfachste Weg, um die n8n Workflow Integration 
    - n8n: http://localhost:5678 (Benutzername: admin, Passwort: password)
    - MCP-Server: http://localhost:3000
 
-Weitere Befehle und Informationen zur Docker-Installation finden Sie in der [ausführlichen Docker-Anleitung](DOCKER.md).
+Weitere Befehle und Informationen zur Docker-Installation finden Sie in der [ausführlichen Docker-Anleitung](docs/docs/Dev-Server-Workflow/DOCKER.md).
 
 #### Option 2: Direkte Installation
 
@@ -148,11 +148,14 @@ Wenn Sie eine direkte Installation ohne Docker bevorzugen:
 
 ```
 Dev-Server-Workflow/
+├── ARCHITECTURE.md            # Überblick über die Architektur und Beziehungen zwischen Komponenten
 ├── docker-mcp-ecosystem/      # Vollständiges MCP-Server-Ökosystem mit Monitoring und Logging
 ├── docker-mcp-servers/        # Minimale MCP-Server-Konfiguration für OpenHands und n8n
 ├── docs/                      # Dokumentation
 │   └── docs/                  # Detaillierte Dokumentation nach Themen
 ├── scripts/                   # Skripte für Installation, Konfiguration und Wartung
+│   ├── generate-common-config.py # Generiert gemeinsame Konfigurationsdateien für beide Implementierungen
+│   ├── test-implementations.py # Automatisierte Tests für beide Implementierungen
 │   └── mcp/                   # Skripte für MCP-Server-Integration
 ├── src/                       # Quellcode
 │   ├── n8n_mcp_server.py      # MCP-Server-Implementierung für n8n
@@ -166,12 +169,23 @@ Dev-Server-Workflow/
 │   ├── n8n_setup_workflows_mcp.py # MCP-Workflow-Definition
 │   ├── n8n_setup_workflows_special.py # Spezielle Workflow-Definitionen
 │   └── env-template           # Vorlage für die .env-Datei
-├── IMPLEMENTATION_PLAN.md     # Detaillierter Implementierungsplan
-├── REPOSITORY_STRUCTURE.md    # Dokumentation der Repository-Struktur
+├── docs/docs/Dev-Server-Workflow/IMPLEMENTATION_PLAN.md     # Detaillierter Implementierungsplan
+├── docs/docs/Dev-Server-Workflow/REPOSITORY_STRUCTURE.md    # Dokumentation der Repository-Struktur
 └── README.md                  # Hauptdokumentation
 ```
 
-Weitere Details zur Repository-Struktur finden Sie in der [REPOSITORY_STRUCTURE.md](REPOSITORY_STRUCTURE.md) Datei.
+Weitere Details zur Repository-Struktur finden Sie in der [REPOSITORY_STRUCTURE.md](docs/docs/Dev-Server-Workflow/REPOSITORY_STRUCTURE.md) Datei.
+
+### Architektur und Beziehungen zwischen Komponenten
+
+Dieses Projekt enthält zwei alternative Implementierungen des MCP-Server-Ökosystems:
+
+1. **docker-mcp-ecosystem**: Eine umfassende Lösung mit allen Komponenten (MCP-Server, n8n, Monitoring, OpenHands)
+2. **docker-mcp-servers**: Eine fokussierte Lösung nur für die MCP-Server
+
+Diese Implementierungen sind nicht dafür ausgelegt, gleichzeitig zu laufen, da sie die gleichen Ports und Container-Namen verwenden.
+
+Für eine detaillierte Erklärung der Architektur, der Beziehungen zwischen den Komponenten und Empfehlungen, welche Implementierung für welchen Anwendungsfall zu verwenden ist, lesen Sie die [ARCHITECTURE.md](ARCHITECTURE.md) Datei.
 
 ## 📊 Workflows
 
@@ -367,6 +381,6 @@ Dieses Projekt ist unter der MIT-Lizenz lizenziert. Weitere Informationen finden
 [docs-shield]: https://img.shields.io/badge/Documentation-000?logo=googledocs&logoColor=FFE165&style=for-the-badge
 [docs-url]: https://github.com/YourOrganization/n8n-workflow-integration/wiki
 [credits-shield]: https://img.shields.io/badge/Project-Credits-blue?style=for-the-badge&color=FFE165&logo=github&logoColor=white
-[credits-url]: https://github.com/YourOrganization/n8n-workflow-integration/blob/main/CREDITS.md
+[credits-url]: https://github.com/YourOrganization/n8n-workflow-integration/blob/main/docs/docs/Dev-Server-Workflow/CREDITS.md
 [activity-graph]: https://repobeats.axiom.co/api/embed/8d1a53c73cf5523d0e52a6cc5b74bce75eecc801.svg
 [activity-url]: https://repobeats.axiom.co
