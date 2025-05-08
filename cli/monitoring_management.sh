@@ -1,355 +1,462 @@
 #!/bin/bash
 
-# Source common functions
-source "$(dirname "$0")/functions.sh"
+# Monitoring-Management-Funktionen für die Dev-Server CLI
 
-# Monitoring management functions
+# Lade Konfiguration
+source "$(dirname "$0")/config.sh"
 
-# Check if a service is running
-check_service_status() {
-    local service="$1"
-    local type="$2"
+# Farben für die Ausgabe
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Funktion zum Starten des Monitoring-Stacks
+start_monitoring() {
+    echo -e "${BLUE}=== Starte Monitoring-Stack ===${NC}"
     
-    log_info "Checking status of service $service"
+    # Überprüfe, ob Docker installiert ist
+    if ! command -v docker &> /dev/null; then
+        echo -e "${RED}❌ Docker ist nicht installiert. Bitte installieren Sie Docker.${NC}"
+        return 1
+    fi
     
-    case "$type" in
-        "systemd")
-            systemctl is-active --quiet "$service"
-            ;;
-        "docker")
-            docker ps --format '{{.Names}}' | grep -q "$service"
-            ;;
-        "process")
-            pgrep -f "$service" > /dev/null
-            ;;
-        *)
-            log_error "Unsupported service type: $type"
-            return 1
-            ;;
-    esac
+    # Überprüfe, ob Docker Compose installiert ist
+    if ! command -v docker-compose &> /dev/null; then
+        echo -e "${RED}❌ Docker Compose ist nicht installiert. Bitte installieren Sie Docker Compose.${NC}"
+        return 1
+    fi
+    
+    # Erstelle das Monitoring-Verzeichnis
+    local monitoring_dir="${DATA_DIR}/monitoring"
+    mkdir -p "$monitoring_dir"
+    
+    # Erstelle die Docker Compose-Datei
+    local compose_file="${monitoring_dir}/docker-compose.yml"
+    
+    cat > "$compose_file" << EOF
+version: '3'
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ${monitoring_dir}/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - ${DOCKER_NETWORK}
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - ${DOCKER_NETWORK}
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    restart: always
+    ports:
+      - "9093:9093"
+    volumes:
+      - ${monitoring_dir}/alertmanager:/etc/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    networks:
+      - ${DOCKER_NETWORK}
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: always
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - ${DOCKER_NETWORK}
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - ${DOCKER_NETWORK}
+
+networks:
+  ${DOCKER_NETWORK}:
+    external: true
+
+volumes:
+  prometheus_data:
+  grafana_data:
+EOF
+    
+    # Erstelle das Prometheus-Konfigurationsverzeichnis
+    mkdir -p "${monitoring_dir}/prometheus"
+    
+    # Erstelle die Prometheus-Konfigurationsdatei
+    cat > "${monitoring_dir}/prometheus/prometheus.yml" << EOF
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+rule_files:
+  - "rules/*.yml"
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['cadvisor:8080']
+EOF
+    
+    # Erstelle das Alertmanager-Konfigurationsverzeichnis
+    mkdir -p "${monitoring_dir}/alertmanager"
+    
+    # Erstelle die Alertmanager-Konfigurationsdatei
+    cat > "${monitoring_dir}/alertmanager/alertmanager.yml" << EOF
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'web.hook'
+
+receivers:
+  - name: 'web.hook'
+    webhook_configs:
+      - url: 'http://localhost:5001/'
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'dev', 'instance']
+EOF
+    
+    # Erstelle das Prometheus-Rules-Verzeichnis
+    mkdir -p "${monitoring_dir}/prometheus/rules"
+    
+    # Erstelle die Prometheus-Rules-Datei
+    cat > "${monitoring_dir}/prometheus/rules/alert.yml" << EOF
+groups:
+  - name: example
+    rules:
+      - alert: HighCPULoad
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU load (instance {{ \$labels.instance }})"
+          description: "CPU load is > 80%\n  VALUE = {{ \$value }}\n  LABELS: {{ \$labels }}"
+
+      - alert: HighMemoryLoad
+        expr: (node_memory_MemTotal_bytes - node_memory_MemFree_bytes - node_memory_Buffers_bytes - node_memory_Cached_bytes) / node_memory_MemTotal_bytes * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory load (instance {{ \$labels.instance }})"
+          description: "Memory load is > 80%\n  VALUE = {{ \$value }}\n  LABELS: {{ \$labels }}"
+
+      - alert: HighDiskUsage
+        expr: (node_filesystem_size_bytes{fstype=~"ext4|xfs"} - node_filesystem_free_bytes{fstype=~"ext4|xfs"}) / node_filesystem_size_bytes{fstype=~"ext4|xfs"} * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High disk usage (instance {{ \$labels.instance }})"
+          description: "Disk usage is > 80%\n  VALUE = {{ \$value }}\n  LABELS: {{ \$labels }}"
+EOF
+    
+    # Erstelle das Docker-Netzwerk, falls es nicht existiert
+    if ! docker network ls | grep -q "$DOCKER_NETWORK"; then
+        echo -e "${YELLOW}Erstelle Docker-Netzwerk $DOCKER_NETWORK...${NC}"
+        docker network create "$DOCKER_NETWORK"
+    fi
+    
+    # Starte den Monitoring-Stack
+    echo -e "${YELLOW}Starte Monitoring-Stack...${NC}"
+    docker-compose -f "$compose_file" up -d
     
     if [ $? -eq 0 ]; then
-        log_info "Service $service is running"
-        return 0
+        echo -e "${GREEN}✅ Monitoring-Stack erfolgreich gestartet${NC}"
+        echo -e "${BLUE}Prometheus:${NC} http://localhost:9090"
+        echo -e "${BLUE}Grafana:${NC} http://localhost:3000 (admin/admin)"
+        echo -e "${BLUE}Alertmanager:${NC} http://localhost:9093"
+        echo -e "${BLUE}Node Exporter:${NC} http://localhost:9100"
+        echo -e "${BLUE}cAdvisor:${NC} http://localhost:8080"
     else
-        log_info "Service $service is not running"
+        echo -e "${RED}❌ Fehler beim Starten des Monitoring-Stacks${NC}"
         return 1
     fi
 }
 
-# Get service logs
-get_service_logs() {
-    local service="$1"
-    local type="$2"
-    local lines="$3"
+# Funktion zum Stoppen des Monitoring-Stacks
+stop_monitoring() {
+    echo -e "${BLUE}=== Stoppe Monitoring-Stack ===${NC}"
     
-    # Default to 100 lines
-    if [ -z "$lines" ]; then
-        lines=100
+    # Überprüfe, ob Docker installiert ist
+    if ! command -v docker &> /dev/null; then
+        echo -e "${RED}❌ Docker ist nicht installiert. Bitte installieren Sie Docker.${NC}"
+        return 1
     fi
     
-    log_info "Getting logs for service $service"
+    # Überprüfe, ob Docker Compose installiert ist
+    if ! command -v docker-compose &> /dev/null; then
+        echo -e "${RED}❌ Docker Compose ist nicht installiert. Bitte installieren Sie Docker Compose.${NC}"
+        return 1
+    fi
     
-    case "$type" in
-        "systemd")
-            journalctl -u "$service" -n "$lines"
-            ;;
-        "docker")
-            docker logs --tail "$lines" "$service"
-            ;;
-        "file")
-            if [ -f "$service" ]; then
-                tail -n "$lines" "$service"
+    # Monitoring-Verzeichnis
+    local monitoring_dir="${DATA_DIR}/monitoring"
+    local compose_file="${monitoring_dir}/docker-compose.yml"
+    
+    # Überprüfe, ob die Docker Compose-Datei existiert
+    if [ ! -f "$compose_file" ]; then
+        echo -e "${RED}❌ Docker Compose-Datei nicht gefunden: $compose_file${NC}"
+        return 1
+    fi
+    
+    # Stoppe den Monitoring-Stack
+    echo -e "${YELLOW}Stoppe Monitoring-Stack...${NC}"
+    docker-compose -f "$compose_file" down
+    
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✅ Monitoring-Stack erfolgreich gestoppt${NC}"
+    else
+        echo -e "${RED}❌ Fehler beim Stoppen des Monitoring-Stacks${NC}"
+        return 1
+    fi
+}
+
+# Funktion zum Neustarten des Monitoring-Stacks
+restart_monitoring() {
+    echo -e "${BLUE}=== Starte Monitoring-Stack neu ===${NC}"
+    
+    stop_monitoring
+    sleep 2
+    start_monitoring
+}
+
+# Funktion zum Anzeigen der Monitoring-Logs
+show_monitoring_logs() {
+    local service="$1"
+    local lines="${2:-100}"
+    
+    echo -e "${BLUE}=== Zeige Monitoring-Logs für $service ===${NC}"
+    
+    # Überprüfe, ob Docker installiert ist
+    if ! command -v docker &> /dev/null; then
+        echo -e "${RED}❌ Docker ist nicht installiert. Bitte installieren Sie Docker.${NC}"
+        return 1
+    fi
+    
+    # Überprüfe, ob der Container existiert
+    if ! docker ps -a --format '{{.Names}}' | grep -q "^$service$"; then
+        echo -e "${RED}❌ Container nicht gefunden: $service${NC}"
+        echo -e "${YELLOW}Verfügbare Container:${NC}"
+        docker ps -a --format '{{.Names}}'
+        return 1
+    fi
+    
+    # Zeige die Logs an
+    docker logs --tail "$lines" "$service"
+}
+
+# Funktion zum Öffnen der Monitoring-Oberflächen im Browser
+open_monitoring_ui() {
+    local service="$1"
+    
+    echo -e "${BLUE}=== Öffne Monitoring-Oberfläche für $service ===${NC}"
+    
+    case "$service" in
+        "prometheus")
+            echo -e "${YELLOW}Öffne Prometheus...${NC}"
+            if command -v xdg-open &> /dev/null; then
+                xdg-open "http://localhost:9090"
+            elif command -v open &> /dev/null; then
+                open "http://localhost:9090"
             else
-                log_error "Log file $service does not exist"
+                echo -e "${RED}❌ Kann Browser nicht öffnen. Bitte öffnen Sie http://localhost:9090 manuell.${NC}"
+                return 1
+            fi
+            ;;
+        "grafana")
+            echo -e "${YELLOW}Öffne Grafana...${NC}"
+            if command -v xdg-open &> /dev/null; then
+                xdg-open "http://localhost:3000"
+            elif command -v open &> /dev/null; then
+                open "http://localhost:3000"
+            else
+                echo -e "${RED}❌ Kann Browser nicht öffnen. Bitte öffnen Sie http://localhost:3000 manuell.${NC}"
+                return 1
+            fi
+            ;;
+        "alertmanager")
+            echo -e "${YELLOW}Öffne Alertmanager...${NC}"
+            if command -v xdg-open &> /dev/null; then
+                xdg-open "http://localhost:9093"
+            elif command -v open &> /dev/null; then
+                open "http://localhost:9093"
+            else
+                echo -e "${RED}❌ Kann Browser nicht öffnen. Bitte öffnen Sie http://localhost:9093 manuell.${NC}"
+                return 1
+            fi
+            ;;
+        "cadvisor")
+            echo -e "${YELLOW}Öffne cAdvisor...${NC}"
+            if command -v xdg-open &> /dev/null; then
+                xdg-open "http://localhost:8080"
+            elif command -v open &> /dev/null; then
+                open "http://localhost:8080"
+            else
+                echo -e "${RED}❌ Kann Browser nicht öffnen. Bitte öffnen Sie http://localhost:8080 manuell.${NC}"
+                return 1
+            fi
+            ;;
+        "node-exporter")
+            echo -e "${YELLOW}Öffne Node Exporter...${NC}"
+            if command -v xdg-open &> /dev/null; then
+                xdg-open "http://localhost:9100"
+            elif command -v open &> /dev/null; then
+                open "http://localhost:9100"
+            else
+                echo -e "${RED}❌ Kann Browser nicht öffnen. Bitte öffnen Sie http://localhost:9100 manuell.${NC}"
                 return 1
             fi
             ;;
         *)
-            log_error "Unsupported log type: $type"
+            echo -e "${RED}❌ Unbekannter Dienst: $service${NC}"
+            echo -e "${YELLOW}Verfügbare Dienste:${NC} prometheus, grafana, alertmanager, cadvisor, node-exporter"
             return 1
             ;;
     esac
-    
-    return $?
 }
 
-# Check disk usage
-check_disk_usage() {
-    local mount_point="$1"
-    local threshold="$2"
+# Funktion zum Anzeigen des Monitoring-Status
+show_monitoring_status() {
+    echo -e "${BLUE}=== Monitoring-Status ===${NC}"
     
-    # Default to 90% threshold
-    if [ -z "$threshold" ]; then
-        threshold=90
-    fi
-    
-    log_info "Checking disk usage for $mount_point"
-    
-    # If mount_point is not provided, check all mount points
-    if [ -z "$mount_point" ]; then
-        df -h
-    else
-        # Get disk usage percentage
-        local usage=$(df -h "$mount_point" | grep -v Filesystem | awk '{print $5}' | sed 's/%//')
-        
-        if [ $? -ne 0 ]; then
-            log_error "Failed to get disk usage for $mount_point"
-            return 1
-        fi
-        
-        echo "Disk usage for $mount_point: $usage%"
-        
-        # Check if usage is above threshold
-        if [ "$usage" -gt "$threshold" ]; then
-            log_warning "Disk usage for $mount_point is above threshold ($usage% > $threshold%)"
-            return 2
-        fi
-    fi
-    
-    return 0
-}
-
-# Check memory usage
-check_memory_usage() {
-    local threshold="$1"
-    
-    # Default to 90% threshold
-    if [ -z "$threshold" ]; then
-        threshold=90
-    fi
-    
-    log_info "Checking memory usage"
-    
-    # Get memory usage percentage
-    local total=$(free | grep Mem | awk '{print $2}')
-    local used=$(free | grep Mem | awk '{print $3}')
-    local usage=$(( used * 100 / total ))
-    
-    if [ $? -ne 0 ]; then
-        log_error "Failed to get memory usage"
+    # Überprüfe, ob Docker installiert ist
+    if ! command -v docker &> /dev/null; then
+        echo -e "${RED}❌ Docker ist nicht installiert. Bitte installieren Sie Docker.${NC}"
         return 1
     fi
     
-    echo "Memory usage: $usage%"
-    
-    # Check if usage is above threshold
-    if [ "$usage" -gt "$threshold" ]; then
-        log_warning "Memory usage is above threshold ($usage% > $threshold%)"
-        return 2
-    fi
-    
-    return 0
+    # Zeige den Status der Monitoring-Container an
+    echo -e "${YELLOW}Monitoring-Container:${NC}"
+    docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "prometheus|grafana|alertmanager|cadvisor|node-exporter" || echo -e "${RED}❌ Keine Monitoring-Container gefunden${NC}"
 }
 
-# Check CPU usage
-check_cpu_usage() {
-    local threshold="$1"
-    
-    # Default to 90% threshold
-    if [ -z "$threshold" ]; then
-        threshold=90
-    fi
-    
-    log_info "Checking CPU usage"
-    
-    # Get CPU usage percentage
-    local usage=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1}')
-    
-    if [ $? -ne 0 ]; then
-        log_error "Failed to get CPU usage"
-        return 1
-    fi
-    
-    echo "CPU usage: $usage%"
-    
-    # Check if usage is above threshold
-    if (( $(echo "$usage > $threshold" | bc -l) )); then
-        log_warning "CPU usage is above threshold ($usage% > $threshold%)"
-        return 2
-    fi
-    
-    return 0
-}
-
-# Check port availability
-check_port_availability() {
-    local port="$1"
-    local host="$2"
-    
-    # Default to localhost
-    if [ -z "$host" ]; then
-        host="localhost"
-    fi
-    
-    log_info "Checking if port $port is available on $host"
-    
-    # Check if port is in use
-    if nc -z "$host" "$port" 2> /dev/null; then
-        log_info "Port $port is in use on $host"
-        return 1
-    else
-        log_info "Port $port is available on $host"
-        return 0
-    fi
-}
-
-# Check URL availability
-check_url_availability() {
-    local url="$1"
-    local timeout="$2"
-    
-    # Default to 5 seconds timeout
-    if [ -z "$timeout" ]; then
-        timeout=5
-    fi
-    
-    log_info "Checking if URL $url is available"
-    
-    # Check if URL is available
-    if curl --output /dev/null --silent --head --fail --max-time "$timeout" "$url"; then
-        log_info "URL $url is available"
-        return 0
-    else
-        log_info "URL $url is not available"
-        return 1
-    fi
-}
-
-# Check Docker container health
-check_docker_container_health() {
-    local container="$1"
-    
-    log_info "Checking health of Docker container $container"
-    
-    # Check if container exists
-    if ! docker ps -a --format '{{.Names}}' | grep -q "$container"; then
-        log_error "Docker container $container does not exist"
-        return 1
-    fi
-    
-    # Check if container is running
-    if ! docker ps --format '{{.Names}}' | grep -q "$container"; then
-        log_warning "Docker container $container is not running"
-        return 2
-    fi
-    
-    # Check container health status
-    local health=$(docker inspect --format='{{.State.Health.Status}}' "$container" 2> /dev/null)
-    
-    # If container has no health check
-    if [ -z "$health" ] || [ "$health" = "<nil>" ]; then
-        log_info "Docker container $container has no health check"
-        return 0
-    fi
-    
-    echo "Health status of Docker container $container: $health"
-    
-    # Check health status
-    if [ "$health" = "healthy" ]; then
-        return 0
-    else
-        log_warning "Docker container $container is not healthy: $health"
-        return 2
-    fi
-}
-
-# Get Docker container stats
-get_docker_container_stats() {
-    local container="$1"
-    
-    log_info "Getting stats for Docker container $container"
-    
-    # Check if container exists
-    if ! docker ps -a --format '{{.Names}}' | grep -q "$container"; then
-        log_error "Docker container $container does not exist"
-        return 1
-    fi
-    
-    # Get container stats
-    docker stats --no-stream "$container"
-    
-    return $?
-}
-
-# Check Prometheus metrics
-check_prometheus_metrics() {
-    local url="$1"
-    local query="$2"
-    
-    log_info "Checking Prometheus metrics at $url with query $query"
-    
-    # Check if curl is installed
-    if ! command -v curl &> /dev/null; then
-        log_error "curl is not installed. Please install it first."
-        return 1
-    fi
-    
-    # Check if jq is installed
-    if ! command -v jq &> /dev/null; then
-        log_error "jq is not installed. Please install it first."
-        return 1
-    fi
-    
-    # Query Prometheus
-    local result=$(curl -s "$url/api/v1/query?query=$query" | jq -r '.data.result')
-    
-    if [ $? -ne 0 ]; then
-        log_error "Failed to query Prometheus"
-        return 1
-    fi
-    
-    echo "Prometheus query result: $result"
-    
-    return 0
-}
-
-# Main function
+# Hauptfunktion
 main() {
-    local command="$1"
-    local arg1="$2"
-    local arg2="$3"
-    local arg3="$4"
+    local action="$1"
+    shift
+    local args="$@"
     
-    case "$command" in
-        "check-service")
-            check_service_status "$arg1" "$arg2"
+    case "$action" in
+        "start")
+            start_monitoring
             ;;
-        "get-logs")
-            get_service_logs "$arg1" "$arg2" "$arg3"
+        "stop")
+            stop_monitoring
             ;;
-        "check-disk")
-            check_disk_usage "$arg1" "$arg2"
+        "restart")
+            restart_monitoring
             ;;
-        "check-memory")
-            check_memory_usage "$arg1"
+        "logs")
+            if [ -z "$args" ]; then
+                echo -e "${RED}❌ Kein Dienst angegeben${NC}"
+                echo -e "${YELLOW}Verfügbare Dienste:${NC} prometheus, grafana, alertmanager, cadvisor, node-exporter"
+                return 1
+            fi
+            show_monitoring_logs "$args"
             ;;
-        "check-cpu")
-            check_cpu_usage "$arg1"
+        "open")
+            if [ -z "$args" ]; then
+                echo -e "${RED}❌ Kein Dienst angegeben${NC}"
+                echo -e "${YELLOW}Verfügbare Dienste:${NC} prometheus, grafana, alertmanager, cadvisor, node-exporter"
+                return 1
+            fi
+            open_monitoring_ui "$args"
             ;;
-        "check-port")
-            check_port_availability "$arg1" "$arg2"
-            ;;
-        "check-url")
-            check_url_availability "$arg1" "$arg2"
-            ;;
-        "check-container")
-            check_docker_container_health "$arg1"
-            ;;
-        "container-stats")
-            get_docker_container_stats "$arg1"
-            ;;
-        "check-prometheus")
-            check_prometheus_metrics "$arg1" "$arg2"
+        "status")
+            show_monitoring_status
             ;;
         *)
-            echo "Usage: $0 [check-service|get-logs|check-disk|check-memory|check-cpu|check-port|check-url|check-container|container-stats|check-prometheus] [args...]"
+            echo -e "${RED}❌ Unbekannte Aktion: $action${NC}"
+            echo -e "${YELLOW}Verfügbare Aktionen:${NC} start, stop, restart, logs, open, status"
             return 1
             ;;
     esac
 }
 
-# Run main function if script is executed directly
+# Führe die Hauptfunktion aus, wenn das Skript direkt ausgeführt wird
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    if [ $# -eq 0 ]; then
+        echo -e "${RED}❌ Keine Aktion angegeben${NC}"
+        echo -e "${YELLOW}Verfügbare Aktionen:${NC} start, stop, restart, logs, open, status"
+        exit 1
+    fi
+    
     main "$@"
 fi
