@@ -1,12 +1,14 @@
 import React from 'react';
-import { ThemeProvider } from 'styled-components';
-import { GlobalStyles, theme } from './theme';
+import { ThemeProvider, GlobalStyles } from './design-system';
 import AppRoutes from './routes';
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider initialTheme="system">
       <GlobalStyles />
+      <div className="skip-link" tabIndex={0}>
+        Skip to main content
+      </div>
       <AppRoutes />
     </ThemeProvider>
   );

@@ -6,6 +6,7 @@ import { Sidebar, SidebarItem } from '../components/common/Sidebar';
 import Navbar from '../components/common/Navbar';
 import AIAssistant from '../components/AIAssistant';
 import useAuthStore from '../store/auth';
+import { useTheme, Button } from '../design-system';
 
 // Icons (simplified for this example)
 const DashboardIcon = () => <span>📊</span>;
@@ -17,11 +18,14 @@ const MonitoringIcon = () => <span>📈</span>;
 const DockerIcon = () => <span>🐳</span>;
 const SettingsIcon = () => <span>⚙️</span>;
 const UserIcon = () => <span>👤</span>;
+const ThemeIcon = () => <span>{useTheme().theme.mode === 'dark' ? '🌙' : '☀️'}</span>;
 
 const LayoutContainer = styled.div`
   display: flex;
   height: 100vh;
   overflow: hidden;
+  background-color: ${props => props.theme.colors.background};
+  color: ${props => props.theme.colors.text.primary};
 `;
 
 const MainContent = styled.main`
@@ -33,7 +37,7 @@ const MainContent = styled.main`
 
 const ContentArea = styled.div`
   flex: 1;
-  padding: 20px;
+  padding: ${props => props.theme.spacing.md};
   overflow: auto;
 `;
 
@@ -41,15 +45,38 @@ const UserMenu = styled.div`
   display: flex;
   align-items: center;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
+  padding: ${props => props.theme.spacing.xs};
+  border-radius: ${props => props.theme.borderRadius.sm};
   
   &:hover {
     background-color: rgba(0, 0, 0, 0.04);
   }
   
   .user-name {
-    margin-left: 8px;
+    margin-left: ${props => props.theme.spacing.xs};
+  }
+`;
+
+const IconButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.25rem;
+  padding: ${props => props.theme.spacing.xs};
+  border-radius: ${props => props.theme.borderRadius.full};
+  color: ${props => props.theme.colors.text.primary};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+  
+  &:focus-visible {
+    outline: 2px solid ${props => props.theme.colors.primary};
+    outline-offset: 2px;
   }
 `;
 
@@ -59,6 +86,7 @@ const MainLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
+  const { toggleTheme, theme } = useTheme();
   
   const handleLogout = () => {
     logout();
@@ -123,30 +151,41 @@ const MainLayout: React.FC = () => {
       
       <MainContent>
         <Navbar>
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
-            <button 
-              style={{ 
-                marginRight: '16px', 
-                background: 'none', 
-                border: 'none', 
-                cursor: 'pointer',
-                fontSize: '1.25rem'
-              }}
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: theme.spacing.md }}>
+            <IconButton
+              onClick={toggleTheme}
+              title={`Zum ${theme.mode === 'dark' ? 'Light' : 'Dark'}-Mode wechseln`}
+              aria-label={`Zum ${theme.mode === 'dark' ? 'Light' : 'Dark'}-Mode wechseln`}
+            >
+              <ThemeIcon />
+            </IconButton>
+            
+            <IconButton
               onClick={() => setAssistantOpen(!assistantOpen)}
               title="KI-Assistent"
+              aria-label="KI-Assistent öffnen"
             >
               🤖
-            </button>
-            <UserMenu onClick={() => navigate('/profile')}>
+            </IconButton>
+            
+            <UserMenu 
+              onClick={() => navigate('/profile')}
+              role="button"
+              tabIndex={0}
+              aria-label="Benutzerprofil öffnen"
+            >
               <UserIcon />
               <span className="user-name">{user?.name || user?.username || 'Benutzer'}</span>
             </UserMenu>
-            <button 
-              style={{ marginLeft: '16px', background: 'none', border: 'none', cursor: 'pointer' }}
+            
+            <Button 
+              variant="text" 
+              size="sm"
               onClick={handleLogout}
+              aria-label="Abmelden"
             >
               Abmelden
-            </button>
+            </Button>
           </div>
         </Navbar>
         
