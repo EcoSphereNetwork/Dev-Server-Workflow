@@ -1,0 +1,147 @@
+{
+  "name": "MCP-LLM-Analyzer",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "llm-analyze",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "llm-analyze-webhook"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Prepare data for LLM analysis\nconst data = $json.data || $json;\nconst serverName = data.server_name || 'unknown';\nconst serverType = data.server_type || data.server_category || 'unknown';\nconst eventType = data.type || 'event';\nconst severity = data.severity || 'info';\nconst description = data.description || data.message || '';\n\n// Create a structured prompt for the LLM\nreturn {\n  ...data,\n  llm_input: `Analyze the following event from MCP Server ${serverName} (type: ${serverType}):\\n\\nEvent Type: ${eventType}\\nSeverity: ${severity}\\nDescription: ${description}\\n\\nPlease provide:\\n1. A concise summary of the event\\n2. Potential impact assessment\\n3. Recommended actions\\n4. Categorization (bug, feature request, information, etc.)\\n5. Priority level (critical, high, medium, low)`,\n  request_id: data.request_id || `llm-analysis-${Date.now()}`,\n  timestamp: data.timestamp || new Date().toISOString()\n};"
+      },
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "id": "prepare-llm-input"
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "prompt": "={{ $json.llm_input }}",
+        "options": {
+          "temperature": 0.3,
+          "maxTokens": 1000,
+          "topP": 1,
+          "frequencyPenalty": 0,
+          "presencePenalty": 0,
+          "responseFormat": {
+            "type": "json_object"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "id": "analyze-with-llm",
+      "credentials": {
+        "openAiApi": {
+          "id": "openAiApi",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Process LLM response\nconst llmResponse = $json.response.choices[0].message.content;\nlet parsedResponse;\n\ntry {\n  // Try to parse JSON response\n  parsedResponse = JSON.parse(llmResponse);\n} catch (error) {\n  // If not valid JSON, use the raw text\n  parsedResponse = {\n    summary: llmResponse.substring(0, 200) + '...',\n    impact: 'Unable to parse structured response',\n    recommendations: 'Review raw LLM output',\n    category: 'unknown',\n    priority: 'medium'\n  };\n}\n\n// Combine original data with LLM analysis\nreturn {\n  ...$json,\n  llm_analyzed: true,\n  llm_analysis: parsedResponse,\n  title: parsedResponse.summary || $json.title || `MCP Server Event: ${$json.server_name}`,\n  description: `${$json.description || $json.message || ''}\\n\\n## LLM Analysis\\n\\n**Summary:** ${parsedResponse.summary || 'N/A'}\\n\\n**Impact:** ${parsedResponse.impact || 'N/A'}\\n\\n**Recommendations:** ${parsedResponse.recommendations || 'N/A'}\\n\\n**Category:** ${parsedResponse.category || 'N/A'}\\n\\n**Priority:** ${parsedResponse.priority || 'N/A'}`,\n  severity: parsedResponse.priority === 'critical' ? 'critical' : \n           parsedResponse.priority === 'high' ? 'error' : \n           parsedResponse.priority === 'medium' ? 'warning' : 'info',\n  analysis_timestamp: new Date().toISOString()\n};"
+      },
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "id": "process-llm-response"
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "=http://localhost:5678/webhook/mcp-integration",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "=$json"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1120, 300],
+      "id": "send-to-integration"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "databaseId": "={{ $env.APPFLOWY_DATABASE_ID_ANALYSIS }}",
+        "record": "={\n  \"Title\": $json.title,\n  \"Server\": $json.server_name,\n  \"Event Type\": $json.type,\n  \"Source ID\": $json.source_id,\n  \"Severity\": $json.severity,\n  \"Summary\": $json.llm_analysis.summary,\n  \"Impact\": $json.llm_analysis.impact,\n  \"Recommendations\": $json.llm_analysis.recommendations,\n  \"Category\": $json.llm_analysis.category,\n  \"Priority\": $json.llm_analysis.priority,\n  \"Analysis Timestamp\": $json.analysis_timestamp,\n  \"Event Timestamp\": $json.timestamp\n}"
+      },
+      "type": "n8n-nodes-base.appflowy",
+      "typeVersion": 1,
+      "position": [1340, 300],
+      "id": "log-analysis-to-appflowy"
+    }
+  ],
+  "connections": {
+    "llm-analyze-webhook": {
+      "main": [
+        [
+          {
+            "node": "prepare-llm-input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prepare-llm-input": {
+      "main": [
+        [
+          {
+            "node": "analyze-with-llm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "analyze-with-llm": {
+      "main": [
+        [
+          {
+            "node": "process-llm-response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "process-llm-response": {
+      "main": [
+        [
+          {
+            "node": "send-to-integration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send-to-integration": {
+      "main": [
+        [
+          {
+            "node": "log-analysis-to-appflowy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  }
+}

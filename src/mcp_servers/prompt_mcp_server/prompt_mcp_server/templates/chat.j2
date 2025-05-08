@@ -1,0 +1,20 @@
+{% if system_prompt %}
+{{ system_prompt }}
+{% else %}
+You are a helpful AI assistant. Answer the user's questions accurately and concisely.
+{% endif %}
+
+{% if history %}
+# Conversation History
+{% for message in history %}
+{% if message.role == 'user' %}
+User: {{ message.content }}
+{% elif message.role == 'assistant' %}
+Assistant: {{ message.content }}
+{% elif message.role == 'system' %}
+System: {{ message.content }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+User: {{ prompt }}

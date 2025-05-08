@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  prompt-mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./prompt_mcp_server/templates:/app/data/templates
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    networks:
+      - prompt-mcp-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - prompt-mcp-network
+
+  # Uncomment to use a local LLM server
+  # llm-server:
+  #   image: ghcr.io/huggingface/text-generation-inference:latest
+  #   ports:
+  #     - "8080:80"
+  #   volumes:
+  #     - ./models:/models
+  #   environment:
+  #     - MODEL_ID=/models/llama3-8b
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
+  #   networks:
+  #     - prompt-mcp-network
+
+networks:
+  prompt-mcp-network:
+    driver: bridge
+
+volumes:
+  redis-data:
