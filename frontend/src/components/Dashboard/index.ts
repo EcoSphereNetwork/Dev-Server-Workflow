@@ -1,0 +1,12 @@
+export { default, Dashboard } from './Dashboard';
+export { default as Widget } from './Widget';
+export * from './widgets/SystemStatusWidget';
+export * from './widgets/MCPStatusWidget';
+export * from './widgets/ServiceStatusWidget';
+export * from './widgets/RecentActivityWidget';
+export * from './widgets/QuickActionsWidget';
+export * from './widgets/MetricsWidget';
+export * from './widgets/NotificationsWidget';
+export * from './widgets/WeatherWidget';
+export * from './widgets/NewsWidget';
+export * from './widgets/CustomWidget';
