@@ -94,7 +94,9 @@ show_help() {
     echo -e "  ${YELLOW}stop${NC} ${CYAN}[Komponente]${NC}         Stoppt eine Komponente"
     echo -e "  ${YELLOW}restart${NC} ${CYAN}[Komponente]${NC}      Startet eine Komponente neu"
     echo -e "  ${YELLOW}logs${NC} ${CYAN}[Komponente]${NC}         Zeigt die Logs einer Komponente an"
-    echo -e "  ${YELLOW}config${NC} ${CYAN}[Option] [Wert]${NC}    Konfiguriert eine Option"
+    echo -e "  ${YELLOW}config${NC} ${CYAN}[Option] [Wert]${NC}    Konfiguriert eine Option
+                                Optionen: llm-api-key, github-token, openproject-token,
+                                n8n-api-key, workspace-path, openhands-docker-mcp"
     echo -e "  ${YELLOW}list${NC} ${CYAN}[Ressourcentyp]${NC}      Listet verfügbare Ressourcen auf"
     echo -e "  ${YELLOW}install${NC} ${CYAN}[Komponente]${NC}      Installiert eine Komponente"
     echo -e "  ${YELLOW}switch-llm${NC} ${CYAN}[LLM]${NC}          Wechselt zwischen LLMs (llamafile, claude)"
@@ -106,7 +108,10 @@ show_help() {
     echo
     echo -e "${GREEN}Komponenten:${NC}"
     echo -e "  ${CYAN}all${NC}                        Alle Komponenten"
-    echo -e "  ${CYAN}mcp${NC}                        MCP-Server"
+    echo -e "  ${CYAN}mcp${NC}                        MCP-Server (Docker Container)
+  ${CYAN}n8n-mcp${NC}                    n8n MCP-Server
+  ${CYAN}docker-mcp${NC}                 Docker MCP-Server
+  ${CYAN}monitoring${NC}                 Monitoring Stack (Prometheus, Grafana, Alertmanager)"
     echo -e "  ${CYAN}n8n${NC}                        n8n-Workflow-Engine"
     echo -e "  ${CYAN}ollama${NC}                     Ollama LLM-Server"
     echo -e "  ${CYAN}openhands${NC}                  OpenHands KI-Agent"
@@ -127,10 +132,26 @@ show_status() {
     
     # MCP-Server Status
     if docker ps | grep -q "mcp-"; then
-        echo -e "${GREEN}✅ MCP-Server:${NC} Läuft"
+        echo -e "${GREEN}✅ MCP-Server (Docker):${NC} Läuft"
         docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep "mcp-"
     else
-        echo -e "${RED}❌ MCP-Server:${NC} Gestoppt"
+        echo -e "${RED}❌ MCP-Server (Docker):${NC} Gestoppt"
+    fi
+    
+    # n8n MCP Server Status
+    if pgrep -f "n8n_mcp_server.py" > /dev/null; then
+        echo -e "${GREEN}✅ n8n MCP-Server:${NC} Läuft"
+        ps aux | grep "[n]8n_mcp_server.py" | awk '{print $2, $11, $12, $13}'
+    else
+        echo -e "${RED}❌ n8n MCP-Server:${NC} Gestoppt"
+    fi
+    
+    # Docker MCP Server Status
+    if pgrep -f "docker_mcp_server.py" > /dev/null; then
+        echo -e "${GREEN}✅ Docker MCP-Server:${NC} Läuft"
+        ps aux | grep "[d]ocker_mcp_server.py" | awk '{print $2, $11, $12, $13}'
+    else
+        echo -e "${RED}❌ Docker MCP-Server:${NC} Gestoppt"
     fi
     
     # n8n Status
@@ -182,10 +203,13 @@ start_component() {
         "all")
             log "INFO" "Starte alle Komponenten..."
             start_component "mcp"
+            start_component "n8n-mcp"
+            start_component "docker-mcp"
             start_component "n8n"
             start_component "ollama"
             start_component "openhands"
             start_component "llamafile"
+            start_component "monitoring"
             ;;
         "mcp")
             log "INFO" "Starte MCP-Server..."
@@ -198,6 +222,34 @@ start_component() {
                 fi
             else
                 log "ERROR" "MCP-Server-Startskript nicht gefunden"
+            fi
+            ;;
+        "n8n-mcp")
+            log "INFO" "Starte n8n MCP-Server..."
+            if [ -f "$WORKSPACE_DIR/cli/functions.sh" ]; then
+                source "$WORKSPACE_DIR/cli/functions.sh"
+                start_mcp "n8n"
+                if [ $? -eq 0 ]; then
+                    log "SUCCESS" "n8n MCP-Server erfolgreich gestartet"
+                else
+                    log "ERROR" "Fehler beim Starten des n8n MCP-Servers"
+                fi
+            else
+                log "ERROR" "CLI-Funktionen nicht gefunden"
+            fi
+            ;;
+        "docker-mcp")
+            log "INFO" "Starte Docker MCP-Server..."
+            if [ -f "$WORKSPACE_DIR/cli/functions.sh" ]; then
+                source "$WORKSPACE_DIR/cli/functions.sh"
+                start_mcp "docker"
+                if [ $? -eq 0 ]; then
+                    log "SUCCESS" "Docker MCP-Server erfolgreich gestartet"
+                else
+                    log "ERROR" "Fehler beim Starten des Docker MCP-Servers"
+                fi
+            else
+                log "ERROR" "CLI-Funktionen nicht gefunden"
             fi
             ;;
         "n8n")
@@ -272,6 +324,9 @@ stop_component() {
             stop_component "ollama"
             stop_component "n8n"
             stop_component "mcp"
+            stop_component "n8n-mcp"
+            stop_component "docker-mcp"
+            stop_component "monitoring"
             ;;
         "mcp")
             log "INFO" "Stoppe MCP-Server..."
@@ -284,6 +339,34 @@ stop_component() {
                 fi
             else
                 log "ERROR" "MCP-Server-Stoppskript nicht gefunden"
+            fi
+            ;;
+        "n8n-mcp")
+            log "INFO" "Stoppe n8n MCP-Server..."
+            if [ -f "$WORKSPACE_DIR/cli/functions.sh" ]; then
+                source "$WORKSPACE_DIR/cli/functions.sh"
+                stop_mcp "n8n"
+                if [ $? -eq 0 ]; then
+                    log "SUCCESS" "n8n MCP-Server erfolgreich gestoppt"
+                else
+                    log "ERROR" "Fehler beim Stoppen des n8n MCP-Servers"
+                fi
+            else
+                log "ERROR" "CLI-Funktionen nicht gefunden"
+            fi
+            ;;
+        "docker-mcp")
+            log "INFO" "Stoppe Docker MCP-Server..."
+            if [ -f "$WORKSPACE_DIR/cli/functions.sh" ]; then
+                source "$WORKSPACE_DIR/cli/functions.sh"
+                stop_mcp "docker"
+                if [ $? -eq 0 ]; then
+                    log "SUCCESS" "Docker MCP-Server erfolgreich gestoppt"
+                else
+                    log "ERROR" "Fehler beim Stoppen des Docker MCP-Servers"
+                fi
+            else
+                log "ERROR" "CLI-Funktionen nicht gefunden"
             fi
             ;;
         "n8n")
@@ -975,9 +1058,23 @@ config_command() {
                 log "SUCCESS" "Verbose-Modus aktiviert"
             fi
             ;;
+        "openhands-docker-mcp")
+            if [ -z "$value" ]; then
+                log "ERROR" "Kein Ausgabepfad angegeben"
+                echo "Verwendung: dev-server config openhands-docker-mcp [Ausgabepfad]"
+                return 1
+            fi
+            python3 "$WORKSPACE_DIR/src/generate_docker_mcp_config.py" -o "$value"
+            if [ $? -eq 0 ]; then
+                log "SUCCESS" "OpenHands Docker MCP Konfiguration generiert in $value"
+            else
+                log "ERROR" "Fehler beim Generieren der OpenHands Docker MCP Konfiguration"
+                return 1
+            fi
+            ;;
         *)
             log "ERROR" "Unbekannte Konfigurationsoption: $option"
-            echo "Verfügbare Optionen: show, llamafile-path, llamafile-port, anthropic-key, claude-model, verbose"
+            echo "Verfügbare Optionen: show, llamafile-path, llamafile-port, anthropic-key, claude-model, verbose, openhands-docker-mcp"
             return 1
             ;;
     esac
@@ -1100,3 +1197,38 @@ main() {
 
 # Führe die Hauptfunktion aus
 main "$@"
+# Add monitoring component to start_component function
+case "$component" in
+    "monitoring")
+        log "INFO" "Starte Monitoring-Stack..."
+        if [ -f "$WORKSPACE_DIR/cli/functions.sh" ]; then
+            source "$WORKSPACE_DIR/cli/functions.sh"
+            start_monitoring
+            if [ $? -eq 0 ]; then
+                log "SUCCESS" "Monitoring-Stack erfolgreich gestartet"
+            else
+                log "ERROR" "Fehler beim Starten des Monitoring-Stacks"
+            fi
+        else
+            log "ERROR" "CLI-Funktionen nicht gefunden"
+        fi
+        ;;
+esac
+
+# Add monitoring component to stop_component function
+case "$component" in
+    "monitoring")
+        log "INFO" "Stoppe Monitoring-Stack..."
+        if [ -f "$WORKSPACE_DIR/cli/functions.sh" ]; then
+            source "$WORKSPACE_DIR/cli/functions.sh"
+            stop_monitoring
+            if [ $? -eq 0 ]; then
+                log "SUCCESS" "Monitoring-Stack erfolgreich gestoppt"
+            else
+                log "ERROR" "Fehler beim Stoppen des Monitoring-Stacks"
+            fi
+        else
+            log "ERROR" "CLI-Funktionen nicht gefunden"
+        fi
+        ;;
+esac
