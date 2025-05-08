@@ -18,7 +18,7 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-if ! command -v docker-compose &> /dev/null; then
+if ! command -v docker compose &> /dev/null; then
     echo -e "${RED}Docker Compose ist nicht installiert. Bitte installieren Sie Docker Compose.${NC}"
     exit 1
 fi
@@ -49,7 +49,7 @@ fi
 
 # Starte die Web-UI
 echo -e "${BLUE}Starte Dev-Server Web-UI...${NC}"
-docker-compose -f docker-compose.web-ui.yml up -d
+docker compose -f docker compose.web-ui.yml up -d
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}Dev-Server Web-UI erfolgreich gestartet.${NC}"
