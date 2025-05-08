@@ -1,159 +1,165 @@
-# MCP-LLM Bridge
+# Ollama MCP Bridge
 
-A TypeScript implementation that connects local LLMs (via Ollama) to Model Context Protocol (MCP) servers. This bridge allows open-source models to use the same tools and capabilities as Claude, enabling powerful local AI assistants.
+Diese Komponente verbindet lokale Large Language Models (LLMs) über Ollama mit dem Model Context Protocol (MCP). Die Bridge ermöglicht es Open-Source-Modellen, die gleichen Tools und Funktionen wie kommerzielle Modelle zu nutzen.
 
-## Overview
+## Übersicht
 
-This project bridges local Large Language Models with MCP servers that provide various capabilities like:
-- Filesystem operations
-- Brave web search
-- GitHub interactions
-- Google Drive & Gmail integration
-- Memory/storage
-- Image generation with Flux
+Die Ollama-MCP-Bridge stellt eine Verbindung zwischen lokalen LLMs und MCP-Servern her, die verschiedene Funktionen bereitstellen:
 
-The bridge translates between the LLM's outputs and the MCP's JSON-RPC protocol, allowing any Ollama-compatible model to use these tools just like Claude does.
+- Dateisystemoperationen
+- Websuche
+- GitHub-Interaktionen
+- Speicherfunktionen
+- Und mehr
 
-## Current Setup
+Die Bridge übersetzt zwischen den Ausgaben des LLMs und dem JSON-RPC-Protokoll des MCP, sodass jedes Ollama-kompatible Modell diese Tools nutzen kann.
 
-- **LLM**: Using Qwen 2.5 7B (qwen2.5-coder:7b-instruct) through Ollama
-- **MCPs**:
-  - Filesystem operations (`@modelcontextprotocol/server-filesystem`)
-  - Brave Search (`@modelcontextprotocol/server-brave-search`)
-  - GitHub (`@modelcontextprotocol/server-github`)
-  - Memory (`@modelcontextprotocol/server-memory`)
-  - Flux image generation (`@patruff/server-flux`)
-  - Gmail & Drive (`@patruff/server-gmail-drive`)
+## Aktuelle Konfiguration
 
-## Architecture
+- **LLM**: Qwen 2.5 7B (qwen2.5-coder:7b-instruct) über Ollama
+- **MCP-Server**:
+  - Filesystem MCP (`filesystem-mcp:3001`)
+  - Desktop Commander MCP (`desktop-commander-mcp:3002`)
+  - Sequential Thinking MCP (`sequential-thinking-mcp:3003`)
+  - GitHub Chat MCP (`github-chat-mcp:3004`)
+  - GitHub MCP (`github-mcp:3005`)
+  - Puppeteer MCP (`puppeteer-mcp:3006`)
+  - Basic Memory MCP (`basic-memory-mcp:3007`)
+  - Wikipedia MCP (`wikipedia-mcp:3008`)
 
-- **Bridge**: Core component that manages tool registration and execution
-- **LLM Client**: Handles Ollama interactions and formats tool calls
-- **MCP Client**: Manages MCP server connections and JSON-RPC communication
-- **Tool Router**: Routes requests to appropriate MCP based on tool type
+## Architektur
 
-### Key Features
-- Multi-MCP support with dynamic tool routing
-- Structured output validation for tool calls
-- Automatic tool detection from user prompts
-- Robust process management for Ollama
-- Detailed logging and error handling
+- **Bridge**: Kernkomponente, die die Werkzeugregistrierung und -ausführung verwaltet
+- **LLM-Client**: Verarbeitet Ollama-Interaktionen und formatiert Werkzeugaufrufe
+- **MCP-Client**: Verwaltet MCP-Server-Verbindungen und JSON-RPC-Kommunikation
+- **Tool-Router**: Leitet Anfragen an den entsprechenden MCP-Server weiter
 
-## Setup
+### Hauptfunktionen
+- Unterstützung mehrerer MCP-Server mit dynamischem Routing
+- Strukturierte Ausgabevalidierung für Werkzeugaufrufe
+- Automatische Werkzeugerkennung aus Benutzeranfragen
+- Robuste Prozessverwaltung für Ollama
+- Detaillierte Protokollierung und Fehlerbehandlung
 
-1. Install Ollama and required model:
+## Einrichtung
+
+1. Starten Sie die Ollama-MCP-Bridge mit Docker Compose:
 ```bash
-ollama pull qwen2.5-coder:7b-instruct
+./start-ollama-bridge.sh
 ```
 
-2. Install MCP servers:
-```bash
-npm install -g @modelcontextprotocol/server-filesystem
-npm install -g @modelcontextprotocol/server-brave-search
-npm install -g @modelcontextprotocol/server-github
-npm install -g @modelcontextprotocol/server-memory
-npm install -g @patruff/server-flux
-npm install -g @patruff/server-gmail-drive
-```
+2. Das Skript führt folgende Schritte aus:
+   - Erstellt eine .env-Datei, wenn sie nicht existiert
+   - Startet die Docker-Container für Ollama und die MCP-Bridge
+   - Lädt das konfigurierte Modell herunter, wenn es noch nicht vorhanden ist
 
-3. Configure credentials:
-   - Set `BRAVE_API_KEY` for Brave Search
-   - Set `GITHUB_PERSONAL_ACCESS_TOKEN` for GitHub
-   - Set `REPLICATE_API_TOKEN` for Flux
-   - Run Gmail/Drive MCP auth: `node path/to/gmail-drive/index.js auth`
-   - For example node C:\Users\patru\AppData\Roaming\npm\node_modules\@patruff\server-gmail-drive\dist\index.js auth
+3. Konfigurieren Sie die Zugangsdaten in der .env-Datei:
+   - `GITHUB_TOKEN` für GitHub-Interaktionen
+   - `BRAVE_API_KEY` für die Brave-Suche (optional)
 
-## Configuration
+## Konfiguration
 
-The bridge is configured through `bridge_config.json`:
-- MCP server definitions
-- LLM settings (model, temperature, etc.)
-- Tool permissions and paths
+Die Bridge wird über die Datei `bridge_config.json` konfiguriert:
+- MCP-Server-Definitionen
+- LLM-Einstellungen (Modell, Temperatur, etc.)
+- Werkzeugberechtigungen und -pfade
 
-Example:
+Beispiel:
 ```json
 {
   "mcpServers": {
     "filesystem": {
-      "command": "node",
-      "args": ["path/to/server-filesystem/dist/index.js"],
-      "allowedDirectory": "workspace/path"
+      "url": "http://filesystem-mcp:3001"
     },
-    // ... other MCP configurations
+    "github": {
+      "url": "http://github-mcp:3005"
+    },
+    "memory": {
+      "url": "http://basic-memory-mcp:3007"
+    }
   },
   "llm": {
     "model": "qwen2.5-coder:7b-instruct",
-    "baseUrl": "http://localhost:11434"
+    "baseUrl": "http://ollama:11434",
+    "temperature": 0.7,
+    "maxTokens": 4096
   }
 }
 ```
 
-## Usage
+## Verwendung
 
-1. Start the bridge:
+1. Testen Sie die Bridge mit dem Testskript:
 ```bash
-npm run start
+./test-ollama-bridge.sh
 ```
 
-2. Available commands:
-   - `list-tools`: Show available tools
-   - Regular text: Send prompts to the LLM
-   - `quit`: Exit the program
-
-Example interactions:
-```
-> Search the web for "latest TypeScript features"
-[Uses Brave Search MCP to find results]
-
-> Create a new folder called "project-docs"
-[Uses Filesystem MCP to create directory]
-
-> Send an email to user@example.com
-[Uses Gmail MCP to compose and send email]
+2. Senden Sie Anfragen an den Chat-Endpunkt:
+```bash
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"Erstelle eine Datei mit dem Namen test.txt im Verzeichnis /workspace"}'
 ```
 
-## Technical Details
+3. Verwenden Sie die Bridge in Ihren Anwendungen:
+   - MCP-Endpunkt: `http://localhost:8000/mcp`
+   - Chat-Endpunkt: `http://localhost:8000/chat`
+   - Gesundheitscheck: `http://localhost:8000/health`
 
-### Tool Detection
-The bridge includes smart tool detection based on user input:
-- Email operations: Detected by email addresses and keywords
-- Drive operations: Detected by file/folder keywords
-- Search operations: Contextually routed to appropriate search tool
+Beispielinteraktionen:
+```
+> Suche im Web nach "neueste TypeScript-Funktionen"
+[Verwendet den Brave Search MCP für die Suche]
 
-### Response Processing
-Responses are processed through multiple stages:
-1. LLM generates structured tool calls
-2. Bridge validates and routes to appropriate MCP
-3. MCP executes operation and returns result
-4. Bridge formats response for user
+> Erstelle einen neuen Ordner namens "projekt-docs"
+[Verwendet den Filesystem MCP zum Erstellen des Verzeichnisses]
 
-## Extended Capabilities
+> Öffne die Webseite github.com
+[Verwendet den Puppeteer MCP zum Öffnen der Webseite]
+```
 
-This bridge effectively brings Claude's tool capabilities to local models:
-- Filesystem manipulation
-- Web search and research
-- Email and document management
-- Code and GitHub interactions
-- Image generation
-- Persistent memory
+## Technische Details
 
-All while running completely locally with open-source models.
+### Werkzeugerkennung
+Die Bridge enthält eine intelligente Werkzeugerkennung basierend auf der Benutzereingabe:
+- Dateisystemoperationen: Erkannt durch Datei- und Verzeichnispfade
+- Suchoperationen: Kontextuell an den entsprechenden Suchdienst weitergeleitet
+- GitHub-Operationen: Erkannt durch Repository- und Issue-Referenzen
 
-## Future Improvements
+### Antwortverarbeitung
+Antworten werden in mehreren Stufen verarbeitet:
+1. Das LLM generiert strukturierte Werkzeugaufrufe
+2. Die Bridge validiert und leitet an den entsprechenden MCP-Server weiter
+3. Der MCP-Server führt die Operation aus und gibt das Ergebnis zurück
+4. Die Bridge formatiert die Antwort für den Benutzer
 
-- Add support for more MCPs
-- Implement parallel tool execution
-- Add streaming responses
-- Enhance error recovery
-- Add conversation memory
-- Support more Ollama models
+## Erweiterte Funktionen
 
-## Related Projects
+Diese Bridge bringt die Werkzeugfähigkeiten kommerzieller Modelle zu lokalen Open-Source-Modellen:
+- Dateisystemmanipulation
+- Websuche und -recherche
+- Code- und GitHub-Interaktionen
+- Browser-Automatisierung
+- Persistenter Speicher
+- Strukturiertes Denken
 
-This bridge integrates with the broader Claude ecosystem:
+Alles läuft vollständig lokal mit Open-Source-Modellen.
+
+## Zukünftige Verbesserungen
+
+- Unterstützung für weitere MCP-Server
+- Implementierung paralleler Werkzeugausführung
+- Hinzufügen von Streaming-Antworten
+- Verbesserte Fehlerbehandlung
+- Hinzufügen von Konversationsgedächtnis
+- Unterstützung weiterer Ollama-Modelle
+
+## Verwandte Projekte
+
+Diese Bridge integriert sich in das breitere MCP-Ökosystem:
 - Model Context Protocol (MCP)
-- Claude Desktop Configuration
-- Ollama Project
-- Various MCP server implementations
+- OpenHands-Integration
+- Ollama-Projekt
+- Verschiedene MCP-Server-Implementierungen
 
-The result is a powerful local AI assistant that can match many of Claude's capabilities while running entirely on your own hardware.
+Das Ergebnis ist ein leistungsstarker lokaler KI-Assistent, der viele Funktionen kommerzieller Modelle bietet, während er vollständig auf Ihrer eigenen Hardware läuft.

@@ -1,0 +1,94 @@
+[core]
+debug = false
+disable_color = false
+cache_dir = "/tmp/cache"
+save_trajectory_path = "/.openhands-state/trajectories"
+file_store_path = "/.openhands-state/file_store"
+file_store = "memory"
+file_uploads_allowed_extensions = [".*"]
+file_uploads_max_file_size_mb = 0
+file_uploads_restrict_file_types = false
+max_budget_per_task = 0.0
+max_iterations = 100
+run_as_openhands = true
+runtime = "docker"
+default_agent = "CodeActAgent"
+jwt_secret = "replace-with-a-secure-random-key"
+
+[llm]
+model = "claude-3-5-sonnet-20241022"
+num_retries = 8
+retry_max_wait = 120
+retry_min_wait = 15
+retry_multiplier = 2.0
+drop_params = false
+caching_prompt = true
+temperature = 0.0
+timeout = 0
+top_p = 1.0
+max_message_chars = 30000
+
+[agent]
+llm_config = "default"
+function_calling = true
+enable_browsing = true
+enable_llm_editor = false
+enable_jupyter = false
+enable_history_truncation = true
+enable_prompt_extensions = true
+
+[sandbox]
+timeout = 120
+user_id = 1000
+base_container_image = "docker.all-hands.dev/all-hands-ai/runtime:0.36-nikolaik"
+use_host_network = false
+runtime_binding_address = "0.0.0.0"
+enable_auto_lint = false
+initialize_plugins = true
+volumes = "/workspace:/workspace:rw"
+
+[security]
+confirmation_mode = false
+security_analyzer = ""
+
+[mcp]
+# SSE Servers - External MCP servers that communicate via Server-Sent Events
+sse_servers = [
+    # MCP servers running in Docker containers
+    "http://mcp-filesystem:3001/mcp",
+    "http://mcp-desktop-commander:3002/mcp",
+    "http://mcp-sequential-thinking:3003/mcp",
+    "http://mcp-github-chat:3004/mcp",
+    "http://mcp-github:3005/mcp",
+    "http://mcp-puppeteer:3006/mcp",
+    "http://mcp-basic-memory:3007/mcp",
+    "http://mcp-wikipedia:3008/mcp"
+]
+
+# Stdio Servers - Local processes that communicate via standard input/output
+# These are fallbacks in case the Docker containers are not available
+stdio_servers = [
+    # Filesystem server
+    {
+        name = "filesystem-fallback",
+        command = "npx",
+        args = ["-y", "@modelcontextprotocol/server-filesystem"]
+    },
+    
+    # GitHub server
+    {
+        name = "github-fallback",
+        command = "npx",
+        args = ["-y", "@modelcontextprotocol/server-github"],
+        env = {
+            "GITHUB_TOKEN" = "${GITHUB_TOKEN}"
+        }
+    },
+    
+    # Memory server
+    {
+        name = "memory-fallback",
+        command = "npx",
+        args = ["-y", "@modelcontextprotocol/server-memory"]
+    }
+]

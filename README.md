@@ -24,6 +24,7 @@
 - [Wichtige Funktionen](#-wichtige-funktionen)
 - [Erste Schritte](#-erste-schritte)
 - [Projektstruktur](#-projektstruktur)
+- [Dev-Server CLI](#-dev-server-cli)
 - [Workflows](#-workflows)
 - [OpenHands Integration](#-openhands-integration)
 - [MCP Integration](#-mcp-integration)
@@ -148,11 +149,15 @@ Wenn Sie eine direkte Installation ohne Docker bevorzugen:
 
 ```
 Dev-Server-Workflow/
+├── ARCHITECTURE.md            # Überblick über die Architektur und Beziehungen zwischen Komponenten
+├── cli/                       # Dev-Server CLI für die Verwaltung aller Komponenten
 ├── docker-mcp-ecosystem/      # Vollständiges MCP-Server-Ökosystem mit Monitoring und Logging
 ├── docker-mcp-servers/        # Minimale MCP-Server-Konfiguration für OpenHands und n8n
 ├── docs/                      # Dokumentation
 │   └── docs/                  # Detaillierte Dokumentation nach Themen
 ├── scripts/                   # Skripte für Installation, Konfiguration und Wartung
+│   ├── generate-common-config.py # Generiert gemeinsame Konfigurationsdateien für beide Implementierungen
+│   ├── test-implementations.py # Automatisierte Tests für beide Implementierungen
 │   └── mcp/                   # Skripte für MCP-Server-Integration
 ├── src/                       # Quellcode
 │   ├── n8n_mcp_server.py      # MCP-Server-Implementierung für n8n
@@ -172,6 +177,68 @@ Dev-Server-Workflow/
 ```
 
 Weitere Details zur Repository-Struktur finden Sie in der [REPOSITORY_STRUCTURE.md](docs/docs/Dev-Server-Workflow/REPOSITORY_STRUCTURE.md) Datei.
+
+### Architektur und Beziehungen zwischen Komponenten
+
+Dieses Projekt enthält zwei alternative Implementierungen des MCP-Server-Ökosystems:
+
+1. **docker-mcp-ecosystem**: Eine umfassende Lösung mit allen Komponenten (MCP-Server, n8n, Monitoring, OpenHands)
+2. **docker-mcp-servers**: Eine fokussierte Lösung nur für die MCP-Server
+
+Diese Implementierungen sind nicht dafür ausgelegt, gleichzeitig zu laufen, da sie die gleichen Ports und Container-Namen verwenden.
+
+Für eine detaillierte Erklärung der Architektur, der Beziehungen zwischen den Komponenten und Empfehlungen, welche Implementierung für welchen Anwendungsfall zu verwenden ist, lesen Sie die [ARCHITECTURE.md](ARCHITECTURE.md) Datei.
+
+## 🖥️ Dev-Server CLI
+
+Die Dev-Server CLI ist eine umfassende Befehlszeilenschnittstelle zur Verwaltung aller Komponenten des Dev-Server-Workflows. Sie bietet eine einheitliche Schnittstelle zum Starten, Stoppen, Konfigurieren und Überwachen der verschiedenen Dienste sowie eine Integration mit KI-Modellen für die Unterstützung bei der Administration.
+
+### Installation der CLI
+
+```bash
+# Installation der CLI
+sudo ./cli/install.sh
+```
+
+### Grundlegende Befehle
+
+```bash
+# Hilfe anzeigen
+dev-server help
+
+# Status aller Komponenten anzeigen
+dev-server status
+
+# Interaktives Menü öffnen
+dev-server menu
+
+# Komponente starten
+dev-server start mcp
+
+# Komponente stoppen
+dev-server stop n8n
+
+# Logs anzeigen
+dev-server logs ollama
+```
+
+### KI-Integration
+
+Die CLI unterstützt zwei LLM-Backends für die KI-Integration:
+
+1. **Llamafile** (lokal): Ein lokales LLM, das keine Internetverbindung benötigt
+2. **Claude** (Anthropic API): Ein leistungsstarkes Cloud-LLM mit API-Zugriff
+
+```bash
+# KI-Befehl ausführen
+dev-server ai "Wie starte ich den MCP-Server?"
+
+# Zwischen LLMs wechseln
+dev-server switch-llm llamafile
+dev-server switch-llm claude
+```
+
+Weitere Informationen zur CLI finden Sie in der [CLI-Dokumentation](cli/README.md).
 
 ## 📊 Workflows
 
