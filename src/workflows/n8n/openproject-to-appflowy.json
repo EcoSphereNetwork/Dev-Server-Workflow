@@ -1,0 +1,180 @@
+{
+  "name": "OpenProject-to-AppFlowy",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "openproject-to-appflowy",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "openproject-to-appflowy-webhook"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "databaseId": "={{ $env.APPFLOWY_DATABASE_ID }}",
+        "record": "={\n  \"Title\": $json.title,\n  \"Description\": $json.description,\n  \"Source\": \"openproject\",\n  \"Source ID\": $json.source_id,\n  \"URL\": $json.url,\n  \"Status\": $json.status,\n  \"Creator\": $json.creator,\n  \"Project\": $json.project,\n  \"Type\": $json.type,\n  \"Priority\": $json.priority,\n  \"Last Updated\": new Date().toISOString()\n}"
+      },
+      "type": "n8n-nodes-base.appflowy",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "id": "update-appflowy-record"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.customField1 }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "id": "check-if-external-source"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.customField1 }}",
+              "operation": "equal",
+              "value2": "github"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [900, 200],
+      "id": "check-if-github"
+    },
+    {
+      "parameters": {
+        "resource": "issues",
+        "owner": "={{ $env.GITHUB_OWNER }}",
+        "repository": "={{ $env.GITHUB_REPO }}",
+        "issueNumber": "={{ $json.customField2 }}",
+        "updateFields": {
+          "state": "={{ $json.status === 'closed' ? 'closed' : 'open' }}"
+        }
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [1120, 140],
+      "id": "update-github-issue"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.customField1 }}",
+              "operation": "equal",
+              "value2": "gitlab"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [900, 400],
+      "id": "check-if-gitlab"
+    },
+    {
+      "parameters": {
+        "authentication": "accessToken",
+        "resource": "issue",
+        "operation": "update",
+        "projectId": "={{ $env.GITLAB_PROJECT_ID }}",
+        "issueId": "={{ $json.customField2 }}",
+        "options": {
+          "state_event": "={{ $json.status === 'closed' ? 'close' : 'reopen' }}"
+        }
+      },
+      "type": "n8n-nodes-base.gitlab",
+      "typeVersion": 1,
+      "position": [1120, 400],
+      "id": "update-gitlab-issue"
+    }
+  ],
+  "connections": {
+    "openproject-to-appflowy-webhook": {
+      "main": [
+        [
+          {
+            "node": "update-appflowy-record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update-appflowy-record": {
+      "main": [
+        [
+          {
+            "node": "check-if-external-source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-if-external-source": {
+      "main": [
+        [
+          {
+            "node": "check-if-github",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "check-if-github": {
+      "main": [
+        [
+          {
+            "node": "update-github-issue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "check-if-gitlab",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-if-gitlab": {
+      "main": [
+        [
+          {
+            "node": "update-gitlab-issue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  }
+}

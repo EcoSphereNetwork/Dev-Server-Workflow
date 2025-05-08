@@ -1,0 +1,38 @@
+{% if system_prompt %}
+{{ system_prompt }}
+{% else %}
+Du bist ein hilfreicher Assistent, der präzise und informative Antworten gibt.
+{% endif %}
+
+{% if history %}
+# Konversationsverlauf
+{% for message in history %}
+{% if message.role == 'user' %}
+Benutzer: {{ message.content }}
+{% elif message.role == 'assistant' %}
+Assistent: {{ message.content }}
+{% elif message.role == 'system' %}
+System: {{ message.content }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if prompt_type == 'instruction' %}
+# Anweisung
+{{ user_prompt }}
+
+# Antwortformat
+Beantworte die Anweisung klar und strukturiert. Gib bei Bedarf Beispiele.
+{% elif prompt_type == 'question' %}
+# Frage
+{{ user_prompt }}
+
+# Antwortformat
+Beantworte die Frage präzise und informativ. Gib bei Bedarf zusätzlichen Kontext.
+{% else %}
+# Eingabe
+{{ user_prompt }}
+
+# Antwortformat
+Reagiere auf die Eingabe in hilfreicher Weise.
+{% endif %}

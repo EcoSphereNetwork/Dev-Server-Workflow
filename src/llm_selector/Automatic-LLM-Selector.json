@@ -1,0 +1,257 @@
+{
+  "name": "Automatic-LLM-Selector",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "analyze-task",
+        "options": {
+          "responseMode": "onReceived"
+        }
+      },
+      "id": "task-analyzer-webhook",
+      "name": "Task Analyzer Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Task Complexity Analyzer\n// Analysiert eingehende Aufgaben und bestimmt deren Komplexität\n\nconst taskRequest = $input.item.json;\n\n// Extrahiere die Aufgabenbeschreibung und andere relevante Daten\nconst {\n  task_description,\n  task_type = \"general\",  // Standardtyp, falls nicht angegeben\n  context_length,        // Optional: Explizite Angabe der Kontextlänge\n  expected_output_length, // Optional: Erwartete Ausgabelänge\n  require_multimodal = false, // Multimodale Fähigkeiten erforderlich?\n  quality_threshold = 7.0,    // Mindestqualität (1-10)\n  custom_parameters = {}      // Zusätzliche benutzerdefinierte Parameter\n} = taskRequest;\n\n// Prüfe, ob eine Aufgabenbeschreibung vorhanden ist\nif (!task_description) {\n  return {\n    error: \"Keine Aufgabenbeschreibung angegeben\",\n    timestamp: new Date().toISOString()\n  };\n}\n\n// Komplexitätskategorien mit Erkennungsmerkmalen\nconst complexityPatterns = {\n  \"very_simple\": {\n    keywords: [\"klassifiziere\", \"kategorisiere\", \"kurz\", \"einfach\", \"ja/nein\", \"wahr/falsch\"],\n    maxTokenEstimate: 500,\n    requiresReasoning: false,\n    requiresCreativity: false,\n    requiresSpecialization: false\n  },\n  \"simple\": {\n    keywords: [\"zusammenfassen\", \"liste\", \"extrahiere\", \"finde\", \"erkläre kurz\"],\n    maxTokenEstimate: 1500,\n    requiresReasoning: false,\n    requiresCreativity: false,\n    requiresSpecialization: false\n  },\n  \"medium\": {\n    keywords: [\"analysiere\", \"vergleiche\", \"erkläre\", \"generiere code\", \"schreibe\"],\n    maxTokenEstimate: 3000,\n    requiresReasoning: true,\n    requiresCreativity: false,\n    requiresSpecialization: false\n  },\n  \"complex\": {\n    keywords: [\"entwickle\", \"entwerfe\", \"optimiere\", \"debugge\", \"löse\", \"tiefgehend\"],\n    maxTokenEstimate: 6000,\n    requiresReasoning: true,\n    requiresCreativity: true,\n    requiresSpecialization: false\n  },\n  \"very_complex\": {\n    keywords: [\"forschung\", \"komplex\", \"umfassend\", \"detailliert\", \"mehrschrittig\"],\n    maxTokenEstimate: 12000,\n    requiresReasoning: true,\n    requiresCreativity: true,\n    requiresSpecialization: true\n  },\n  \"extremely_complex\": {\n    keywords: [\"hochkomplex\", \"KI-Agent\", \"Forschungssynthese\", \"Systemarchitektur\", \"umfangreich\"],\n    maxTokenEstimate: 20000,\n    requiresReasoning: true,\n    requiresCreativity: true,\n    requiresSpecialization: true\n  }\n};\n\n// Aufgabentypen mit spezifischen Anforderungen\nconst taskTypes = {\n  \"general\": {\n    complexityMultiplier: 1.0,\n    qualityThreshold: 7.0\n  },\n  \"code_generation\": {\n    complexityMultiplier: 1.2,\n    qualityThreshold: 8.0,\n    keywords: [\"code\", \"programmieren\", \"funktion\", \"klasse\", \"implementiere\"]\n  },\n  \"creative_writing\": {\n    complexityMultiplier: 1.1,\n    qualityThreshold: 8.5,\n    keywords: [\"kreativ\", \"geschichte\", \"artikel\", \"blog\", \"schreibe\"]\n  },\n  \"data_analysis\": {\n    complexityMultiplier: 1.3,\n    qualityThreshold: 8.0,\n    keywords: [\"daten\", \"analyse\", \"statistik\", \"trend\", \"auswerten\"]\n  },\n  \"translation\": {\n    complexityMultiplier: 0.9,\n    qualityThreshold: 8.0,\n    keywords: [\"übersetze\", \"übersetzung\", \"sprache\", \"von\", \"nach\"]\n  },\n  \"summarization\": {\n    complexityMultiplier: 0.8,\n    qualityThreshold: 7.5,\n    keywords: [\"zusammenfassen\", \"zusammenfassung\", \"kurz\", \"kompakt\"]\n  }\n};\n\n// Funktion zur Schätzung der Tokenanzahl basierend auf der Textlänge\nfunction estimateTokenCount(text) {\n  // Einfache Schätzung: ca. 4 Zeichen pro Token (für Deutsch/Englisch)\n  return Math.ceil(text.length / 4);\n}\n\n// Funktion zur Erkennung des Aufgabentyps\nfunction detectTaskType(description) {\n  // Standardtyp\n  let detectedType = \"general\";\n  let highestMatchCount = 0;\n  \n  // Prüfe jeden Aufgabentyp auf Schlüsselwörter\n  for (const [type, typeInfo] of Object.entries(taskTypes)) {\n    if (type === \"general\" || !typeInfo.keywords) continue;\n    \n    let matchCount = 0;\n    for (const keyword of typeInfo.keywords) {\n      if (description.toLowerCase().includes(keyword.toLowerCase())) {\n        matchCount++;\n      }\n    }\n    \n    // Wähle den Typ mit den meisten Übereinstimmungen\n    if (matchCount > highestMatchCount) {\n      highestMatchCount = matchCount;\n      detectedType = type;\n    }\n  }\n  \n  return detectedType;\n}\n\n// Funktion zur Analyse der Komplexität\nfunction analyzeComplexity(description, detectedTaskType) {\n  // Tokenanzahl schätzen\n  const estimatedTokens = estimateTokenCount(description);\n  \n  // Prüfe auf Indikatoren für komplexes Reasoning\n  const hasReasoningIndicators = [\n    \"warum\", \"wie\", \"erkläre\", \"analysiere\", \"vergleiche\", \"bewerte\"\n  ].some(indicator => description.toLowerCase().includes(indicator.toLowerCase()));\n  \n  // Prüfe auf Indikatoren für Kreativität\n  const hasCreativityIndicators = [\n    \"kreativ\", \"innovativ\", \"neu\", \"originell\", \"entwerfe\", \"gestalte\"\n  ].some(indicator => description.toLowerCase().includes(indicator.toLowerCase()));\n  \n  // Prüfe auf Indikatoren für Spezialisierung\n  const hasSpecializationIndicators = [\n    \"fachlich\", \"spezialisiert\", \"expertenwissen\", \"domänenspezifisch\"\n  ].some(indicator => description.toLowerCase().includes(indicator.toLowerCase()));\n  \n  // Zähle Schlüsselwörter für jede Komplexitätsstufe\n  const complexityScores = {};\n  for (const [complexity, patterns] of Object.entries(complexityPatterns)) {\n    let score = 0;\n    \n    // Prüfe Schlüsselwörter\n    for (const keyword of patterns.keywords) {\n      if (description.toLowerCase().includes(keyword.toLowerCase())) {\n        score += 1;\n      }\n    }\n    \n    // Berücksichtige Reasoning, Kreativität und Spezialisierung\n    if (patterns.requiresReasoning && hasReasoningIndicators) score += 2;\n    if (patterns.requiresCreativity && hasCreativityIndicators) score += 2;\n    if (patterns.requiresSpecialization && hasSpecializationIndicators) score += 2;\n    \n    // Berücksichtige die geschätzte Tokenzahl\n    if (estimatedTokens <= patterns.maxTokenEstimate) score += 1;\n    \n    complexityScores[complexity] = score;\n  }\n  \n  // Bestimme die Komplexität mit dem höchsten Score\n  let highestScore = -1;\n  let detectedComplexity = \"medium\"; // Standardwert\n  \n  for (const [complexity, score] of Object.entries(complexityScores)) {\n    if (score > highestScore) {\n      highestScore = score;\n      detectedComplexity = complexity;\n    }\n  }\n  \n  // Berücksichtige den Aufgabentyp für die finale Komplexität\n  const typeInfo = taskTypes[detectedTaskType];\n  const complexityOrder = [\"very_simple\", \"simple\", \"medium\", \"complex\", \"very_complex\", \"extremely_complex\"];\n  const complexityIndex = complexityOrder.indexOf(detectedComplexity);\n  \n  // Passe die Komplexität basierend auf dem Typ an\n  let adjustedIndex = complexityIndex;\n  if (typeInfo.complexityMultiplier > 1.2) {\n    // Erhöhe die Komplexität um eine Stufe für Typen mit hohem Multiplikator\n    adjustedIndex = Math.min(complexityIndex + 1, complexityOrder.length - 1);\n  } else if (typeInfo.complexityMultiplier < 0.8) {\n    // Verringere die Komplexität um eine Stufe für Typen mit niedrigem Multiplikator\n    adjustedIndex = Math.max(complexityIndex - 1, 0);\n  }\n  \n  const finalComplexity = complexityOrder[adjustedIndex];\n  \n  return {\n    complexity: finalComplexity,\n    scores: complexityScores,\n    estimated_tokens: estimatedTokens,\n    has_reasoning: hasReasoningIndicators,\n    has_creativity: hasCreativityIndicators,\n    has_specialization: hasSpecializationIndicators\n  };\n}\n\n// Hauptfunktion zur Analyse der Aufgabe\nfunction analyzeTask() {\n  try {\n    // Erkenne den Aufgabentyp, falls nicht explizit angegeben\n    const detectedTaskType = task_type === \"general\" ? \n                            detectTaskType(task_description) : \n                            task_type;\n    \n    // Analysiere die Komplexität\n    const complexityAnalysis = analyzeComplexity(task_description, detectedTaskType);\n    \n    // Bestimme die Qualitätsanforderung basierend auf Typ und benutzerdefiniertem Schwellenwert\n    const typeQualityThreshold = taskTypes[detectedTaskType]?.qualityThreshold || 7.0;\n    const finalQualityThreshold = Math.max(quality_threshold, typeQualityThreshold);\n    \n    // Erstelle die Anforderungsparameter für die Modellauswahl\n    const requirementsForModelSelection = {\n      task_complexity: complexityAnalysis.complexity,\n      task_type: detectedTaskType,\n      input_tokens: context_length || complexityAnalysis.estimated_tokens,\n      output_tokens: expected_output_length || Math.ceil(complexityAnalysis.estimated_tokens * 0.5),\n      require_multimodal: require_multimodal,\n      quality_threshold: finalQualityThreshold,\n      // Weitere Parameter können hier hinzugefügt werden\n      ...custom_parameters\n    };\n    \n    return {\n      task_analysis: {\n        description: task_description.substring(0, 100) + (task_description.length > 100 ? \"...\" : \"\"),\n        detected_type: detectedTaskType,\n        complexity_result: complexityAnalysis,\n        quality_threshold: finalQualityThreshold,\n        multimodal_required: require_multimodal\n      },\n      model_selection_parameters: requirementsForModelSelection,\n      timestamp: new Date().toISOString()\n    };\n  } catch (error) {\n    return {\n      error: error.message,\n      timestamp: new Date().toISOString()\n    };\n  }\n}\n\n// Führe die Aufgabenanalyse aus\nreturn analyzeTask();"
+      },
+      "id": "task-complexity-analyzer",
+      "name": "Task Complexity Analyzer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$json.model_selection_parameters ? 'http://localhost:5000/estimate-task-cost' : 'http://localhost:5000/error'}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model_selection_parameters",
+              "value": "={{$json.model_selection_parameters}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cost-estimation-api",
+      "name": "Cost Estimation API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// LLM Model Selector\n// Wählt das optimale Modell basierend auf Komplexität und Kosten\n\nconst response = $input.item.json;\n\n// Prüfe, ob die Antwort einen Fehler enthält\nif (response.error) {\n  return {\n    error: response.error,\n    timestamp: new Date().toISOString()\n  };\n}\n\n// Extrahiere die Aufgabenanalyse und Modellempfehlungen\nconst taskAnalysis = $node[\"Task Complexity Analyzer\"].json.task_analysis;\nconst modelResults = response.model_results || {};\nconst recommendations = response.recommendations || {};\n\n// Definiere Auswahlstrategien\nconst selectionStrategies = {\n  \"cost_effective\": {\n    name: \"Kosteneffizient\",\n    description: \"Wählt das kostengünstigste Modell, das die Anforderungen erfüllt\",\n    recommendationKey: \"most_cost_effective\"\n  },\n  \"balanced\": {\n    name: \"Ausgewogen\",\n    description: \"Balanciert Kosten, Geschwindigkeit und Qualität\",\n    recommendationKey: \"balanced\"\n  },\n  \"high_quality\": {\n    name: \"Hohe Qualität\",\n    description: \"Priorisiert Qualität über Kosten\",\n    recommendationKey: \"highest_quality\"\n  },\n  \"fastest\": {\n    name: \"Schnellste Antwort\",\n    description: \"Wählt das Modell mit der geringsten Latenz\",\n    recommendationKey: \"fastest_response\"\n  }\n};\n\n// Wähle die Standardstrategie basierend auf der Komplexität\nlet defaultStrategy = \"balanced\";\nconst complexity = taskAnalysis.complexity_result.complexity;\n\nif (complexity === \"very_simple\" || complexity === \"simple\") {\n  defaultStrategy = \"cost_effective\";\n} else if (complexity === \"very_complex\" || complexity === \"extremely_complex\") {\n  defaultStrategy = \"high_quality\";\n}\n\n// Funktion zur Auswahl des optimalen Modells basierend auf der Strategie\nfunction selectOptimalModel(strategy) {\n  const strategyInfo = selectionStrategies[strategy];\n  if (!strategyInfo) {\n    throw new Error(`Ungültige Auswahlstrategie: ${strategy}`);\n  }\n  \n  // Hole die Empfehlung basierend auf der Strategie\n  let recommendation = recommendations[strategyInfo.recommendationKey];\n  \n  // Fallback auf die kosteneffizienteste Option, wenn keine Empfehlung verfügbar ist\n  if (!recommendation && recommendations.most_cost_effective) {\n    recommendation = recommendations.most_cost_effective;\n  }\n  \n  // Fallback auf das erste verfügbare Modell, wenn keine Empfehlungen verfügbar sind\n  if (!recommendation) {\n    const availableModels = Object.keys(modelResults).filter(model => \n      modelResults[model] && !modelResults[model].isRejected && !modelResults[model].error\n    );\n    \n    if (availableModels.length > 0) {\n      const firstModel = availableModels[0];\n      recommendation = {\n        model: firstModel,\n        cost: modelResults[firstModel].totalCost,\n        latency: modelResults[firstModel].latency,\n        quality_score: modelResults[firstModel].qualityScore\n      };\n    } else {\n      throw new Error(\"Keine geeigneten Modelle für diese Aufgabe gefunden\");\n    }\n  }\n  \n  return {\n    selected_model: recommendation.model,\n    selection_strategy: strategy,\n    strategy_name: strategyInfo.name,\n    strategy_description: strategyInfo.description,\n    model_details: modelResults[recommendation.model],\n    estimated_cost: recommendation.cost,\n    estimated_latency: recommendation.latency,\n    quality_score: recommendation.quality_score || modelResults[recommendation.model].qualityScore\n  };\n}\n\n// Hauptfunktion zur Modellauswahl\nfunction selectModel() {\n  try {\n    // Wähle die Strategie basierend auf der Aufgabenkomplexität\n    const selectedStrategy = defaultStrategy;\n    \n    // Wähle das optimale Modell\n    const modelSelection = selectOptimalModel(selectedStrategy);\n    \n    // Erstelle die Routing-Informationen\n    const modelType = modelResults[modelSelection.selected_model].modelType;\n    const isLocal = modelType === 'local';\n    \n    const routingInfo = {\n      endpoint: isLocal ? `http://localhost:8000/models/${modelSelection.selected_model}/generate` : \n                        `https://api.${modelResults[modelSelection.selected_model].provider}.com/v1/chat/completions`,\n      api_key_required: !isLocal,\n      provider: modelResults[modelSelection.selected_model].provider || 'local',\n      model_type: modelType\n    };\n    \n    return {\n      task_analysis: taskAnalysis,\n      model_selection: modelSelection,\n      routing: routingInfo,\n      all_recommendations: recommendations,\n      timestamp: new Date().toISOString()\n    };\n  } catch (error) {\n    return {\n      error: error.message,\n      task_analysis: taskAnalysis,\n      timestamp: new Date().toISOString()\n    };\n  }\n}\n\n// Führe die Modellauswahl aus\nreturn selectModel();"
+      },
+      "id": "llm-model-selector",
+      "name": "LLM Model Selector",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.error !== undefined}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "error-check",
+      "name": "Error Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fehlerbehandlung\nconst error = $input.item.json.error;\n\nreturn {\n  success: false,\n  error: error,\n  message: `Fehler bei der Modellauswahl: ${error}`,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "handle-error",
+      "name": "Handle Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Erfolgreiche Modellauswahl\nconst result = $input.item.json;\n\n// Extrahiere die wichtigsten Informationen\nconst {\n  task_analysis,\n  model_selection,\n  routing\n} = result;\n\n// Erstelle eine benutzerfreundliche Zusammenfassung\nconst summary = {\n  task_type: task_analysis.detected_type,\n  task_complexity: task_analysis.complexity_result.complexity,\n  selected_model: model_selection.selected_model,\n  selection_strategy: model_selection.strategy_name,\n  estimated_cost: model_selection.estimated_cost,\n  estimated_latency: `${(model_selection.estimated_latency).toFixed(2)} Sekunden`,\n  quality_score: `${model_selection.quality_score}/10`,\n  model_type: routing.model_type,\n  provider: routing.provider\n};\n\n// Erstelle eine detaillierte Antwort\nreturn {\n  success: true,\n  summary: summary,\n  routing_details: routing,\n  model_selection_details: model_selection,\n  task_analysis: task_analysis,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "prepare-response",
+      "name": "Prepare Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Task Router\n// Leitet die Aufgabe an das ausgewählte Modell weiter\n\nconst result = $input.item.json;\n\n// Extrahiere die Routing-Informationen\nconst {\n  routing_details,\n  model_selection_details,\n  task_analysis\n} = result;\n\n// Erstelle die Anfrage an das ausgewählte Modell\nconst modelRequest = {\n  model: model_selection_details.selected_model,\n  endpoint: routing_details.endpoint,\n  provider: routing_details.provider,\n  task: {\n    description: task_analysis.description,\n    type: task_analysis.detected_type,\n    complexity: task_analysis.complexity_result.complexity\n  },\n  estimated_cost: model_selection_details.estimated_cost,\n  estimated_latency: model_selection_details.estimated_latency,\n  timestamp: new Date().toISOString()\n};\n\n// In einer realen Implementierung würde hier die Anfrage an das Modell gesendet\n// und die Antwort zurückgegeben werden\n\nreturn {\n  ...result,\n  model_request: modelRequest,\n  message: `Aufgabe wurde an das Modell ${model_selection_details.selected_model} weitergeleitet.`\n};"
+      },
+      "id": "task-router",
+      "name": "Task Router",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Feedback Collector\n// Sammelt Feedback zur Modellauswahl für kontinuierliche Verbesserung\n\nconst result = $input.item.json;\n\n// Extrahiere die relevanten Informationen\nconst {\n  summary,\n  model_selection_details,\n  task_analysis\n} = result;\n\n// Erstelle einen Feedback-Eintrag\nconst feedbackEntry = {\n  task_id: `task-${Date.now()}`,\n  timestamp: new Date().toISOString(),\n  task_type: task_analysis.detected_type,\n  task_complexity: task_analysis.complexity_result.complexity,\n  selected_model: model_selection_details.selected_model,\n  selection_strategy: model_selection_details.selection_strategy,\n  estimated_cost: model_selection_details.estimated_cost,\n  estimated_latency: model_selection_details.estimated_latency,\n  // Diese Felder würden in einer realen Implementierung nach der Modellausführung ausgefüllt\n  actual_cost: null,\n  actual_latency: null,\n  quality_rating: null,\n  user_satisfaction: null\n};\n\n// In einer realen Implementierung würde dieses Feedback in einer Datenbank gespeichert\n// und für die kontinuierliche Verbesserung des Auswahlalgorithmus verwendet\n\nreturn {\n  ...result,\n  feedback: feedbackEntry,\n  message: `Feedback zur Modellauswahl wurde erfasst.`\n};"
+      },
+      "id": "feedback-collector",
+      "name": "Feedback Collector",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {}
+      },
+      "id": "respond-with-error",
+      "name": "Respond with Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1560, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {}
+      },
+      "id": "respond-with-result",
+      "name": "Respond with Result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2000, 400]
+    }
+  ],
+  "connections": {
+    "Task Analyzer Webhook": {
+      "main": [
+        [
+          {
+            "node": "Task Complexity Analyzer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Task Complexity Analyzer": {
+      "main": [
+        [
+          {
+            "node": "Cost Estimation API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cost Estimation API": {
+      "main": [
+        [
+          {
+            "node": "LLM Model Selector",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Model Selector": {
+      "main": [
+        [
+          {
+            "node": "Error Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Check": {
+      "main": [
+        [
+          {
+            "node": "Handle Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Error": {
+      "main": [
+        [
+          {
+            "node": "Respond with Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Response": {
+      "main": [
+        [
+          {
+            "node": "Task Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Task Router": {
+      "main": [
+        [
+          {
+            "node": "Feedback Collector",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Feedback Collector": {
+      "main": [
+        [
+          {
+            "node": "Respond with Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
