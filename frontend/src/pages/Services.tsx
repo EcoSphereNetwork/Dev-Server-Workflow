@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { Container, Card, Button } from '../design-system';
 import { ServiceList } from '../components/Services';
 import { Service, ServiceCategory } from '../types/services';
-import { getServices, startService, stopService, restartService } from '../services/serviceApi';
+import { useServices } from '../context/ServicesContext';
 
 // Styled-Components für die Services-Seite
 const PageContainer = styled.div`
@@ -43,11 +43,17 @@ const ErrorContainer = styled.div`
 
 // Services-Komponente
 const Services: React.FC = () => {
-  // State für Dienste
-  const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  
+  // Services Context
+  const { 
+    services, 
+    loading, 
+    error, 
+    startService, 
+    stopService, 
+    restartService 
+  } = useServices();
   
   // Kategorien für die Dienste
   const categories: ServiceCategory[] = [
@@ -79,67 +85,30 @@ const Services: React.FC = () => {
     },
   ];
   
-  // Lade Dienste
-  useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        setLoading(true);
-        const data = await getServices();
-        setServices(data);
-        setError(null);
-      } catch (err) {
-        console.error('Fehler beim Laden der Dienste:', err);
-        setError('Die Dienste konnten nicht geladen werden. Bitte versuchen Sie es später erneut.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchServices();
-  }, []);
-  
   // Starte einen Dienst
   const handleStartService = async (id: string) => {
     try {
-      const updatedService = await startService(id);
-      setServices(prevServices => 
-        prevServices.map(service => 
-          service.id === id ? updatedService : service
-        )
-      );
+      await startService(id);
     } catch (err) {
       console.error('Fehler beim Starten des Dienstes:', err);
-      setError('Der Dienst konnte nicht gestartet werden. Bitte versuchen Sie es später erneut.');
     }
   };
   
   // Stoppe einen Dienst
   const handleStopService = async (id: string) => {
     try {
-      const updatedService = await stopService(id);
-      setServices(prevServices => 
-        prevServices.map(service => 
-          service.id === id ? updatedService : service
-        )
-      );
+      await stopService(id);
     } catch (err) {
       console.error('Fehler beim Stoppen des Dienstes:', err);
-      setError('Der Dienst konnte nicht gestoppt werden. Bitte versuchen Sie es später erneut.');
     }
   };
   
   // Starte einen Dienst neu
   const handleRestartService = async (id: string) => {
     try {
-      const updatedService = await restartService(id);
-      setServices(prevServices => 
-        prevServices.map(service => 
-          service.id === id ? updatedService : service
-        )
-      );
+      await restartService(id);
     } catch (err) {
       console.error('Fehler beim Neustarten des Dienstes:', err);
-      setError('Der Dienst konnte nicht neu gestartet werden. Bitte versuchen Sie es später erneut.');
     }
   };
   

@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import { Sidebar, SidebarItem } from '../components/common/Sidebar';
 import Navbar from '../components/common/Navbar';
 import AIAssistant from '../components/AIAssistant';
+import { ServiceSidebar, ServiceWebView, ServiceMenu } from '../components/ServiceIntegration';
 import useAuthStore from '../store/auth';
 import { useTheme, Button } from '../design-system';
 
@@ -83,6 +84,9 @@ const IconButton = styled.button`
 const MainLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [assistantOpen, setAssistantOpen] = useState(false);
+  const [serviceSidebarOpen, setServiceSidebarOpen] = useState(false);
+  const [serviceWebViewOpen, setServiceWebViewOpen] = useState(false);
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
@@ -147,6 +151,13 @@ const MainLayout: React.FC = () => {
           active={location.pathname.startsWith('/settings')} 
           onClick={() => navigate('/settings')} 
         />
+        
+        <ServiceMenu 
+          onSelectService={(serviceId) => {
+            setSelectedServiceId(serviceId);
+            setServiceWebViewOpen(true);
+          }} 
+        />
       </Sidebar>
       
       <MainContent>
@@ -161,6 +172,14 @@ const MainLayout: React.FC = () => {
             </IconButton>
             
             <IconButton
+              onClick={() => setServiceSidebarOpen(true)}
+              title="Dienste"
+              aria-label="Dienste öffnen"
+            >
+              🌐
+            </IconButton>
+            
+            <IconButton
               onClick={() => setAssistantOpen(!assistantOpen)}
               title="KI-Assistent"
               aria-label="KI-Assistent öffnen"
@@ -169,10 +188,10 @@ const MainLayout: React.FC = () => {
             </IconButton>
             
             <UserMenu 
-              onClick={() => navigate('/profile')}
+              onClick={() => navigate('/user-settings')}
               role="button"
               tabIndex={0}
-              aria-label="Benutzerprofil öffnen"
+              aria-label="Benutzereinstellungen öffnen"
             >
               <UserIcon />
               <span className="user-name">{user?.name || user?.username || 'Benutzer'}</span>
@@ -198,6 +217,22 @@ const MainLayout: React.FC = () => {
         isOpen={assistantOpen} 
         onClose={() => setAssistantOpen(!assistantOpen)} 
       />
+      
+      <ServiceSidebar
+        isOpen={serviceSidebarOpen}
+        onClose={() => setServiceSidebarOpen(false)}
+      />
+      
+      {selectedServiceId && (
+        <ServiceWebView
+          serviceId={selectedServiceId}
+          isOpen={serviceWebViewOpen}
+          onClose={() => {
+            setServiceWebViewOpen(false);
+            setSelectedServiceId(null);
+          }}
+        />
+      )}
     </LayoutContainer>
   );
 };

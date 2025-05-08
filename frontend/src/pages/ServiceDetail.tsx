@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { Container, Button } from '../design-system';
 import { ServiceDetail as ServiceDetailComponent } from '../components/Services';
-import { getService, getServiceLogs, startService, stopService, restartService, updateService, deleteService } from '../services/serviceApi';
+import { useServices } from '../context/ServicesContext';
 import { Service, ServiceLog } from '../types/services';
 
 // Styled-Components für die ServiceDetail-Seite
@@ -51,6 +51,17 @@ const ServiceDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
+  // Services Context
+  const { 
+    getServiceById, 
+    getServiceLogs: fetchServiceLogs, 
+    startService, 
+    stopService, 
+    restartService, 
+    updateService, 
+    deleteService 
+  } = useServices();
+  
   // Lade Dienst und Logs
   useEffect(() => {
     const fetchServiceAndLogs = async () => {
@@ -59,8 +70,8 @@ const ServiceDetailPage: React.FC = () => {
       try {
         setLoading(true);
         const [serviceData, logsData] = await Promise.all([
-          getService(id),
-          getServiceLogs(id),
+          getServiceById(id),
+          fetchServiceLogs(id),
         ]);
         
         setService(serviceData);
@@ -75,7 +86,7 @@ const ServiceDetailPage: React.FC = () => {
     };
     
     fetchServiceAndLogs();
-  }, [id]);
+  }, [id, getServiceById, fetchServiceLogs]);
   
   // Starte den Dienst
   const handleStartService = async () => {
