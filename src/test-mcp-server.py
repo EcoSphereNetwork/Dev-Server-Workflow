@@ -11,9 +11,15 @@ import sys
 import os
 import time
 from pathlib import Path
+from typing import Dict, List, Any, Optional, Union, Tuple, NoReturn
 
-def main():
-    """Hauptfunktion zum Testen des MCP-Servers."""
+def main() -> int:
+    """
+    Hauptfunktion zum Testen des MCP-Servers.
+    
+    Returns:
+        int: Exit-Code (0 für Erfolg, 1 für Fehler)
+    """
     # Finde den Pfad zum MCP-Server
     script_dir = Path(__file__).parent
     mcp_server_path = script_dir / 'n8n-mcp-server.py'

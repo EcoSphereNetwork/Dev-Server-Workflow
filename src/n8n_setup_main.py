@@ -15,7 +15,9 @@ import time
 import subprocess
 import json
 import sys
+import asyncio
 from pathlib import Path
+from typing import Dict, List, Any, Optional, Union, Tuple, Set, Callable
 
 # Füge das aktuelle Verzeichnis zum Python-Pfad hinzu, um lokale Importe zu ermöglichen
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -251,7 +253,7 @@ class N8nMCPServer:
         self.writer.write(f"{message_json}\\n".encode())
         await self.writer.drain()
 
-async def main():
+async def main() -> None:
     \"\"\"Hauptfunktion zum Starten des MCP-Servers.\"\"\"
     # Lade Umgebungsvariablen
     n8n_url = os.environ.get("N8N_URL", "http://localhost:5678")
@@ -269,8 +271,13 @@ if __name__ == "__main__":
     asyncio.run(main())
 """
 
-def parse_args():
-    """Parse command line arguments."""
+def parse_args() -> argparse.Namespace:
+    """
+    Parse command line arguments.
+    
+    Returns:
+        argparse.Namespace: Parsed command line arguments
+    """
     parser = argparse.ArgumentParser(description='Set up n8n with integrated workflows')
     parser.add_argument('--n8n-url', default='http://localhost:5678', help='URL of the n8n instance')
     parser.add_argument('--api-key', help='n8n API key')
@@ -286,8 +293,18 @@ def parse_args():
     parser.add_argument('--mcp-port', type=int, default=3333, help='Port for the MCP server')
     return parser.parse_args()
 
-def setup_mcp_server(n8n_url, api_key, port=3333):
-    """Richtet den MCP-Server für n8n ein."""
+def setup_mcp_server(n8n_url: str, api_key: str, port: int = 3333) -> bool:
+    """
+    Richtet den MCP-Server für n8n ein.
+    
+    Args:
+        n8n_url: URL der n8n-Instanz
+        api_key: API-Key für n8n
+        port: Port, auf dem der MCP-Server laufen soll
+        
+    Returns:
+        bool: True, wenn die Einrichtung erfolgreich war, sonst False
+    """
     print("Setting up MCP server for n8n...")
     
     # Verwende die vorhandene MCP-Server-Datei oder erstelle eine neue
@@ -402,8 +419,10 @@ WantedBy=multi-user.target
         print(f"Error testing MCP server: {str(e)}")
         print("You may need to manually verify the server is working correctly")
 
-def main():
-    """Main function."""
+def main() -> None:
+    """
+    Main function for setting up n8n with integrated workflows.
+    """
     try:
         args = parse_args()
         
@@ -677,16 +696,35 @@ def main():
     if args.mcp:
         setup_mcp_server(n8n_url, api_key, args.mcp_port)
 
-def update_github_credentials(workflow_data, credential_id):
-    """Update GitHub credentials in the workflow."""
+def update_github_credentials(workflow_data: Dict[str, Any], credential_id: str) -> Dict[str, Any]:
+    """
+    Update GitHub credentials in the workflow.
+    
+    Args:
+        workflow_data: Workflow data to update
+        credential_id: ID of the GitHub credential
+        
+    Returns:
+        Dict[str, Any]: Updated workflow data
+    """
     for node in workflow_data['nodes']:
         if node.get('type') in ['n8n-nodes-base.github', 'n8n-nodes-base.githubTrigger']:
             node['credentials'] = {
                 'githubApi': credential_id
             }
 
-def update_openproject_credentials(workflow_data, credential_id, openproject_url):
-    """Update OpenProject credentials in the workflow."""
+def update_openproject_credentials(workflow_data: Dict[str, Any], credential_id: str, openproject_url: str) -> Dict[str, Any]:
+    """
+    Update OpenProject credentials in the workflow.
+    
+    Args:
+        workflow_data: Workflow data to update
+        credential_id: ID of the OpenProject credential
+        openproject_url: URL of the OpenProject instance
+        
+    Returns:
+        Dict[str, Any]: Updated workflow data
+    """
     for node in workflow_data['nodes']:
         if (node.get('type') == 'n8n-nodes-base.httpRequest' and 
             'parameters' in node and 
