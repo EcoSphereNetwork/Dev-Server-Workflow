@@ -45,7 +45,7 @@ check_docker() {
     fi
     
     # Check if Docker Compose is installed
-    if ! command -v docker-compose &> /dev/null; then
+    if ! command -v docker compose &> /dev/null; then
         log_message "ERROR" "Docker Compose is not installed"
         return ${ERROR_CODES["DEPENDENCY_ERROR"]}
     fi
@@ -93,7 +93,7 @@ start_mcp_server() {
     fi
     
     # Start server
-    docker-compose -f "$compose_file" --env-file "$env_file" up -d "$server_name"
+    docker compose -f "$compose_file" --env-file "$env_file" up -d "$server_name"
     
     # Wait for server to be ready
     local max_attempts=30
@@ -139,7 +139,7 @@ stop_mcp_server() {
     fi
     
     # Stop server
-    docker-compose -f "$compose_file" --env-file "$env_file" stop "$server_name"
+    docker compose -f "$compose_file" --env-file "$env_file" stop "$server_name"
     
     log_message "INFO" "Server $server_name stopped successfully"
     return ${ERROR_CODES["SUCCESS"]}
@@ -248,7 +248,7 @@ list_mcp_servers() {
     log_message "INFO" "Listing all MCP servers"
     
     # List all services in compose file that end with -mcp
-    docker-compose -f "$compose_file" config --services | grep -E 'mcp$|mcp-bridge$'
+    docker compose -f "$compose_file" config --services | grep -E 'mcp$|mcp-bridge$'
     
     return ${ERROR_CODES["SUCCESS"]}
 }
@@ -433,7 +433,7 @@ check_dependencies() {
     
     # Check required commands
     check_command "docker" "Install Docker: https://docs.docker.com/get-docker/"
-    check_command "docker-compose" "Install Docker Compose: https://docs.docker.com/compose/install/"
+    check_command "docker compose" "Install Docker Compose: https://docs.docker.com/compose/install/"
     check_command "curl" "Install curl: apt-get install -y curl"
     check_command "jq" "Install jq: apt-get install -y jq"
     

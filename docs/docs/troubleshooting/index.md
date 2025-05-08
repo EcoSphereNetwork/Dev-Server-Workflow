@@ -52,19 +52,19 @@ This guide provides solutions for common issues you might encounter when using t
 ### Docker Compose Not Found
 
 **Symptoms:**
-- `docker-compose: command not found` error
+- `docker compose: command not found` error
 
 **Solutions:**
 
 1. Install Docker Compose:
    ```bash
    sudo apt-get update
-   sudo apt-get install -y docker-compose
+   sudo apt-get install -y docker compose
    ```
 
 2. Install Docker Compose using pip:
    ```bash
-   pip install docker-compose
+   pip install docker compose
    ```
 
 ## n8n Issues
@@ -381,7 +381,7 @@ This guide provides solutions for common issues you might encounter when using t
 3. Change the port in the configuration:
    ```bash
    # For n8n
-   sed -i 's/5678/5679/g' docker-compose.yml
+   sed -i 's/5678/5679/g' docker compose.yml
    ```
 
 ## Getting Help

@@ -71,7 +71,7 @@ fi
 
 # Start the containers
 echo "Starting MCP ecosystem..."
-docker-compose up -d
+docker compose up -d
 
 # Wait for services to be ready
 echo "Waiting for services to be ready..."
@@ -82,7 +82,7 @@ echo "Checking n8n status..."
 if docker ps | grep -q "n8n"; then
   echo "n8n is running."
 else
-  echo "ERROR: n8n failed to start. Check logs with 'docker-compose logs n8n'"
+  echo "ERROR: n8n failed to start. Check logs with 'docker compose logs n8n'"
   exit 1
 fi
 

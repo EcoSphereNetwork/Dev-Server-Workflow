@@ -105,10 +105,10 @@ Die gemeinsame Bibliothek reduziert Code-Duplikation zwischen `docker-mcp-ecosys
 source "${BASE_DIR}/src/common/mcp_server_lib.sh"
 
 # MCP-Server starten
-start_mcp_server "server-name" "docker-compose.yml" ".env"
+start_mcp_server "server-name" "docker compose.yml" ".env"
 
 # MCP-Server stoppen
-stop_mcp_server "server-name" "docker-compose.yml" ".env"
+stop_mcp_server "server-name" "docker compose.yml" ".env"
 
 # MCP-Server-Status abrufen
 status=$(get_mcp_server_status "server-name")

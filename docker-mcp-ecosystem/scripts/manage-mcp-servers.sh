@@ -88,51 +88,51 @@ case "$ACTION" in
     start)
         if [ -z "$SERVER" ]; then
             echo -e "${GREEN}Starte alle MCP-Server...${NC}"
-            docker-compose up -d
+            docker compose up -d
         else
             echo -e "${GREEN}Starte den MCP-Server $SERVER...${NC}"
-            docker-compose up -d $SERVER
+            docker compose up -d $SERVER
         fi
         ;;
     stop)
         if [ -z "$SERVER" ]; then
             echo -e "${YELLOW}Stoppe alle MCP-Server...${NC}"
-            docker-compose down
+            docker compose down
         else
             echo -e "${YELLOW}Stoppe den MCP-Server $SERVER...${NC}"
-            docker-compose stop $SERVER
+            docker compose stop $SERVER
         fi
         ;;
     restart)
         if [ -z "$SERVER" ]; then
             echo -e "${GREEN}Starte alle MCP-Server neu...${NC}"
-            docker-compose restart
+            docker compose restart
         else
             echo -e "${GREEN}Starte den MCP-Server $SERVER neu...${NC}"
-            docker-compose restart $SERVER
+            docker compose restart $SERVER
         fi
         ;;
     status)
         if [ -z "$SERVER" ]; then
             echo -e "${BLUE}Status aller MCP-Server:${NC}"
-            docker-compose ps
+            docker compose ps
         else
             echo -e "${BLUE}Status des MCP-Servers $SERVER:${NC}"
-            docker-compose ps $SERVER
+            docker compose ps $SERVER
         fi
         ;;
     logs)
         if [ -z "$SERVER" ]; then
             echo -e "${BLUE}Logs aller MCP-Server (letzte $LOG_LINES Zeilen):${NC}"
-            docker-compose logs --tail=$LOG_LINES
+            docker compose logs --tail=$LOG_LINES
         else
             echo -e "${BLUE}Logs des MCP-Servers $SERVER (letzte $LOG_LINES Zeilen):${NC}"
-            docker-compose logs --tail=$LOG_LINES $SERVER
+            docker compose logs --tail=$LOG_LINES $SERVER
         fi
         ;;
     list)
         echo -e "${BLUE}Verfügbare MCP-Server:${NC}"
-        docker-compose config --services | grep -E 'mcp$|mcp-bridge$'
+        docker compose config --services | grep -E 'mcp$|mcp-bridge$'
         ;;
     inspect)
         if [ -z "$SERVER" ]; then
@@ -140,7 +140,7 @@ case "$ACTION" in
             exit 1
         else
             echo -e "${BLUE}Detaillierte Informationen zum MCP-Server $SERVER:${NC}"
-            docker-compose exec $SERVER env
+            docker compose exec $SERVER env
             echo -e "\n${BLUE}Container-Informationen:${NC}"
             docker inspect mcp-$SERVER
         fi
@@ -153,7 +153,7 @@ case "$ACTION" in
             echo -e "${BLUE}Teste Verbindung zum MCP-Server $SERVER...${NC}"
             
             # Ermittle den Port des MCP-Servers
-            PORT=$(docker-compose exec $SERVER env | grep MCP_PORT | cut -d= -f2)
+            PORT=$(docker compose exec $SERVER env | grep MCP_PORT | cut -d= -f2)
             if [ -z "$PORT" ]; then
                 PORT=3000 # Standardport, falls nicht angegeben
             fi

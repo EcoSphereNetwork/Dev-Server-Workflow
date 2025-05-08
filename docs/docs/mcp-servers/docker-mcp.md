@@ -138,7 +138,7 @@ The Docker MCP Server provides the following tools:
   ```json
   {
       "project_name": "my-stack",
-      "compose_file": "docker-compose.yml",
+      "compose_file": "docker compose.yml",
       "service": "web"
   }
   ```
@@ -147,7 +147,7 @@ The Docker MCP Server provides the following tools:
   ```json
   {
       "project_name": "my-stack",
-      "compose_file": "docker-compose.yml"
+      "compose_file": "docker compose.yml"
   }
   ```
 
@@ -155,7 +155,7 @@ The Docker MCP Server provides the following tools:
   ```json
   {
       "project_name": "my-stack",
-      "compose_file": "docker-compose.yml",
+      "compose_file": "docker compose.yml",
       "service": "web"
   }
   ```
@@ -164,7 +164,7 @@ The Docker MCP Server provides the following tools:
   ```json
   {
       "project_name": "my-stack",
-      "compose_file": "docker-compose.yml",
+      "compose_file": "docker compose.yml",
       "service": "web"
   }
   ```
@@ -173,7 +173,7 @@ The Docker MCP Server provides the following tools:
   ```json
   {
       "project_name": "my-stack",
-      "compose_file": "docker-compose.yml",
+      "compose_file": "docker compose.yml",
       "service": "web"
   }
   ```
@@ -254,5 +254,5 @@ To integrate the Docker MCP Server with OpenHands, add the following configurati
 
 - Validate your Docker Compose file:
   ```bash
-  docker-compose -f your-compose-file.yml config
+  docker compose -f your-compose-file.yml config
   ```

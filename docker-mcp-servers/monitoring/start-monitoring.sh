@@ -35,12 +35,12 @@ fi
 
 # Start the monitoring stack
 log "Starting monitoring stack..."
-docker-compose up -d
+docker compose up -d
 
 # Check if all containers are running
 log "Checking if all containers are running..."
-if docker-compose ps | grep -q "Exit"; then
-    error "Some containers failed to start. Please check the logs with 'docker-compose logs'."
+if docker compose ps | grep -q "Exit"; then
+    error "Some containers failed to start. Please check the logs with 'docker compose logs'."
     exit 1
 fi
 
@@ -51,6 +51,6 @@ log "You can access cAdvisor at http://localhost:8081"
 
 # List all running monitoring containers
 log "Running monitoring containers:"
-docker-compose ps
+docker compose ps
 
 exit 0

@@ -29,7 +29,7 @@ fi
 
 # Stop the monitoring stack
 log "Stopping monitoring stack..."
-docker-compose down
+docker compose down
 
 log "Monitoring stack has been stopped."
 

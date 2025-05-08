@@ -270,7 +270,7 @@ A Grafana dashboard is available in the monitoring stack. To access it:
   ```json
   {
       "project_name": "my-stack",
-      "compose_file": "docker-compose.yml",
+      "compose_file": "docker compose.yml",
       "service": "web"
   }
   ```
@@ -279,7 +279,7 @@ A Grafana dashboard is available in the monitoring stack. To access it:
   ```json
   {
       "project_name": "my-stack",
-      "compose_file": "docker-compose.yml"
+      "compose_file": "docker compose.yml"
   }
   ```
 
@@ -287,7 +287,7 @@ A Grafana dashboard is available in the monitoring stack. To access it:
   ```json
   {
       "project_name": "my-stack",
-      "compose_file": "docker-compose.yml",
+      "compose_file": "docker compose.yml",
       "service": "web"
   }
   ```
@@ -296,7 +296,7 @@ A Grafana dashboard is available in the monitoring stack. To access it:
   ```json
   {
       "project_name": "my-stack",
-      "compose_file": "docker-compose.yml",
+      "compose_file": "docker compose.yml",
       "service": "web"
   }
   ```
@@ -305,7 +305,7 @@ A Grafana dashboard is available in the monitoring stack. To access it:
   ```json
   {
       "project_name": "my-stack",
-      "compose_file": "docker-compose.yml",
+      "compose_file": "docker compose.yml",
       "service": "web"
   }
   ```

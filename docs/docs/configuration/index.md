@@ -97,7 +97,7 @@ GRAFANA_PORT=3000
 
 ### n8n-Konfiguration
 
-Die n8n-Konfiguration wird in der `.env`-Datei und in `docker-compose.yml` definiert.
+Die n8n-Konfiguration wird in der `.env`-Datei und in `docker compose.yml` definiert.
 
 Wichtige Konfigurationsparameter:
 
@@ -111,7 +111,7 @@ Wichtige Konfigurationsparameter:
 
 ### MCP-Server-Konfiguration
 
-Die MCP-Server-Konfiguration wird in der `.env`-Datei, in `docker-compose.yml` und in spezifischen JSON-Konfigurationsdateien definiert.
+Die MCP-Server-Konfiguration wird in der `.env`-Datei, in `docker compose.yml` und in spezifischen JSON-Konfigurationsdateien definiert.
 
 Wichtige Konfigurationsparameter:
 
@@ -134,7 +134,7 @@ Spezifische MCP-Server-Konfiguration:
 
 ### Web-UI-Konfiguration
 
-Die Web-UI-Konfiguration wird in der `.env`-Datei und in `docker-compose.web-ui.yml` definiert.
+Die Web-UI-Konfiguration wird in der `.env`-Datei und in `docker compose.web-ui.yml` definiert.
 
 Wichtige Konfigurationsparameter:
 

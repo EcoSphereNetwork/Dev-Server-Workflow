@@ -101,51 +101,51 @@ case "$ACTION" in
     start)
         if [ -z "$SERVICE" ]; then
             echo -e "${GREEN}Starte das gesamte MCP-Server-Ökosystem...${NC}"
-            docker-compose up -d
+            docker compose up -d
         else
             echo -e "${GREEN}Starte den Dienst $SERVICE...${NC}"
-            docker-compose up -d $SERVICE
+            docker compose up -d $SERVICE
         fi
         ;;
     stop)
         if [ -z "$SERVICE" ]; then
             echo -e "${YELLOW}Stoppe das gesamte MCP-Server-Ökosystem...${NC}"
-            docker-compose down
+            docker compose down
         else
             echo -e "${YELLOW}Stoppe den Dienst $SERVICE...${NC}"
-            docker-compose stop $SERVICE
+            docker compose stop $SERVICE
         fi
         ;;
     restart)
         if [ -z "$SERVICE" ]; then
             echo -e "${GREEN}Starte das gesamte MCP-Server-Ökosystem neu...${NC}"
-            docker-compose restart
+            docker compose restart
         else
             echo -e "${GREEN}Starte den Dienst $SERVICE neu...${NC}"
-            docker-compose restart $SERVICE
+            docker compose restart $SERVICE
         fi
         ;;
     status)
         if [ -z "$SERVICE" ]; then
             echo -e "${BLUE}Status des gesamten MCP-Server-Ökosystems:${NC}"
-            docker-compose ps
+            docker compose ps
         else
             echo -e "${BLUE}Status des Dienstes $SERVICE:${NC}"
-            docker-compose ps $SERVICE
+            docker compose ps $SERVICE
         fi
         ;;
     logs)
         if [ -z "$SERVICE" ]; then
             echo -e "${BLUE}Logs des gesamten MCP-Server-Ökosystems (letzte $LOG_LINES Zeilen):${NC}"
-            docker-compose logs --tail=$LOG_LINES
+            docker compose logs --tail=$LOG_LINES
         else
             echo -e "${BLUE}Logs des Dienstes $SERVICE (letzte $LOG_LINES Zeilen):${NC}"
-            docker-compose logs --tail=$LOG_LINES $SERVICE
+            docker compose logs --tail=$LOG_LINES $SERVICE
         fi
         ;;
     list)
         echo -e "${BLUE}Verfügbare Dienste im MCP-Server-Ökosystem:${NC}"
-        docker-compose config --services
+        docker compose config --services
         ;;
     inspect)
         if [ -z "$SERVICE" ]; then
@@ -153,7 +153,7 @@ case "$ACTION" in
             exit 1
         else
             echo -e "${BLUE}Detaillierte Informationen zum Dienst $SERVICE:${NC}"
-            docker-compose exec $SERVICE env
+            docker compose exec $SERVICE env
             echo -e "\n${BLUE}Container-Informationen:${NC}"
             docker inspect mcp-$SERVICE
         fi
@@ -167,18 +167,18 @@ case "$ACTION" in
             exit 1
         else
             echo -e "${BLUE}Führe Befehl '$COMMAND' im Dienst $SERVICE aus:${NC}"
-            docker-compose exec $SERVICE sh -c "$COMMAND"
+            docker compose exec $SERVICE sh -c "$COMMAND"
         fi
         ;;
     update)
         if [ -z "$SERVICE" ]; then
             echo -e "${GREEN}Aktualisiere das gesamte MCP-Server-Ökosystem...${NC}"
-            docker-compose pull
-            docker-compose up -d
+            docker compose pull
+            docker compose up -d
         else
             echo -e "${GREEN}Aktualisiere den Dienst $SERVICE...${NC}"
-            docker-compose pull $SERVICE
-            docker-compose up -d $SERVICE
+            docker compose pull $SERVICE
+            docker compose up -d $SERVICE
         fi
         ;;
     backup)
@@ -187,21 +187,21 @@ case "$ACTION" in
             BACKUP_DIR="backups/full_backup_$TIMESTAMP"
             echo -e "${GREEN}Erstelle Backup des gesamten MCP-Server-Ökosystems in $BACKUP_DIR...${NC}"
             mkdir -p $BACKUP_DIR
-            docker-compose down
+            docker compose down
             tar -czf $BACKUP_DIR/volumes.tar.gz -C /var/lib/docker/volumes .
             cp -r * $BACKUP_DIR/
-            docker-compose up -d
+            docker compose up -d
         else
             BACKUP_DIR="backups/${SERVICE}_backup_$TIMESTAMP"
             echo -e "${GREEN}Erstelle Backup des Dienstes $SERVICE in $BACKUP_DIR...${NC}"
             mkdir -p $BACKUP_DIR
-            docker-compose stop $SERVICE
+            docker compose stop $SERVICE
             VOLUME_NAME=$(docker inspect mcp-$SERVICE | grep -o '"Source": "/var/lib/docker/volumes/[^"]*' | sed 's/"Source": "//')
             if [ -n "$VOLUME_NAME" ]; then
                 tar -czf $BACKUP_DIR/volume.tar.gz -C $VOLUME_NAME .
             fi
             cp -r $SERVICE $BACKUP_DIR/
-            docker-compose start $SERVICE
+            docker compose start $SERVICE
         fi
         echo -e "${GREEN}Backup abgeschlossen.${NC}"
         ;;
@@ -215,17 +215,17 @@ case "$ACTION" in
         else
             if [ -z "$SERVICE" ]; then
                 echo -e "${GREEN}Stelle das gesamte MCP-Server-Ökosystem aus $BACKUP_FILE wieder her...${NC}"
-                docker-compose down
+                docker compose down
                 tar -xzf $BACKUP_FILE -C /var/lib/docker/volumes
-                docker-compose up -d
+                docker compose up -d
             else
                 echo -e "${GREEN}Stelle den Dienst $SERVICE aus $BACKUP_FILE wieder her...${NC}"
-                docker-compose stop $SERVICE
+                docker compose stop $SERVICE
                 VOLUME_NAME=$(docker inspect mcp-$SERVICE | grep -o '"Source": "/var/lib/docker/volumes/[^"]*' | sed 's/"Source": "//')
                 if [ -n "$VOLUME_NAME" ]; then
                     tar -xzf $BACKUP_FILE -C $VOLUME_NAME
                 fi
-                docker-compose start $SERVICE
+                docker compose start $SERVICE
             fi
             echo -e "${GREEN}Wiederherstellung abgeschlossen.${NC}"
         fi

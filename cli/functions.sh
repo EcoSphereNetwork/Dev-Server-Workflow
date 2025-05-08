@@ -1223,18 +1223,18 @@ start_monitoring() {
     fi
     
     # Check if Docker Compose is available
-    if ! check_command "docker-compose"; then
-        log_warn "docker-compose is not available. Trying docker compose..."
+    if ! check_command "docker compose"; then
+        log_warn "docker compose is not available. Trying docker compose..."
         if ! docker compose version > /dev/null 2>&1; then
             log_error "Docker Compose is not available. Cannot start monitoring stack."
             return 1
         fi
         
         # Use docker compose
-        (cd "${WORKSPACE_DIR}/docker" && docker compose -f docker-compose.monitoring.yml up -d)
+        (cd "${WORKSPACE_DIR}/docker" && docker compose -f docker compose.monitoring.yml up -d)
     else
-        # Use docker-compose
-        (cd "${WORKSPACE_DIR}/docker" && docker-compose -f docker-compose.monitoring.yml up -d)
+        # Use docker compose
+        (cd "${WORKSPACE_DIR}/docker" && docker compose -f docker compose.monitoring.yml up -d)
     fi
     
     if [ $? -eq 0 ]; then
@@ -1260,18 +1260,18 @@ stop_monitoring() {
     fi
     
     # Check if Docker Compose is available
-    if ! check_command "docker-compose"; then
-        log_warn "docker-compose is not available. Trying docker compose..."
+    if ! check_command "docker compose"; then
+        log_warn "docker compose is not available. Trying docker compose..."
         if ! docker compose version > /dev/null 2>&1; then
             log_error "Docker Compose is not available. Cannot stop monitoring stack."
             return 1
         fi
         
         # Use docker compose
-        (cd "${WORKSPACE_DIR}/docker" && docker compose -f docker-compose.monitoring.yml down)
+        (cd "${WORKSPACE_DIR}/docker" && docker compose -f docker compose.monitoring.yml down)
     else
-        # Use docker-compose
-        (cd "${WORKSPACE_DIR}/docker" && docker-compose -f docker-compose.monitoring.yml down)
+        # Use docker compose
+        (cd "${WORKSPACE_DIR}/docker" && docker compose -f docker compose.monitoring.yml down)
     fi
     
     if [ $? -eq 0 ]; then

@@ -91,7 +91,7 @@ EOFDOCKER
 echo "8. Aktualisiere das Start-Skript für OpenHands..."
 cat > "$HOME/start-openhands.sh" << EOFOPENHANDS
 #!/bin/bash
-docker-compose -f $HOME/openhands-docker-compose.yml up -d
+docker compose -f $HOME/openhands-docker-compose.yml up -d
 echo "OpenHands gestartet unter http://localhost:$CUSTOM_PORT"
 EOFOPENHANDS
 chmod +x "$HOME/start-openhands.sh"
@@ -120,7 +120,7 @@ echo "Ollama-MCP-Bridge ist unter http://localhost:8000/mcp erreichbar."
 echo "Drücke STRG+C, um alle Dienste zu beenden."
 
 # Warte auf Benutzerunterbrechung
-trap "echo 'Stoppe Dienste...'; kill \$OLLAMA_BRIDGE_PID; docker-compose -f '$HOME/openhands-docker-compose.yml' down; echo 'Alle Dienste gestoppt.'" INT
+trap "echo 'Stoppe Dienste...'; kill \$OLLAMA_BRIDGE_PID; docker compose -f '$HOME/openhands-docker-compose.yml' down; echo 'Alle Dienste gestoppt.'" INT
 wait
 EOFALL
 chmod +x "$HOME/start-all-mcp.sh"

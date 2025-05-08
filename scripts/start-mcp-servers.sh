@@ -33,7 +33,7 @@ if ! command -v docker &> /dev/null; then
 fi
 
 # Überprüfen, ob Docker Compose installiert ist
-if ! command -v docker-compose &> /dev/null; then
+if ! command -v docker compose &> /dev/null; then
     error "Docker Compose ist nicht installiert. Bitte installieren Sie Docker Compose und versuchen Sie es erneut."
     exit 1
 fi
@@ -97,11 +97,11 @@ log "Pulling Docker-Images für MCP-Server..."
 
 # Docker-Container starten
 log "Starte MCP-Server-Docker-Container..."
-docker-compose -f "$DOCKER_COMPOSE_FILE" up -d
+docker compose -f "$DOCKER_COMPOSE_FILE" up -d
 
 # Überprüfen, ob alle Container gestartet wurden
 log "Überprüfe den Status der Container..."
-docker-compose -f "$DOCKER_COMPOSE_FILE" ps
+docker compose -f "$DOCKER_COMPOSE_FILE" ps
 
 # Warten, bis alle Container bereit sind
 log "Warte, bis alle Container bereit sind..."
@@ -128,7 +128,7 @@ log "  Wikipedia MCP: http://localhost:3008"
 
 # Zeige Hinweise zur Integration mit n8n und OpenHands
 log "Integration mit n8n:"
-log "  1. Starten Sie n8n mit: docker-compose up -d n8n"
+log "  1. Starten Sie n8n mit: docker compose up -d n8n"
 log "  2. Importieren Sie den Workflow aus: src/ESN_Initial-Szenario/n8n-workflows/enhanced-mcp-trigger.json"
 log "  3. Konfigurieren Sie die MCP-Server-URLs in den n8n-Umgebungsvariablen"
 

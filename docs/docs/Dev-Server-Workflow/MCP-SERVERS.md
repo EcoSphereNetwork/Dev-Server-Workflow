@@ -60,7 +60,7 @@ cp .env.example .env
 4. Starten Sie die Docker-Container:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ## Verwendung
@@ -130,17 +130,17 @@ Wenn Sie Probleme mit den MCP-Servern haben, überprüfen Sie die folgenden Punk
 
 1. Überprüfen Sie die Docker-Container-Logs:
    ```bash
-   docker-compose logs <container-name>
+   docker compose logs <container-name>
    ```
 
 2. Überprüfen Sie, ob die MCP-Server laufen:
    ```bash
-   docker-compose ps
+   docker compose ps
    ```
 
 3. Überprüfen Sie den Gesundheitszustand der MCP-Server:
    ```bash
-   docker-compose exec <container-name> curl -f http://localhost:<port>/health
+   docker compose exec <container-name> curl -f http://localhost:<port>/health
    ```
 
 4. Verwenden Sie das Monitoring-Skript, um die MCP-Server zu überwachen:

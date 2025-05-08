@@ -21,7 +21,7 @@ check_dependencies() {
     fi
     
     # Überprüfe Docker Compose
-    if ! command -v docker-compose &> /dev/null; then
+    if ! command -v docker compose &> /dev/null; then
         echo -e "${RED}Docker Compose ist nicht installiert. Bitte installiere Docker Compose und versuche es erneut.${NC}"
         exit 1
     fi
@@ -85,7 +85,7 @@ create_env_file() {
 pull_docker_images() {
     echo -e "${BLUE}Lade Docker-Images herunter...${NC}"
     
-    docker-compose pull
+    docker compose pull
     
     echo -e "${GREEN}Docker-Images heruntergeladen.${NC}"
 }
@@ -94,7 +94,7 @@ pull_docker_images() {
 start_containers() {
     echo -e "${BLUE}Starte Container...${NC}"
     
-    docker-compose up -d
+    docker compose up -d
     
     echo -e "${GREEN}Container gestartet.${NC}"
 }
@@ -103,7 +103,7 @@ start_containers() {
 check_container_status() {
     echo -e "${BLUE}Überprüfe Container-Status...${NC}"
     
-    docker-compose ps
+    docker compose ps
     
     echo -e "${GREEN}Container-Status überprüft.${NC}"
 }

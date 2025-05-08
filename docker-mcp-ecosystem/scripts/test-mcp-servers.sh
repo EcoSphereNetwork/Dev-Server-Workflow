@@ -72,7 +72,7 @@ fi
 cd "$(dirname "$0")/.."
 
 # Ermittle den Port des MCP-Servers
-PORT=$(docker-compose exec $SERVER env | grep MCP_PORT | cut -d= -f2)
+PORT=$(docker compose exec $SERVER env | grep MCP_PORT | cut -d= -f2)
 if [ -z "$PORT" ]; then
     PORT=3000 # Standardport, falls nicht angegeben
 fi

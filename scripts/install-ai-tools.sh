@@ -252,7 +252,7 @@ cat > "$OPENHANDS_SCRIPT" <<EOL
 #!/bin/bash
 
 # Starte OpenHands Container
-docker-compose -f $DOCKER_COMPOSE_FILE up -d
+docker compose -f $DOCKER_COMPOSE_FILE up -d
 echo "OpenHands gestartet unter http://localhost:3000"
 EOL
 

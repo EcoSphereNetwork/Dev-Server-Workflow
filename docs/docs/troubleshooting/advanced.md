@@ -89,7 +89,7 @@ docker volume ls
 5. Überprüfen Sie die Docker-Compose-Konfiguration:
 
 ```bash
-docker-compose -f <compose-file> config
+docker compose -f <compose-file> config
 ```
 
 #### Netzwerkprobleme
@@ -566,7 +566,7 @@ Wenn alle anderen Methoden fehlschlagen, können Sie das System neu installieren
 ```bash
 # Alle Container stoppen und entfernen
 ./dev-server-cli.sh stop-all
-docker-compose down -v
+docker compose down -v
 
 # Repository neu klonen
 cd ..

@@ -153,7 +153,7 @@ git clone https://github.com/EcoSphereNetwork/Dev-Server-Workflow.git
 cd Dev-Server-Workflow
 
 # Docker-Container starten
-docker-compose up -d
+docker compose up -d
 ```
 
 Dies startet n8n und importiert automatisch alle Workflows.

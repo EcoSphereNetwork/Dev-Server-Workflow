@@ -270,7 +270,7 @@ case "$COMMAND" in
         if [[ -f "${BASE_DIR}/src/common/dependency_manager.sh" ]]; then
             "${BASE_DIR}/src/common/dependency_manager.sh" stop-all
         else
-            docker-compose -f "${BASE_DIR}/docker-compose.yml" down
+            docker compose -f "${BASE_DIR}/docker-compose.yml" down
         fi
         
         # Kopiere Konfigurationsdateien

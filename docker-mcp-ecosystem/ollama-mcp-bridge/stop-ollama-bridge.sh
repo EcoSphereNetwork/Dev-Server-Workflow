@@ -20,13 +20,13 @@ if ! command -v docker &> /dev/null; then
 fi
 
 # Prüfe, ob Docker Compose installiert ist
-if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+if ! command -v docker compose &> /dev/null && ! docker compose version &> /dev/null; then
     echo -e "${RED}Docker Compose ist nicht installiert. Bitte installieren Sie Docker Compose und versuchen Sie es erneut.${NC}"
     exit 1
 fi
 
 # Stoppe die Container
 echo -e "${YELLOW}Stoppe Ollama und MCP-Bridge...${NC}"
-docker-compose down
+docker compose down
 
 echo -e "${GREEN}=== Ollama und MCP-Bridge wurden gestoppt! ===${NC}"

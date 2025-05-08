@@ -29,6 +29,6 @@ fi
 
 # Stop the MCP servers
 log "Stopping MCP servers..."
-docker-compose down
+docker compose down
 
 log "All MCP servers have been stopped."

@@ -83,7 +83,7 @@ LICENSE                   # Project license
 pyproject.toml           # Project configuration
 .pre-commit-config.yaml  # Pre-commit hooks
 Dockerfile               # Docker configuration
-docker-compose.yml       # Docker Compose config
+docker compose.yml       # Docker Compose config
 Makefile                 # Build automation
 mkdocs.yml              # Documentation config
 ```

@@ -117,10 +117,10 @@ if [ -f "$DOCKER_START" ]; then
   echo -e "${GREEN}Updated references in docker-start.sh${NC}"
 fi
 
-# Update docker-compose.yml if it exists
+# Update docker compose.yml if it exists
 DOCKER_COMPOSE="./docker-compose.yml"
 if [ -f "$DOCKER_COMPOSE" ]; then
-  echo -e "${YELLOW}Updating references in docker-compose.yml...${NC}"
+  echo -e "${YELLOW}Updating references in docker compose.yml...${NC}"
   temp_file=$(mktemp)
   
   while IFS= read -r line; do
@@ -132,7 +132,7 @@ if [ -f "$DOCKER_COMPOSE" ]; then
   
   # Replace the original file with the modified one
   mv "$temp_file" "$DOCKER_COMPOSE"
-  echo -e "${GREEN}Updated references in docker-compose.yml${NC}"
+  echo -e "${GREEN}Updated references in docker compose.yml${NC}"
 fi
 
 echo -e "\n${GREEN}Fix complete. Please try running the setup again:${NC}"

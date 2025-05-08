@@ -58,12 +58,12 @@ This guide will help you get started with the project template.
 
 1. Build the image:
    ```bash
-   docker-compose build
+   docker compose build
    ```
 
 2. Run the application:
    ```bash
-   docker-compose up
+   docker compose up
    ```
 
 ## Next Steps

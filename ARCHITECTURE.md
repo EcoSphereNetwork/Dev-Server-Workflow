@@ -74,7 +74,7 @@ Die Docker-Implementierungen verwenden die Workflow-Definitionen aus dem `src`-V
 Beide Docker-Implementierungen verwenden ähnliche Konfigurationsstrukturen:
 
 - **.env-Dateien**: Umgebungsvariablen für die Konfiguration
-- **docker-compose.yml**: Definition der Docker-Container
+- **docker compose.yml**: Definition der Docker-Container
 - **Skripte**: Start-, Stopp- und Monitoring-Skripte
 
 ### Modulare Struktur

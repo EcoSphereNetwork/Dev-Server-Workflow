@@ -5,7 +5,7 @@ Diese Anleitung hilft dir bei der Einrichtung von MCP-Servern für Claude Deskto
 ## Voraussetzungen
 
 - Node.js und npm installiert
-- Docker und Docker Compose installiert
+- Docker installiert
 - Claude Desktop für Linux installiert
 
 ## Verfügbare Skripte
@@ -128,7 +128,7 @@ Verwende das Fix-Skript, um die Claude Desktop Konfiguration zu korrigieren:
 Überprüfe die Docker-Logs:
 
 ```bash
-docker-compose -f ~/openhands-docker-compose.yml logs
+docker compose -f ~/openhands-docker-compose.yml logs
 ```
 
 ### MCP-Server funktionieren nicht
@@ -147,7 +147,7 @@ Der MCP-Inspektor ist unter http://localhost:6274 erreichbar.
 - MCP-Inspektor starten: `~/start-mcp-inspector.sh`
 - Ollama-MCP-Bridge starten: `~/start-ollama-bridge.sh`
 - Alle Dienste starten: `~/start-all-mcp.sh`
-- OpenHands stoppen: `docker-compose -f ~/openhands-docker-compose.yml down`
+- OpenHands stoppen: `docker compose -f ~/openhands-docker-compose.yml down`
 - MCP-Server neu installieren: `npm install -g @modelcontextprotocol/server-name`
 
 ### Behebung von Installationsproblemen

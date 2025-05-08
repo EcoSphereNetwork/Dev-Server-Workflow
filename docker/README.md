@@ -48,7 +48,7 @@ Weitere Details zur Architektur findest du in der [ARCHITECTURE.md](./ARCHITECTU
 
 3. Docker-Container starten:
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 4. Auf n8n zugreifen:
@@ -190,28 +190,28 @@ Jeder MCP-Server kann angepasst werden, um zusätzliche Tools bereitzustellen:
 
 Überprüfe die Logs:
 ```bash
-docker-compose logs github-mcp
+docker compose logs github-mcp
 ```
 
 ### n8n kann nicht mit MCP-Servern kommunizieren
 
 Überprüfe die Nginx-Konfiguration und die Firewall-Einstellungen:
 ```bash
-docker-compose logs nginx
+docker compose logs nginx
 ```
 
 ### Redis-Verbindungsprobleme
 
 Überprüfe die Redis-Verbindung:
 ```bash
-docker-compose exec redis redis-cli ping
+docker compose exec redis redis-cli ping
 ```
 
 ### Workflow-Ausführungsfehler
 
 Überprüfe die n8n-Logs:
 ```bash
-docker-compose logs n8n
+docker compose logs n8n
 ```
 
 ## Lizenz

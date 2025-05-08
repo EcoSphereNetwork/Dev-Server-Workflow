@@ -79,10 +79,10 @@ Der LLM Cost Analyzer kann mit Docker und Docker Compose bereitgestellt werden:
 
 ```bash
 # Baue und starte den Server
-docker-compose up -d
+docker compose up -d
 
 # Stoppe den Server
-docker-compose down
+docker compose down
 ```
 
 ## Konfiguration

@@ -35,7 +35,7 @@ if ! command -v docker &> /dev/null; then
 fi
 
 # Prüfe, ob Docker Compose installiert ist
-if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+if ! command -v docker compose &> /dev/null && ! docker compose version &> /dev/null; then
     echo -e "${RED}Docker Compose ist nicht installiert. Bitte installieren Sie Docker Compose und versuchen Sie es erneut.${NC}"
     exit 1
 fi
@@ -107,7 +107,7 @@ cat > "$HOME/start-openhands.sh" << EOF
 
 # Starte OpenHands mit Docker Compose
 cd \$HOME
-docker-compose -f openhands-docker-compose.yml up -d
+docker compose -f openhands-docker-compose.yml up -d
 
 echo "OpenHands wurde gestartet und ist verfügbar unter:"
 echo "  http://localhost:${OPENHANDS_PORT}"
@@ -122,7 +122,7 @@ cat > "$HOME/stop-openhands.sh" << EOF
 
 # Stoppe OpenHands mit Docker Compose
 cd \$HOME
-docker-compose -f openhands-docker-compose.yml down
+docker compose -f openhands-docker-compose.yml down
 
 echo "OpenHands wurde gestoppt."
 EOF
@@ -135,7 +135,7 @@ cat > "$HOME/restart-openhands.sh" << EOF
 
 # Starte OpenHands neu mit Docker Compose
 cd \$HOME
-docker-compose -f openhands-docker-compose.yml restart
+docker compose -f openhands-docker-compose.yml restart
 
 echo "OpenHands wurde neu gestartet und ist verfügbar unter:"
 echo "  http://localhost:${OPENHANDS_PORT}"

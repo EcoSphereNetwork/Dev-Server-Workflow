@@ -12,7 +12,7 @@ mkdir -p /opt/n8n
 cd /opt/n8n
 
 # Erstellung einer Docker-Compose-Datei
-cat > docker-compose.yml << EOF
+cat > docker compose.yml << EOF
 version: '3'
 
 services:
@@ -44,7 +44,7 @@ EOF
 mkdir -p custom_nodes
 
 # Starten der n8n-Instanz
-docker-compose up -d
+docker compose up -d
 ```
 
 ### 1.2 Installation der Community-Nodes
@@ -76,7 +76,7 @@ cd ../../../../
 
 # Neustart des n8n-Containers
 cd /opt/n8n
-docker-compose restart
+docker compose restart
 ```
 
 ## 2. Konfiguration der Credentials

@@ -17,7 +17,7 @@ Sie können die Versionen mit folgenden Befehlen überprüfen:
 
 ```bash
 docker --version
-docker-compose --version
+docker compose --version
 python --version
 git --version
 node --version
@@ -299,8 +299,8 @@ Die wichtigsten Konfigurationsdateien sind:
 
 - `.env`: Hauptkonfigurationsdatei
 - `cli/config.sh`: Konfiguration für die CLI
-- `docker-compose.yml`: Docker-Compose-Konfiguration
-- `docker-compose.web-ui.yml`: Docker-Compose-Konfiguration für die Web-UI
+- `docker compose.yml`: Docker-Compose-Konfiguration
+- `docker compose.web-ui.yml`: Docker-Compose-Konfiguration für die Web-UI
 
 ### Anpassung der MCP-Server
 
