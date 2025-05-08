@@ -103,6 +103,18 @@ show_help() {
     echo -e "  ${YELLOW}update${NC} ${CYAN}[Komponente]${NC}       Aktualisiert eine Komponente"
     echo -e "  ${YELLOW}backup${NC} ${CYAN}[Komponente]${NC}       Erstellt ein Backup einer Komponente"
     echo -e "  ${YELLOW}restore${NC} ${CYAN}[Backup]${NC}          Stellt ein Backup wieder her"
+    echo
+    echo -e "${GREEN}Erweiterte Befehle:${NC}"
+    echo -e "  ${YELLOW}package${NC} ${CYAN}[Aktion] [Paket] [Manager] [Optionen]${NC}    Paketmanagement"
+    echo -e "                                Aktionen: install, uninstall, update, upgrade, check"
+    echo -e "                                Manager: apt, pip, pip3, npm, npx, dpkg"
+    echo -e "  ${YELLOW}configure${NC} ${CYAN}[Aktion] [Datei] [Schlüssel] [Wert] [Extra]${NC}    Konfigurationsmanagement"
+    echo -e "                                Aktionen: set, get, comment, uncomment, set-json, get-json,"
+    echo -e "                                          set-yaml, get-yaml, set-xml, get-xml, set-env, get-env"
+    echo -e "  ${YELLOW}monitor${NC} ${CYAN}[Aktion] [Argumente...]${NC}    Monitoring-Funktionen"
+    echo -e "                                Aktionen: check-service, get-logs, check-disk, check-memory,"
+    echo -e "                                          check-cpu, check-port, check-url, check-container,"
+    echo -e "                                          container-stats, check-prometheus"
     echo -e "  ${YELLOW}ai${NC} ${CYAN}[Prompt]${NC}               Führt einen KI-Befehl aus"
     echo -e "  ${YELLOW}menu${NC}                     Öffnet das interaktive Menü"
     echo
@@ -1186,6 +1198,33 @@ main() {
             ;;
         "menu")
             show_menu
+            ;;
+        "package")
+            if [ $# -lt 3 ]; then
+                log "ERROR" "Unvollständige Parameter"
+                echo "Verwendung: dev-server package [Aktion] [Paket] [Manager] [Optionen]"
+                exit 1
+            fi
+            source "$SCRIPT_DIR/package_management.sh"
+            main "$1" "$2" "$3" "$4"
+            ;;
+        "configure")
+            if [ $# -lt 3 ]; then
+                log "ERROR" "Unvollständige Parameter"
+                echo "Verwendung: dev-server configure [Aktion] [Datei] [Schlüssel] [Wert] [Extra]"
+                exit 1
+            fi
+            source "$SCRIPT_DIR/config_management.sh"
+            main "$1" "$2" "$3" "$4" "$5"
+            ;;
+        "monitor")
+            if [ $# -lt 1 ]; then
+                log "ERROR" "Keine Aktion angegeben"
+                echo "Verwendung: dev-server monitor [Aktion] [Argumente...]"
+                exit 1
+            fi
+            source "$SCRIPT_DIR/monitoring_management.sh"
+            main "$1" "$2" "$3" "$4"
             ;;
         *)
             log "ERROR" "Unbekannter Befehl: $command"
