@@ -36,6 +36,9 @@ else
     LLAMAFILE_PORT=8080
     SHELLGPT_INSTALLED=false
     VERBOSE_MODE=false
+    ANTHROPIC_API_KEY=""
+    ACTIVE_LLM="llamafile" # Optionen: llamafile, claude
+    CLAUDE_MODEL="claude-3-5-sonnet-20240620" # Standardmodell für Claude
     
     # Erstelle Konfigurationsdatei
     cat > "$CONFIG_FILE" << EOF
@@ -45,6 +48,9 @@ LLAMAFILE_URL="$LLAMAFILE_URL"
 LLAMAFILE_PORT=8080
 SHELLGPT_INSTALLED=false
 VERBOSE_MODE=false
+ANTHROPIC_API_KEY=""
+ACTIVE_LLM="llamafile"
+CLAUDE_MODEL="claude-3-5-sonnet-20240620"
 EOF
 fi
 
@@ -88,9 +94,10 @@ show_help() {
     echo -e "  ${YELLOW}stop${NC} ${CYAN}[Komponente]${NC}         Stoppt eine Komponente"
     echo -e "  ${YELLOW}restart${NC} ${CYAN}[Komponente]${NC}      Startet eine Komponente neu"
     echo -e "  ${YELLOW}logs${NC} ${CYAN}[Komponente]${NC}         Zeigt die Logs einer Komponente an"
-    echo -e "  ${YELLOW}config${NC} ${CYAN}[Komponente]${NC}       Konfiguriert eine Komponente"
+    echo -e "  ${YELLOW}config${NC} ${CYAN}[Option] [Wert]${NC}    Konfiguriert eine Option"
     echo -e "  ${YELLOW}list${NC} ${CYAN}[Ressourcentyp]${NC}      Listet verfügbare Ressourcen auf"
     echo -e "  ${YELLOW}install${NC} ${CYAN}[Komponente]${NC}      Installiert eine Komponente"
+    echo -e "  ${YELLOW}switch-llm${NC} ${CYAN}[LLM]${NC}          Wechselt zwischen LLMs (llamafile, claude)"
     echo -e "  ${YELLOW}update${NC} ${CYAN}[Komponente]${NC}       Aktualisiert eine Komponente"
     echo -e "  ${YELLOW}backup${NC} ${CYAN}[Komponente]${NC}       Erstellt ein Backup einer Komponente"
     echo -e "  ${YELLOW}restore${NC} ${CYAN}[Backup]${NC}          Stellt ein Backup wieder her"
@@ -380,6 +387,100 @@ show_logs() {
     esac
 }
 
+# Konfiguriere ShellGPT für das aktive LLM
+configure_shellgpt() {
+    mkdir -p "$HOME/.config/shell_gpt"
+    
+    if [ "$ACTIVE_LLM" = "llamafile" ]; then
+        log "INFO" "Konfiguriere ShellGPT für Llamafile..."
+        cat > "$HOME/.config/shell_gpt/config.yaml" << EOF
+OPENAI_API_KEY: "sk-xxx"
+OPENAI_API_HOST: "http://localhost:$LLAMAFILE_PORT/v1"
+CHAT_CACHE_LENGTH: 100
+CHAT_CACHE_PATH: "$HOME/.config/shell_gpt/chat_cache"
+CACHE_LENGTH: 100
+CACHE_PATH: "$HOME/.config/shell_gpt/cache"
+REQUEST_TIMEOUT: 60
+TEMPERATURE: 0.1
+TOP_P: 1
+MAX_TOKENS: 2048
+SHELL_COMMAND_HISTORY_LENGTH: 100
+SYSTEM_PROMPT: "You are a helpful AI assistant that provides accurate and concise information about the Dev-Server-Workflow project. You help users with commands, troubleshooting, and configuration of MCP servers, n8n workflows, Docker containers, and other components."
+EOF
+    elif [ "$ACTIVE_LLM" = "claude" ]; then
+        if [ -z "$ANTHROPIC_API_KEY" ]; then
+            log "ERROR" "Anthropic API-Schlüssel ist nicht konfiguriert. Bitte konfigurieren Sie ihn mit 'dev-server config anthropic-key'"
+            return 1
+        fi
+        
+        log "INFO" "Konfiguriere ShellGPT für Claude..."
+        cat > "$HOME/.config/shell_gpt/config.yaml" << EOF
+ANTHROPIC_API_KEY: "$ANTHROPIC_API_KEY"
+ANTHROPIC_MODEL: "$CLAUDE_MODEL"
+CHAT_CACHE_LENGTH: 100
+CHAT_CACHE_PATH: "$HOME/.config/shell_gpt/chat_cache"
+CACHE_LENGTH: 100
+CACHE_PATH: "$HOME/.config/shell_gpt/cache"
+REQUEST_TIMEOUT: 60
+TEMPERATURE: 0.1
+TOP_P: 1
+MAX_TOKENS: 2048
+SHELL_COMMAND_HISTORY_LENGTH: 100
+SYSTEM_PROMPT: "You are a helpful AI assistant that provides accurate and concise information about the Dev-Server-Workflow project. You help users with commands, troubleshooting, and configuration of MCP servers, n8n workflows, Docker containers, and other components."
+EOF
+    else
+        log "ERROR" "Unbekanntes LLM: $ACTIVE_LLM"
+        return 1
+    fi
+    
+    log "SUCCESS" "ShellGPT für $ACTIVE_LLM konfiguriert"
+    return 0
+}
+
+# Wechsle das aktive LLM
+switch_llm() {
+    local llm="$1"
+    
+    case "$llm" in
+        "llamafile")
+            log "INFO" "Wechsle zu Llamafile..."
+            sed -i "s/ACTIVE_LLM=.*/ACTIVE_LLM=\"llamafile\"/" "$CONFIG_FILE"
+            ACTIVE_LLM="llamafile"
+            
+            # Konfiguriere ShellGPT neu, wenn es installiert ist
+            if [ "$SHELLGPT_INSTALLED" = true ]; then
+                configure_shellgpt
+            fi
+            
+            log "SUCCESS" "Zu Llamafile gewechselt"
+            ;;
+        "claude")
+            log "INFO" "Wechsle zu Claude..."
+            
+            # Prüfe, ob der API-Schlüssel konfiguriert ist
+            if [ -z "$ANTHROPIC_API_KEY" ]; then
+                log "ERROR" "Anthropic API-Schlüssel ist nicht konfiguriert. Bitte konfigurieren Sie ihn mit 'dev-server config anthropic-key'"
+                return 1
+            fi
+            
+            sed -i "s/ACTIVE_LLM=.*/ACTIVE_LLM=\"claude\"/" "$CONFIG_FILE"
+            ACTIVE_LLM="claude"
+            
+            # Konfiguriere ShellGPT neu, wenn es installiert ist
+            if [ "$SHELLGPT_INSTALLED" = true ]; then
+                configure_shellgpt
+            fi
+            
+            log "SUCCESS" "Zu Claude gewechselt"
+            ;;
+        *)
+            log "ERROR" "Unbekanntes LLM: $llm"
+            echo "Verfügbare LLMs: llamafile, claude"
+            return 1
+            ;;
+    esac
+}
+
 # Installationsfunktion
 install_component() {
     local component="$1"
@@ -408,22 +509,9 @@ install_component() {
                 log "INFO" "Installiere ShellGPT mit pip..."
                 pip install shell-gpt
                 if [ $? -eq 0 ]; then
-                    # Konfiguriere ShellGPT für die Verwendung mit Llamafile
-                    mkdir -p "$HOME/.config/shell_gpt"
-                    cat > "$HOME/.config/shell_gpt/config.yaml" << EOF
-OPENAI_API_KEY: "sk-xxx"
-OPENAI_API_HOST: "http://localhost:$LLAMAFILE_PORT/v1"
-CHAT_CACHE_LENGTH: 100
-CHAT_CACHE_PATH: "$HOME/.config/shell_gpt/chat_cache"
-CACHE_LENGTH: 100
-CACHE_PATH: "$HOME/.config/shell_gpt/cache"
-REQUEST_TIMEOUT: 60
-TEMPERATURE: 0.1
-TOP_P: 1
-MAX_TOKENS: 2048
-SHELL_COMMAND_HISTORY_LENGTH: 100
-SYSTEM_PROMPT: "You are a helpful AI assistant that provides accurate and concise information about the Dev-Server-Workflow project. You help users with commands, troubleshooting, and configuration of MCP servers, n8n workflows, Docker containers, and other components."
-EOF
+                    # Konfiguriere ShellGPT für das aktive LLM
+                    configure_shellgpt
+                    
                     # Aktualisiere Konfiguration
                     sed -i "s/SHELLGPT_INSTALLED=false/SHELLGPT_INSTALLED=true/" "$CONFIG_FILE"
                     log "SUCCESS" "ShellGPT erfolgreich installiert und konfiguriert"
@@ -504,14 +592,22 @@ ai_command() {
     
     # Prüfe, ob ShellGPT installiert ist
     if [ "$SHELLGPT_INSTALLED" = true ] && command -v sgpt > /dev/null; then
-        # Prüfe, ob Llamafile läuft
-        if ! pgrep -f "llamafile" > /dev/null; then
-            log "WARNING" "Llamafile läuft nicht. Starte Llamafile..."
-            start_component "llamafile"
-            sleep 5
+        if [ "$ACTIVE_LLM" = "llamafile" ]; then
+            # Prüfe, ob Llamafile läuft
+            if ! pgrep -f "llamafile" > /dev/null; then
+                log "WARNING" "Llamafile läuft nicht. Starte Llamafile..."
+                start_component "llamafile"
+                sleep 5
+            fi
+        elif [ "$ACTIVE_LLM" = "claude" ]; then
+            # Prüfe, ob der API-Schlüssel konfiguriert ist
+            if [ -z "$ANTHROPIC_API_KEY" ]; then
+                log "ERROR" "Anthropic API-Schlüssel ist nicht konfiguriert. Bitte konfigurieren Sie ihn mit 'dev-server config anthropic-key'"
+                return 1
+            fi
         fi
         
-        log "INFO" "Sende Anfrage an KI: $prompt"
+        log "INFO" "Sende Anfrage an KI ($ACTIVE_LLM): $prompt"
         sgpt "$prompt"
     else
         log "ERROR" "ShellGPT ist nicht installiert. Installieren Sie es mit 'dev-server install shellgpt'"
@@ -675,6 +771,9 @@ show_menu() {
                     echo -e "${CYAN}2)${NC} Llamafile-Pfad ändern"
                     echo -e "${CYAN}3)${NC} Llamafile-Port ändern"
                     echo -e "${CYAN}4)${NC} Verbose-Modus umschalten"
+                    echo -e "${CYAN}5)${NC} Anthropic API-Schlüssel konfigurieren"
+                    echo -e "${CYAN}6)${NC} Claude-Modell ändern"
+                    echo -e "${CYAN}7)${NC} Aktives LLM wechseln"
                     echo -e "${CYAN}0)${NC} Zurück zum Hauptmenü"
                     echo
                     read -p "Wählen Sie eine Option: " config_option
@@ -713,6 +812,69 @@ show_menu() {
                             fi
                             sleep 1
                             ;;
+                        5)
+                            read -p "Anthropic API-Schlüssel: " api_key
+                            sed -i "s|ANTHROPIC_API_KEY=.*|ANTHROPIC_API_KEY=\"$api_key\"|" "$CONFIG_FILE"
+                            ANTHROPIC_API_KEY="$api_key"
+                            echo -e "${GREEN}Anthropic API-Schlüssel aktualisiert${NC}"
+                            
+                            # Konfiguriere ShellGPT neu, wenn es installiert ist und Claude aktiv ist
+                            if [ "$SHELLGPT_INSTALLED" = true ] && [ "$ACTIVE_LLM" = "claude" ]; then
+                                configure_shellgpt
+                            fi
+                            
+                            sleep 1
+                            ;;
+                        6)
+                            echo -e "${YELLOW}Verfügbare Claude-Modelle:${NC}"
+                            echo -e "1) claude-3-5-sonnet-20240620 (Standard)"
+                            echo -e "2) claude-3-opus-20240229"
+                            echo -e "3) claude-3-haiku-20240307"
+                            echo
+                            read -p "Wählen Sie ein Modell (1-3): " model_option
+                            
+                            case $model_option in
+                                1) 
+                                    sed -i "s|CLAUDE_MODEL=.*|CLAUDE_MODEL=\"claude-3-5-sonnet-20240620\"|" "$CONFIG_FILE"
+                                    CLAUDE_MODEL="claude-3-5-sonnet-20240620"
+                                    ;;
+                                2) 
+                                    sed -i "s|CLAUDE_MODEL=.*|CLAUDE_MODEL=\"claude-3-opus-20240229\"|" "$CONFIG_FILE"
+                                    CLAUDE_MODEL="claude-3-opus-20240229"
+                                    ;;
+                                3) 
+                                    sed -i "s|CLAUDE_MODEL=.*|CLAUDE_MODEL=\"claude-3-haiku-20240307\"|" "$CONFIG_FILE"
+                                    CLAUDE_MODEL="claude-3-haiku-20240307"
+                                    ;;
+                                *) 
+                                    echo -e "${RED}Ungültige Option${NC}"
+                                    sleep 1
+                                    continue
+                                    ;;
+                            esac
+                            
+                            echo -e "${GREEN}Claude-Modell aktualisiert auf $CLAUDE_MODEL${NC}"
+                            
+                            # Konfiguriere ShellGPT neu, wenn es installiert ist und Claude aktiv ist
+                            if [ "$SHELLGPT_INSTALLED" = true ] && [ "$ACTIVE_LLM" = "claude" ]; then
+                                configure_shellgpt
+                            fi
+                            
+                            sleep 1
+                            ;;
+                        7)
+                            echo -e "${YELLOW}Verfügbare LLMs:${NC}"
+                            echo -e "1) Llamafile (lokal)"
+                            echo -e "2) Claude (Anthropic API)"
+                            echo
+                            read -p "Wählen Sie ein LLM (1-2): " llm_option
+                            
+                            case $llm_option in
+                                1) switch_llm "llamafile" ;;
+                                2) switch_llm "claude" ;;
+                                *) echo -e "${RED}Ungültige Option${NC}"; sleep 1 ;;
+                            esac
+                            ;;
                         0) break ;;
                         *) echo -e "${RED}Ungültige Option${NC}"; sleep 1 ;;
                     esac
@@ -728,6 +890,97 @@ show_menu() {
                 ;;
         esac
     done
+}
+
+# Konfigurationsfunktion
+config_command() {
+    local option="$1"
+    local value="$2"
+    
+    case "$option" in
+        "show")
+            echo -e "${GREEN}=== Aktuelle Konfiguration ===${NC}"
+            cat "$CONFIG_FILE"
+            ;;
+        "llamafile-path")
+            if [ -z "$value" ]; then
+                log "ERROR" "Kein Pfad angegeben"
+                echo "Verwendung: dev-server config llamafile-path [Pfad]"
+                return 1
+            fi
+            sed -i "s|LLAMAFILE_PATH=.*|LLAMAFILE_PATH=\"$value\"|" "$CONFIG_FILE"
+            source "$CONFIG_FILE"
+            log "SUCCESS" "Llamafile-Pfad aktualisiert auf $value"
+            ;;
+        "llamafile-port")
+            if [ -z "$value" ]; then
+                log "ERROR" "Kein Port angegeben"
+                echo "Verwendung: dev-server config llamafile-port [Port]"
+                return 1
+            fi
+            sed -i "s|LLAMAFILE_PORT=.*|LLAMAFILE_PORT=$value|" "$CONFIG_FILE"
+            source "$CONFIG_FILE"
+            log "SUCCESS" "Llamafile-Port aktualisiert auf $value"
+            ;;
+        "anthropic-key")
+            if [ -z "$value" ]; then
+                log "ERROR" "Kein API-Schlüssel angegeben"
+                echo "Verwendung: dev-server config anthropic-key [API-Schlüssel]"
+                return 1
+            fi
+            sed -i "s|ANTHROPIC_API_KEY=.*|ANTHROPIC_API_KEY=\"$value\"|" "$CONFIG_FILE"
+            ANTHROPIC_API_KEY="$value"
+            log "SUCCESS" "Anthropic API-Schlüssel aktualisiert"
+            
+            # Konfiguriere ShellGPT neu, wenn es installiert ist und Claude aktiv ist
+            if [ "$SHELLGPT_INSTALLED" = true ] && [ "$ACTIVE_LLM" = "claude" ]; then
+                configure_shellgpt
+            fi
+            ;;
+        "claude-model")
+            if [ -z "$value" ]; then
+                log "ERROR" "Kein Modell angegeben"
+                echo "Verwendung: dev-server config claude-model [Modell]"
+                echo "Verfügbare Modelle: claude-3-5-sonnet-20240620, claude-3-opus-20240229, claude-3-haiku-20240307"
+                return 1
+            fi
+            
+            # Prüfe, ob das Modell gültig ist
+            case "$value" in
+                "claude-3-5-sonnet-20240620"|"claude-3-opus-20240229"|"claude-3-haiku-20240307")
+                    sed -i "s|CLAUDE_MODEL=.*|CLAUDE_MODEL=\"$value\"|" "$CONFIG_FILE"
+                    CLAUDE_MODEL="$value"
+                    log "SUCCESS" "Claude-Modell aktualisiert auf $value"
+                    
+                    # Konfiguriere ShellGPT neu, wenn es installiert ist und Claude aktiv ist
+                    if [ "$SHELLGPT_INSTALLED" = true ] && [ "$ACTIVE_LLM" = "claude" ]; then
+                        configure_shellgpt
+                    fi
+                    ;;
+                *)
+                    log "ERROR" "Ungültiges Modell: $value"
+                    echo "Verfügbare Modelle: claude-3-5-sonnet-20240620, claude-3-opus-20240229, claude-3-haiku-20240307"
+                    return 1
+                    ;;
+            esac
+            ;;
+        "verbose")
+            if [ "$VERBOSE_MODE" = true ]; then
+                sed -i "s|VERBOSE_MODE=true|VERBOSE_MODE=false|" "$CONFIG_FILE"
+                VERBOSE_MODE=false
+                log "SUCCESS" "Verbose-Modus deaktiviert"
+            else
+                sed -i "s|VERBOSE_MODE=false|VERBOSE_MODE=true|" "$CONFIG_FILE"
+                VERBOSE_MODE=true
+                log "SUCCESS" "Verbose-Modus aktiviert"
+            fi
+            ;;
+        *)
+            log "ERROR" "Unbekannte Konfigurationsoption: $option"
+            echo "Verfügbare Optionen: show, llamafile-path, llamafile-port, anthropic-key, claude-model, verbose"
+            return 1
+            ;;
+    esac
 }
 
 # Hauptfunktion
@@ -807,6 +1060,24 @@ main() {
                 exit 1
             fi
             install_component "$1"
+            ;;
+        "config")
+            if [ $# -eq 0 ]; then
+                log "ERROR" "Keine Konfigurationsoption angegeben"
+                echo "Verwendung: dev-server config [Option] [Wert]"
+                echo "Verfügbare Optionen: show, llamafile-path, llamafile-port, anthropic-key, claude-model, verbose"
+                exit 1
+            fi
+            config_command "$1" "$2"
+            ;;
+        "switch-llm")
+            if [ $# -eq 0 ]; then
+                log "ERROR" "Kein LLM angegeben"
+                echo "Verwendung: dev-server switch-llm [LLM]"
+                echo "Verfügbare LLMs: llamafile, claude"
+                exit 1
+            fi
+            switch_llm "$1"
             ;;
         "ai")
             if [ $# -eq 0 ]; then
