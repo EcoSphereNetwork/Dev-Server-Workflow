@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dev-Server-Workflow Web UI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            margin-top: 0;
+            color: #444;
+        }
+        .status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status.online {
+            background-color: #4CAF50;
+        }
+        .status.offline {
+            background-color: #F44336;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button.stop {
+            background-color: #F44336;
+        }
+        button.stop:hover {
+            background-color: #d32f2f;
+        }
+        .tool-container {
+            margin-top: 20px;
+        }
+        .tool-card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        .tool-name {
+            font-weight: bold;
+        }
+        .tool-description {
+            color: #666;
+            margin: 5px 0;
+        }
+        .tool-parameters {
+            margin-top: 10px;
+        }
+        .parameter-input {
+            margin-bottom: 10px;
+        }
+        .parameter-input label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .parameter-input input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .response {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            border-left: 3px solid #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dev-Server-Workflow Web UI</h1>
+        
+        <div class="card">
+            <h2>MCP Server Status</h2>
+            <div id="mcp-status">Checking status...</div>
+            <div class="actions">
+                <button id="check-status">Check Status</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Available Tools</h2>
+            <div id="tools-container">Loading tools...</div>
+        </div>
+        
+        <div class="card">
+            <h2>Tool Testing</h2>
+            <div id="tool-testing">
+                <select id="tool-select">
+                    <option value="">Select a tool</option>
+                </select>
+                <div id="tool-parameters"></div>
+                <button id="call-tool">Call Tool</button>
+                <div id="tool-response" class="response" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const MCP_SERVER_URL = 'http://localhost:3333';
+        
+        // DOM Elements
+        const mcpStatusEl = document.getElementById('mcp-status');
+        const checkStatusBtn = document.getElementById('check-status');
+        const toolsContainerEl = document.getElementById('tools-container');
+        const toolSelectEl = document.getElementById('tool-select');
+        const toolParametersEl = document.getElementById('tool-parameters');
+        const callToolBtn = document.getElementById('call-tool');
+        const toolResponseEl = document.getElementById('tool-response');
+        
+        // Tools data
+        let toolsData = {};
+        
+        // Check MCP Server Status
+        async function checkMcpStatus() {
+            mcpStatusEl.innerHTML = 'Checking status...';
+            try {
+                const response = await fetch(`${MCP_SERVER_URL}/health`);
+                const data = await response.json();
+                
+                if (data.status === 'ok') {
+                    mcpStatusEl.innerHTML = '<span class="status online"></span> MCP Server is online';
+                } else {
+                    mcpStatusEl.innerHTML = '<span class="status offline"></span> MCP Server is online but reporting issues';
+                }
+            } catch (error) {
+                mcpStatusEl.innerHTML = '<span class="status offline"></span> MCP Server is offline';
+                console.error('Error checking MCP server status:', error);
+            }
+        }
+        
+        // Load Available Tools
+        async function loadTools() {
+            toolsContainerEl.innerHTML = 'Loading tools...';
+            try {
+                const response = await fetch(`${MCP_SERVER_URL}/tools`);
+                toolsData = await response.json();
+                
+                // Clear tool select
+                toolSelectEl.innerHTML = '<option value="">Select a tool</option>';
+                
+                // Display tools
+                if (Object.keys(toolsData).length === 0) {
+                    toolsContainerEl.innerHTML = 'No tools available.';
+                } else {
+                    let toolsHtml = '';
+                    
+                    for (const [toolName, toolInfo] of Object.entries(toolsData)) {
+                        toolsHtml += `
+                            <div class="tool-card">
+                                <div class="tool-name">${toolName}</div>
+                                <div class="tool-description">${toolInfo.description || 'No description available'}</div>
+                            </div>
+                        `;
+                        
+                        // Add to select
+                        const option = document.createElement('option');
+                        option.value = toolName;
+                        option.textContent = toolName;
+                        toolSelectEl.appendChild(option);
+                    }
+                    
+                    toolsContainerEl.innerHTML = toolsHtml;
+                }
+            } catch (error) {
+                toolsContainerEl.innerHTML = 'Error loading tools.';
+                console.error('Error loading tools:', error);
+            }
+        }
+        
+        // Update Tool Parameters
+        function updateToolParameters() {
+            const selectedTool = toolSelectEl.value;
+            toolParametersEl.innerHTML = '';
+            
+            if (!selectedTool || !toolsData[selectedTool]) {
+                return;
+            }
+            
+            const toolInfo = toolsData[selectedTool];
+            const parameters = toolInfo.parameters || {};
+            
+            if (Object.keys(parameters).length === 0) {
+                toolParametersEl.innerHTML = '<p>This tool has no parameters.</p>';
+                return;
+            }
+            
+            let parametersHtml = '<div class="tool-parameters">';
+            
+            for (const [paramName, paramInfo] of Object.entries(parameters)) {
+                parametersHtml += `
+                    <div class="parameter-input">
+                        <label for="param-${paramName}">${paramName}${paramInfo.required ? ' *' : ''}</label>
+                        <input type="text" id="param-${paramName}" placeholder="${paramInfo.description || ''}">
+                    </div>
+                `;
+            }
+            
+            parametersHtml += '</div>';
+            toolParametersEl.innerHTML = parametersHtml;
+        }
+        
+        // Call Tool
+        async function callTool() {
+            const selectedTool = toolSelectEl.value;
+            
+            if (!selectedTool) {
+                alert('Please select a tool');
+                return;
+            }
+            
+            // Collect parameters
+            const parameters = {};
+            const toolInfo = toolsData[selectedTool];
+            const toolParams = toolInfo.parameters || {};
+            
+            for (const paramName of Object.keys(toolParams)) {
+                const inputEl = document.getElementById(`param-${paramName}`);
+                if (inputEl && inputEl.value) {
+                    parameters[paramName] = inputEl.value;
+                }
+            }
+            
+            try {
+                const response = await fetch(`${MCP_SERVER_URL}/tools/${selectedTool}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(parameters)
+                });
+                
+                const data = await response.json();
+                
+                toolResponseEl.style.display = 'block';
+                toolResponseEl.innerHTML = `
+                    <h3>Response:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                toolResponseEl.style.display = 'block';
+                toolResponseEl.innerHTML = `
+                    <h3>Error:</h3>
+                    <pre>${error.message}</pre>
+                `;
+                console.error('Error calling tool:', error);
+            }
+        }
+        
+        // Event Listeners
+        checkStatusBtn.addEventListener('click', checkMcpStatus);
+        toolSelectEl.addEventListener('change', updateToolParameters);
+        callToolBtn.addEventListener('click', callTool);
+        
+        // Initialize
+        checkMcpStatus();
+        loadTools();
+    </script>
+</body>
+</html>
