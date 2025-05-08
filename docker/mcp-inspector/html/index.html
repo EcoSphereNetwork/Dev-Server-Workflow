@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Inspector</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 20px;
+            background-color: #f8f9fa;
+        }
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            font-weight: bold;
+        }
+        .json-viewer {
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .tool-card {
+            margin-bottom: 10px;
+        }
+        .nav-tabs {
+            margin-bottom: 20px;
+        }
+        #health-status {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .status-healthy {
+            color: #28a745;
+        }
+        .status-unhealthy {
+            color: #dc3545;
+        }
+        .tool-execution {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+        .execution-success {
+            border-left: 4px solid #28a745;
+        }
+        .execution-error {
+            border-left: 4px solid #dc3545;
+        }
+        .execution-running {
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">MCP Inspector</h1>
+        
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="true">Dashboard</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tools-tab" data-bs-toggle="tab" data-bs-target="#tools" type="button" role="tab" aria-controls="tools" aria-selected="false">Tools</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="executions-tab" data-bs-toggle="tab" data-bs-target="#executions" type="button" role="tab" aria-controls="executions" aria-selected="false">Executions</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="test-tab" data-bs-toggle="tab" data-bs-target="#test" type="button" role="tab" aria-controls="test" aria-selected="false">Test Tool</button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="myTabContent">
+            <!-- Dashboard Tab -->
+            <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">Health Status</div>
+                            <div class="card-body">
+                                <div id="health-status">Loading...</div>
+                                <div id="health-details" class="mt-3">
+                                    <div class="json-viewer">
+                                        <pre id="health-json">Loading health information...</pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">Metrics</div>
+                            <div class="card-body">
+                                <div id="metrics-details">
+                                    <div class="json-viewer">
+                                        <pre id="metrics-json">Loading metrics information...</pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">Tool Statistics</div>
+                    <div class="card-body">
+                        <div id="tool-stats-container">
+                            <div class="row" id="tool-stats">
+                                <!-- Tool statistics will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tools Tab -->
+            <div class="tab-pane fade" id="tools" role="tabpanel" aria-labelledby="tools-tab">
+                <div class="card">
+                    <div class="card-header">Available Tools</div>
+                    <div class="card-body">
+                        <div id="tools-container">
+                            <!-- Tools will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Executions Tab -->
+            <div class="tab-pane fade" id="executions" role="tabpanel" aria-labelledby="executions-tab">
+                <div class="card">
+                    <div class="card-header">Recent Tool Executions</div>
+                    <div class="card-body">
+                        <div id="executions-container">
+                            <!-- Executions will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Test Tool Tab -->
+            <div class="tab-pane fade" id="test" role="tabpanel" aria-labelledby="test-tab">
+                <div class="card">
+                    <div class="card-header">Test Tool Execution</div>
+                    <div class="card-body">
+                        <form id="test-tool-form">
+                            <div class="mb-3">
+                                <label for="tool-select" class="form-label">Select Tool</label>
+                                <select class="form-select" id="tool-select">
+                                    <option value="">Select a tool...</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="tool-arguments" class="form-label">Arguments (JSON)</label>
+                                <textarea class="form-control" id="tool-arguments" rows="5"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Execute Tool</button>
+                        </form>
+                        
+                        <div class="mt-4">
+                            <h5>Result</h5>
+                            <div class="json-viewer">
+                                <pre id="test-result">No result yet</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // MCP Server URL
+        const MCP_SERVER_URL = 'http://localhost:3333';
+        
+        // Function to format JSON
+        function formatJSON(json) {
+            return JSON.stringify(json, null, 2);
+        }
+        
+        // Function to get health information
+        async function getHealth() {
+            try {
+                const response = await fetch(`${MCP_SERVER_URL}/health`);
+                const data = await response.json();
+                
+                // Update health status
+                const healthStatus = document.getElementById('health-status');
+                if (data.status === 'healthy') {
+                    healthStatus.textContent = 'Healthy';
+                    healthStatus.className = 'status-healthy';
+                } else {
+                    healthStatus.textContent = 'Unhealthy';
+                    healthStatus.className = 'status-unhealthy';
+                }
+                
+                // Update health details
+                document.getElementById('health-json').textContent = formatJSON(data);
+                
+                return data;
+            } catch (error) {
+                console.error('Error fetching health information:', error);
+                document.getElementById('health-status').textContent = 'Connection Error';
+                document.getElementById('health-status').className = 'status-unhealthy';
+                document.getElementById('health-json').textContent = 'Error connecting to MCP server';
+                return null;
+            }
+        }
+        
+        // Function to get metrics
+        async function getMetrics() {
+            try {
+                const response = await fetch(`${MCP_SERVER_URL}/metrics`);
+                const data = await response.json();
+                
+                // Update metrics details
+                document.getElementById('metrics-json').textContent = formatJSON(data);
+                
+                // Update tool statistics
+                const toolStatsContainer = document.getElementById('tool-stats');
+                toolStatsContainer.innerHTML = '';
+                
+                if (data.tool_stats) {
+                    Object.entries(data.tool_stats).forEach(([toolName, stats]) => {
+                        const successRate = stats.count > 0 ? (stats.success_count / stats.count * 100).toFixed(1) : 0;
+                        const avgDuration = stats.average_duration ? stats.average_duration.toFixed(2) : 0;
+                        
+                        const toolStatHtml = `
+                            <div class="col-md-4 mb-3">
+                                <div class="card tool-card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${toolName}</h5>
+                                        <p class="card-text">
+                                            <strong>Executions:</strong> ${stats.count}<br>
+                                            <strong>Success Rate:</strong> ${successRate}%<br>
+                                            <strong>Avg Duration:</strong> ${avgDuration}s
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        toolStatsContainer.innerHTML += toolStatHtml;
+                    });
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Error fetching metrics:', error);
+                document.getElementById('metrics-json').textContent = 'Error connecting to MCP server';
+                return null;
+            }
+        }
+        
+        // Function to get tools
+        async function getTools() {
+            try {
+                const response = await fetch(`${MCP_SERVER_URL}/tools`);
+                const tools = await response.json();
+                
+                // Update tools container
+                const toolsContainer = document.getElementById('tools-container');
+                toolsContainer.innerHTML = '';
+                
+                tools.forEach(tool => {
+                    const toolHtml = `
+                        <div class="card mb-3">
+                            <div class="card-header">${tool.name}</div>
+                            <div class="card-body">
+                                <p>${tool.description}</p>
+                                <h6>Parameters:</h6>
+                                <div class="json-viewer">
+                                    <pre>${formatJSON(tool.parameters)}</pre>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    toolsContainer.innerHTML += toolHtml;
+                });
+                
+                // Update tool select dropdown
+                const toolSelect = document.getElementById('tool-select');
+                toolSelect.innerHTML = '<option value="">Select a tool...</option>';
+                
+                tools.forEach(tool => {
+                    const option = document.createElement('option');
+                    option.value = tool.name;
+                    option.textContent = tool.name;
+                    option.dataset.parameters = JSON.stringify(tool.parameters);
+                    toolSelect.appendChild(option);
+                });
+                
+                return tools;
+            } catch (error) {
+                console.error('Error fetching tools:', error);
+                document.getElementById('tools-container').innerHTML = '<div class="alert alert-danger">Error connecting to MCP server</div>';
+                return [];
+            }
+        }
+        
+        // Function to get executions
+        async function getExecutions() {
+            try {
+                const response = await fetch(`${MCP_SERVER_URL}/executions`);
+                const executions = await response.json();
+                
+                // Update executions container
+                const executionsContainer = document.getElementById('executions-container');
+                executionsContainer.innerHTML = '';
+                
+                if (executions.length === 0) {
+                    executionsContainer.innerHTML = '<div class="alert alert-info">No executions yet</div>';
+                    return [];
+                }
+                
+                executions.forEach(execution => {
+                    let statusClass = '';
+                    switch (execution.status) {
+                        case 'success':
+                            statusClass = 'execution-success';
+                            break;
+                        case 'error':
+                            statusClass = 'execution-error';
+                            break;
+                        case 'running':
+                            statusClass = 'execution-running';
+                            break;
+                    }
+                    
+                    const duration = execution.end_time && execution.start_time 
+                        ? (execution.end_time - execution.start_time).toFixed(2) 
+                        : 'N/A';
+                    
+                    const executionHtml = `
+                        <div class="tool-execution ${statusClass}">
+                            <h5>${execution.tool}</h5>
+                            <p>
+                                <strong>Status:</strong> ${execution.status}<br>
+                                <strong>Duration:</strong> ${duration}s
+                            </p>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Arguments:</h6>
+                                    <div class="json-viewer">
+                                        <pre>${formatJSON(execution.arguments)}</pre>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Result:</h6>
+                                    <div class="json-viewer">
+                                        <pre>${execution.result ? formatJSON(execution.result) : (execution.error || 'Running...')}</pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    executionsContainer.innerHTML += executionHtml;
+                });
+                
+                return executions;
+            } catch (error) {
+                console.error('Error fetching executions:', error);
+                document.getElementById('executions-container').innerHTML = '<div class="alert alert-danger">Error connecting to MCP server</div>';
+                return [];
+            }
+        }
+        
+        // Function to execute a tool
+        async function executeTool(toolName, arguments) {
+            try {
+                const response = await fetch(`${MCP_SERVER_URL}/execute`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: toolName,
+                        arguments: arguments
+                    })
+                });
+                
+                const result = await response.json();
+                document.getElementById('test-result').textContent = formatJSON(result);
+                return result;
+            } catch (error) {
+                console.error('Error executing tool:', error);
+                document.getElementById('test-result').textContent = `Error: ${error.message}`;
+                return null;
+            }
+        }
+        
+        // Event listener for tool selection
+        document.getElementById('tool-select').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.dataset.parameters) {
+                const parameters = JSON.parse(selectedOption.dataset.parameters);
+                
+                // Create a sample arguments object based on the parameters
+                const sampleArguments = {};
+                if (parameters.properties) {
+                    Object.entries(parameters.properties).forEach(([name, schema]) => {
+                        // Add sample values based on type
+                        switch (schema.type) {
+                            case 'string':
+                                sampleArguments[name] = schema.description || 'sample string';
+                                break;
+                            case 'number':
+                            case 'integer':
+                                sampleArguments[name] = 0;
+                                break;
+                            case 'boolean':
+                                sampleArguments[name] = false;
+                                break;
+                            case 'array':
+                                sampleArguments[name] = [];
+                                break;
+                            case 'object':
+                                sampleArguments[name] = {};
+                                break;
+                        }
+                    });
+                }
+                
+                document.getElementById('tool-arguments').value = formatJSON(sampleArguments);
+            } else {
+                document.getElementById('tool-arguments').value = '{}';
+            }
+        });
+        
+        // Event listener for tool execution form
+        document.getElementById('test-tool-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const toolName = document.getElementById('tool-select').value;
+            if (!toolName) {
+                alert('Please select a tool');
+                return;
+            }
+            
+            let arguments;
+            try {
+                arguments = JSON.parse(document.getElementById('tool-arguments').value);
+            } catch (error) {
+                alert('Invalid JSON in arguments');
+                return;
+            }
+            
+            document.getElementById('test-result').textContent = 'Executing...';
+            await executeTool(toolName, arguments);
+            
+            // Refresh executions
+            await getExecutions();
+        });
+        
+        // Initialize the page
+        async function initialize() {
+            await getHealth();
+            await getMetrics();
+            await getTools();
+            await getExecutions();
+            
+            // Set up refresh interval
+            setInterval(async () => {
+                await getHealth();
+                await getMetrics();
+                await getExecutions();
+            }, 5000);
+        }
+        
+        // Start initialization when the page loads
+        document.addEventListener('DOMContentLoaded', initialize);
+    </script>
+</body>
+</html>
