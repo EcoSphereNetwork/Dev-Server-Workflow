@@ -106,7 +106,7 @@ cd /workspace/Dev-Server-Workflow/docker-mcp-ecosystem-improved
 # Funktion zum Abrufen der MCP-Server-URL
 get_server_url() {
     local server=$1
-    local port=$(docker-compose exec $server env | grep MCP_PORT | cut -d= -f2)
+    local port=$(docker compose exec $server env | grep MCP_PORT | cut -d= -f2)
     echo "http://$server:$port"
 }
 
@@ -114,7 +114,7 @@ get_server_url() {
 case "$ACTION" in
     list-servers)
         echo -e "${BLUE}Verfügbare MCP-Server:${NC}"
-        docker-compose config --services | grep -E 'mcp$|mcp-bridge$'
+        docker compose config --services | grep -E 'mcp$|mcp-bridge$'
         ;;
     list-tools)
         if [ -z "$SERVER" ]; then
@@ -123,7 +123,7 @@ case "$ACTION" in
         else
             echo -e "${BLUE}Verfügbare Tools des MCP-Servers $SERVER:${NC}"
             SERVER_URL=$(get_server_url $SERVER)
-            docker-compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method tools/list
+            docker compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method tools/list
         fi
         ;;
     call-tool)
@@ -137,7 +137,7 @@ case "$ACTION" in
             echo -e "${BLUE}Rufe Tool $TOOL des MCP-Servers $SERVER auf:${NC}"
             SERVER_URL=$(get_server_url $SERVER)
             if [ -z "$ARGS" ]; then
-                docker-compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method tools/call --tool-name $TOOL
+                docker compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method tools/call --tool-name $TOOL
             else
                 # Extrahiere Schlüssel-Wert-Paare aus dem JSON und übergebe sie als einzelne Argumente
                 ARGS_ARRAY=()
@@ -145,7 +145,7 @@ case "$ACTION" in
                     value=$(echo $ARGS | jq -r ".[\"$key\"]")
                     ARGS_ARRAY+=("--tool-arg" "$key=$value")
                 done
-                docker-compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method tools/call --tool-name $TOOL "${ARGS_ARRAY[@]}"
+                docker compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method tools/call --tool-name $TOOL "${ARGS_ARRAY[@]}"
             fi
         fi
         ;;
@@ -156,7 +156,7 @@ case "$ACTION" in
         else
             echo -e "${BLUE}Verfügbare Ressourcen des MCP-Servers $SERVER:${NC}"
             SERVER_URL=$(get_server_url $SERVER)
-            docker-compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method resources/list
+            docker compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method resources/list
         fi
         ;;
     get-resource)
@@ -169,7 +169,7 @@ case "$ACTION" in
         else
             echo -e "${BLUE}Rufe Ressource $RESOURCE des MCP-Servers $SERVER ab:${NC}"
             SERVER_URL=$(get_server_url $SERVER)
-            docker-compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method resources/get --resource-id $RESOURCE
+            docker compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method resources/get --resource-id $RESOURCE
         fi
         ;;
     list-prompts)
@@ -179,7 +179,7 @@ case "$ACTION" in
         else
             echo -e "${BLUE}Verfügbare Prompts des MCP-Servers $SERVER:${NC}"
             SERVER_URL=$(get_server_url $SERVER)
-            docker-compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method prompts/list
+            docker compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method prompts/list
         fi
         ;;
     call-prompt)
@@ -193,7 +193,7 @@ case "$ACTION" in
             echo -e "${BLUE}Rufe Prompt $PROMPT des MCP-Servers $SERVER auf:${NC}"
             SERVER_URL=$(get_server_url $SERVER)
             if [ -z "$PROMPT_ARGS" ]; then
-                docker-compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method prompts/call --prompt-id $PROMPT
+                docker compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method prompts/call --prompt-id $PROMPT
             else
                 # Extrahiere Schlüssel-Wert-Paare aus dem JSON und übergebe sie als einzelne Argumente
                 ARGS_ARRAY=()
@@ -201,7 +201,7 @@ case "$ACTION" in
                     value=$(echo $PROMPT_ARGS | jq -r ".[\"$key\"]")
                     ARGS_ARRAY+=("--prompt-arg" "$key=$value")
                 done
-                docker-compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method prompts/call --prompt-id $PROMPT "${ARGS_ARRAY[@]}"
+                docker compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method prompts/call --prompt-id $PROMPT "${ARGS_ARRAY[@]}"
             fi
         fi
         ;;

@@ -59,7 +59,7 @@ MCP_SERVER_PORT=3000
 ### 3. Docker-Container starten
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 Dies startet folgende Container:
@@ -159,7 +159,7 @@ Dies erstellt die MCP-Server-Konfiguration und generiert die `openhands-mcp-conf
 
 ```bash
 # Bei Docker-Installation
-docker-compose ps
+docker compose ps
 
 # Bei manueller Installation
 curl http://localhost:5678/healthz
@@ -201,11 +201,11 @@ Nach erfolgreicher Installation können Sie auf folgende Komponenten zugreifen:
 
 ```bash
 # Überprüfen Sie den Status der Container
-docker-compose ps
+docker compose ps
 
 # Überprüfen Sie die Logs
-docker-compose logs n8n
-docker-compose logs mcp-server
+docker compose logs n8n
+docker compose logs mcp-server
 ```
 
 #### Netzwerkprobleme
@@ -220,8 +220,8 @@ docker network inspect n8n-network
 
 #### n8n ist nicht erreichbar
 
-- Überprüfen Sie, ob der n8n-Container läuft: `docker-compose ps n8n`
-- Überprüfen Sie die n8n-Logs: `docker-compose logs n8n`
+- Überprüfen Sie, ob der n8n-Container läuft: `docker compose ps n8n`
+- Überprüfen Sie die n8n-Logs: `docker compose logs n8n`
 - Stellen Sie sicher, dass Port 5678 nicht von einem anderen Dienst verwendet wird
 
 #### Workflow-Aktivierung schlägt fehl
@@ -237,10 +237,10 @@ docker network inspect n8n-network
 ```bash
 # Überprüfen Sie den Status der MCP-Server
 cd docker-mcp-servers
-docker-compose ps
+docker compose ps
 
 # Überprüfen Sie die Logs
-docker-compose logs filesystem-mcp
+docker compose logs filesystem-mcp
 ```
 
 #### Verbindungsprobleme zwischen n8n und MCP-Servern

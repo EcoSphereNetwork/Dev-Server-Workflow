@@ -14,7 +14,7 @@ Dieses Dokument beschreibt die Struktur des Dev-Server-Workflow-Repositories nac
 
 - **IMPLEMENTATION_PLAN.md**: Detaillierter Implementierungsplan für das MCP-Server-Ökosystem und die n8n-Workflows.
 - **README.md**: Hauptdokumentation des Projekts.
-- **docker-compose.yml**: Docker-Compose-Konfiguration für die n8n-Integration.
+- **docker compose.yml**: Docker-Compose-Konfiguration für die n8n-Integration.
 - **Dockerfile**: Dockerfile für den n8n-MCP-Server.
 
 ## docker-mcp-ecosystem

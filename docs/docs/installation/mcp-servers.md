@@ -42,7 +42,7 @@ Edit the `.env` file with your configuration.
 ### 3. Start the MCP Servers
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 This will start all MCP servers in detached mode.
@@ -50,7 +50,7 @@ This will start all MCP servers in detached mode.
 To start a specific MCP server:
 
 ```bash
-docker-compose up -d mcp-github
+docker compose up -d mcp-github
 ```
 
 ## Python Virtual Environment Installation

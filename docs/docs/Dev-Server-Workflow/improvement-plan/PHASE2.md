@@ -14,7 +14,7 @@ Die MCP-Server wurden um neue Server erweitert, die zusätzliche Funktionen biet
 - **Firebase MCP-Server**: Integration mit Firebase
 - **Salesforce MCP-Server**: Integration mit Salesforce
 
-Die Docker-Compose-Konfiguration wurde aktualisiert, um diese neuen Server zu unterstützen, und es wurde eine neue Umgebungsvariablendatei erstellt, die die erforderlichen Konfigurationsparameter dokumentiert.
+Die Docker Compose-Konfiguration wurde aktualisiert, um diese neuen Server zu unterstützen, und es wurde eine neue Umgebungsvariablendatei erstellt, die die erforderlichen Konfigurationsparameter dokumentiert.
 
 ### 2. Verbesserte MCP-Server-Verwaltung
 
@@ -44,7 +44,7 @@ Es wurde ein neuer n8n-Workflow erstellt, der OpenHands mit anderen Tools integr
 Die folgenden Dateien wurden erstellt oder geändert:
 
 ### Neue Dateien:
-- `docker-mcp-servers/docker-compose-updated.yml`: Aktualisierte Docker-Compose-Konfiguration mit neuen MCP-Servern
+- `docker-mcp-servers/docker-compose-updated.yml`: Aktualisierte Docker Compose-Konfiguration mit neuen MCP-Servern
 - `docker-mcp-servers/.env.example.updated`: Aktualisierte Umgebungsvariablendatei mit neuen Konfigurationsparametern
 - `docker-mcp-servers/start-mcp-servers-updated.sh`: Aktualisiertes Skript zum Starten der MCP-Server
 - `docker-mcp-servers/test-mcp-servers-updated.py`: Aktualisiertes Skript zum Testen der MCP-Server

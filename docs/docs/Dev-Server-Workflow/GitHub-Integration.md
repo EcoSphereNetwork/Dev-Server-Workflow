@@ -179,8 +179,8 @@ Wenn Sie Probleme mit der GitHub-Integration haben:
 
 3. Überprüfen Sie die Logs der MCP-Server:
    ```bash
-   docker-compose logs github-mcp
-   docker-compose logs github-chat-mcp
+   docker compose logs github-mcp
+   docker compose logs github-chat-mcp
    ```
 
 4. Überprüfen Sie die Webhook-Konfiguration:

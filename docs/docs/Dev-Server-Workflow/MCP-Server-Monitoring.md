@@ -44,7 +44,7 @@ cd /workspace/Dev-Server-Workflow/docker-mcp-servers/monitoring
 2. Starten Sie die Docker-Container:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ## Zugriff auf die Überwachungstools
@@ -94,8 +94,8 @@ Wenn Sie Probleme mit der Überwachungslösung haben:
 
 1. Überprüfen Sie die Docker-Container-Logs:
    ```bash
-   docker-compose logs prometheus
-   docker-compose logs grafana
+   docker compose logs prometheus
+   docker compose logs grafana
    ```
 
 2. Überprüfen Sie, ob die MCP-Server Prometheus-Metriken bereitstellen:

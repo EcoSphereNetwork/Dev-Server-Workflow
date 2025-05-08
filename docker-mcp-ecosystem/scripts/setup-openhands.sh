@@ -246,7 +246,7 @@ EOF
 echo -e "${BLUE}Erstelle Start-Skript für OpenHands...${NC}"
 cat > "$HOME/start-openhands.sh" << EOF
 #!/bin/bash
-docker-compose -f $HOME/openhands-docker-compose.yml up -d
+docker compose -f $HOME/openhands-docker-compose.yml up -d
 echo "OpenHands gestartet unter http://localhost:$OPENHANDS_PORT"
 EOF
 chmod +x "$HOME/start-openhands.sh"

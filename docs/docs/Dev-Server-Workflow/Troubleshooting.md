@@ -46,7 +46,7 @@ Diese Anleitung hilft Ihnen bei der Behebung häufiger Probleme mit der n8n Work
 1. Überprüfen Sie, ob Docker und Docker Compose installiert sind:
    ```bash
    docker --version
-   docker-compose --version
+   docker compose --version
    ```
 
 2. Stellen Sie sicher, dass der Docker-Daemon läuft:
@@ -56,7 +56,7 @@ Diese Anleitung hilft Ihnen bei der Behebung häufiger Probleme mit der n8n Work
 
 3. Versuchen Sie, n8n manuell zu installieren:
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 ### API-Key-Probleme

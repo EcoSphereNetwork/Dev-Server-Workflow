@@ -69,10 +69,10 @@ Eine gemeinsame Bibliothek wurde erstellt, um Code-Duplikation zwischen `docker-
 source /path/to/src/common/mcp_server_lib.sh
 
 # MCP-Server starten
-start_mcp_server "server-name" "docker-compose.yml" ".env"
+start_mcp_server "server-name" "docker compose.yml" ".env"
 
 # MCP-Server stoppen
-stop_mcp_server "server-name" "docker-compose.yml" ".env"
+stop_mcp_server "server-name" "docker compose.yml" ".env"
 
 # MCP-Server-Status abrufen
 status=$(get_mcp_server_status "server-name")

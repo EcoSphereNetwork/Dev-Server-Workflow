@@ -271,7 +271,7 @@ start_component() {
             if docker ps | grep -q "n8n"; then
                 log "WARNING" "n8n läuft bereits"
             else
-                docker-compose -f "$WORKSPACE_DIR/docker-mcp-ecosystem/docker-compose.yml" up -d n8n
+                docker compose -f "$WORKSPACE_DIR/docker-mcp-ecosystem/docker-compose.yml" up -d n8n
                 if [ $? -eq 0 ]; then
                     log "SUCCESS" "n8n erfolgreich gestartet"
                 else
@@ -385,7 +385,7 @@ stop_component() {
             ;;
         "n8n")
             log "INFO" "Stoppe n8n..."
-            docker-compose -f "$WORKSPACE_DIR/docker-mcp-ecosystem/docker-compose.yml" stop n8n
+            docker compose -f "$WORKSPACE_DIR/docker-mcp-ecosystem/docker-compose.yml" stop n8n
             if [ $? -eq 0 ]; then
                 log "SUCCESS" "n8n erfolgreich gestoppt"
             else
@@ -455,15 +455,15 @@ show_logs() {
     case "$component" in
         "mcp")
             log "INFO" "Zeige MCP-Server-Logs..."
-            docker-compose -f "$WORKSPACE_DIR/docker-mcp-ecosystem/docker-compose.yml" logs --tail="$lines" $(docker ps --format "{{.Names}}" | grep "mcp-")
+            docker compose -f "$WORKSPACE_DIR/docker-mcp-ecosystem/docker-compose.yml" logs --tail="$lines" $(docker ps --format "{{.Names}}" | grep "mcp-")
             ;;
         "n8n")
             log "INFO" "Zeige n8n-Logs..."
-            docker-compose -f "$WORKSPACE_DIR/docker-mcp-ecosystem/docker-compose.yml" logs --tail="$lines" n8n
+            docker compose -f "$WORKSPACE_DIR/docker-mcp-ecosystem/docker-compose.yml" logs --tail="$lines" n8n
             ;;
         "ollama")
             log "INFO" "Zeige Ollama-Logs..."
-            docker-compose -f "$WORKSPACE_DIR/docker-mcp-ecosystem/ollama-mcp-bridge/docker-compose.yml" logs --tail="$lines" ollama ollama-mcp-bridge
+            docker compose -f "$WORKSPACE_DIR/docker-mcp-ecosystem/ollama-mcp-bridge/docker-compose.yml" logs --tail="$lines" ollama ollama-mcp-bridge
             ;;
         "openhands")
             log "INFO" "Zeige OpenHands-Logs..."

@@ -20,7 +20,7 @@ if ! command -v docker &> /dev/null; then
 fi
 
 # Prüfe, ob Docker Compose installiert ist
-if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+if ! command -v docker compose &> /dev/null && ! docker compose version &> /dev/null; then
     echo -e "${RED}Docker Compose ist nicht installiert. Bitte installieren Sie Docker Compose und versuchen Sie es erneut.${NC}"
     exit 1
 fi
@@ -44,26 +44,26 @@ fi
 
 # Starte die Container
 echo -e "${YELLOW}Starte Ollama und MCP-Bridge...${NC}"
-docker-compose up -d
+docker compose up -d
 
 # Warte auf den Start der Container
 echo -e "${YELLOW}Warte auf den Start der Container...${NC}"
 sleep 10
 
 # Prüfe, ob die Container laufen
-if docker-compose ps | grep -q "Up"; then
+if docker compose ps | grep -q "Up"; then
     echo -e "${GREEN}Ollama und MCP-Bridge wurden erfolgreich gestartet!${NC}"
 else
-    echo -e "${RED}Es gab ein Problem beim Starten der Container. Bitte überprüfen Sie die Logs mit 'docker-compose logs'.${NC}"
+    echo -e "${RED}Es gab ein Problem beim Starten der Container. Bitte überprüfen Sie die Logs mit 'docker compose logs'.${NC}"
     exit 1
 fi
 
 # Lade das Modell, wenn es noch nicht vorhanden ist
 MODEL=$(grep OLLAMA_MODEL .env | cut -d= -f2)
 echo -e "${YELLOW}Prüfe, ob das Modell ${MODEL} bereits heruntergeladen wurde...${NC}"
-if ! docker-compose exec ollama ollama list | grep -q "$MODEL"; then
+if ! docker compose exec ollama ollama list | grep -q "$MODEL"; then
     echo -e "${YELLOW}Lade das Modell ${MODEL} herunter...${NC}"
-    docker-compose exec ollama ollama pull "$MODEL"
+    docker compose exec ollama ollama pull "$MODEL"
     echo -e "${GREEN}Modell ${MODEL} wurde erfolgreich heruntergeladen!${NC}"
 else
     echo -e "${GREEN}Modell ${MODEL} ist bereits vorhanden.${NC}"

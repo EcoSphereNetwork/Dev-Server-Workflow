@@ -63,14 +63,14 @@ check_docker() {
 
 # Funktion zum Überprüfen, ob Docker Compose installiert ist
 check_docker_compose() {
-    if ! command -v docker-compose &> /dev/null; then
+    if ! command -v docker compose &> /dev/null; then
         warn "Docker Compose ist nicht installiert. Versuche, es zu installieren..."
         
         # Installiere Docker Compose
         sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
         sudo chmod +x /usr/local/bin/docker-compose
         
-        if ! command -v docker-compose &> /dev/null; then
+        if ! command -v docker compose &> /dev/null; then
             error "Konnte Docker Compose nicht installieren. Bitte installieren Sie Docker Compose manuell."
             return 1
         fi

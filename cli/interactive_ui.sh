@@ -425,7 +425,7 @@ show_n8n_dialog() {
                 --infobox "Starte n8n..." 5 40
             
             cd "${BASE_DIR}"
-            docker-compose -f docker-compose.yml up -d n8n
+            docker compose -f docker compose.yml up -d n8n
             
             dialog --clear --backtitle "Dev-Server-Workflow" \
                 --title "n8n starten" \
@@ -678,7 +678,7 @@ show_config_dialog() {
                 --menu "Wählen Sie eine Konfigurationsdatei:" 15 60 4 \
                 "1" ".env" \
                 "2" "cli/config.sh" \
-                "3" "docker-compose.yml" \
+                "3" "docker compose.yml" \
                 "b" "Zurück" \
                 3>&1 1>&2 2>&3)
             
@@ -697,7 +697,7 @@ show_config_dialog() {
                     ${EDITOR:-nano} "${BASE_DIR}/cli/config.sh"
                     ;;
                 3)
-                    # Edit docker-compose.yml
+                    # Edit docker compose.yml
                     ${EDITOR:-nano} "${BASE_DIR}/docker-compose.yml"
                     ;;
                 b|*) ;;
@@ -751,7 +751,7 @@ show_config_dialog() {
             ;;
         5)
             # Show Docker Compose configuration
-            local compose_output=$(docker-compose -f "${BASE_DIR}/docker-compose.yml" config)
+            local compose_output=$(docker compose -f "${BASE_DIR}/docker-compose.yml" config)
             
             dialog --clear --backtitle "Dev-Server-Workflow" \
                 --title "Docker-Compose-Konfiguration anzeigen" \
@@ -1042,7 +1042,7 @@ show_backup_dialog() {
                             tar -xzf "$selected_backup" -C "$temp_dir"
                             
                             # Stop all containers
-                            docker-compose -f "${BASE_DIR}/docker-compose.yml" down
+                            docker compose -f "${BASE_DIR}/docker-compose.yml" down
                             
                             # Restore configuration
                             cp -r "$temp_dir"/*/.env "${BASE_DIR}/" 2>/dev/null || true
@@ -1197,7 +1197,7 @@ show_installation_dialog() {
                 
                 # Install dependencies
                 apt-get update
-                apt-get install -y curl jq docker.io docker-compose python3 python3-pip
+                apt-get install -y curl jq docker.io docker compose python3 python3-pip
                 pip3 install psutil docker prometheus_client
                 
                 dialog --clear --backtitle "Dev-Server-Workflow" \
@@ -1246,7 +1246,7 @@ show_installation_dialog() {
                 
                 # Install n8n
                 cd "${BASE_DIR}"
-                docker-compose -f docker-compose.yml up -d n8n
+                docker compose -f docker compose.yml up -d n8n
                 
                 dialog --clear --backtitle "Dev-Server-Workflow" \
                     --title "n8n installieren" \
@@ -1270,7 +1270,7 @@ show_installation_dialog() {
                 
                 # Install monitoring
                 cd "${BASE_DIR}"
-                docker-compose -f docker-compose.yml up -d prometheus grafana
+                docker compose -f docker compose.yml up -d prometheus grafana
                 
                 dialog --clear --backtitle "Dev-Server-Workflow" \
                     --title "Monitoring installieren" \
@@ -1294,13 +1294,13 @@ show_installation_dialog() {
                 
                 # Install dependencies
                 apt-get update
-                apt-get install -y curl jq docker.io docker-compose python3 python3-pip
+                apt-get install -y curl jq docker.io docker compose python3 python3-pip
                 pip3 install psutil docker prometheus_client
                 
                 # Install all components
                 cd "${BASE_DIR}"
                 ./start-mcp-servers.sh
-                docker-compose -f docker-compose.yml up -d
+                docker compose -f docker compose.yml up -d
                 
                 dialog --clear --backtitle "Dev-Server-Workflow" \
                     --title "Alles installieren" \

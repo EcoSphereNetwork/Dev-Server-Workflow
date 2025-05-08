@@ -47,7 +47,7 @@ cd docker-mcp-servers
 cd docker-mcp-servers
 cp .env.example .env
 # Edit the .env file with your configuration
-docker-compose up -d
+docker compose up -d
 ```
 
 ## Configuration
@@ -136,12 +136,12 @@ If you encounter issues with the MCP servers:
 
 1. Check the Docker container logs:
    ```bash
-   docker-compose logs <container-name>
+   docker compose logs <container-name>
    ```
 
 2. Verify that the MCP servers are running:
    ```bash
-   docker-compose ps
+   docker compose ps
    ```
 
 3. Check the health status of the MCP servers:

@@ -206,7 +206,7 @@ check_dependencies() {
     fi
     
     # Prüfe Docker Compose
-    if ! command -v docker-compose &> /dev/null; then
+    if ! command -v docker compose &> /dev/null; then
         echo -e "${RED}Docker Compose ist nicht installiert. Bitte installieren Sie Docker Compose.${NC}"
         return 1
     fi

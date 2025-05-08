@@ -41,12 +41,12 @@ fi
 
 # Start the MCP servers
 log "Starting MCP servers..."
-docker-compose up -d
+docker compose up -d
 
 # Check if all containers are running
 log "Checking if all containers are running..."
-if docker-compose ps | grep -q "Exit"; then
-    error "Some containers failed to start. Please check the logs with 'docker-compose logs'."
+if docker compose ps | grep -q "Exit"; then
+    error "Some containers failed to start. Please check the logs with 'docker compose logs'."
     exit 1
 fi
 
@@ -56,4 +56,4 @@ log "You can stop the MCP servers with './stop-mcp-servers.sh'"
 
 # List all running MCP servers
 log "Running MCP servers:"
-docker-compose ps
+docker compose ps

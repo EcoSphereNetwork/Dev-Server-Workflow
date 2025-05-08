@@ -158,7 +158,7 @@ EOF3
 # Erstelle Start-Skript für OpenHands
 cat > "$HOME/start-openhands.sh" << 'EOF4'
 #!/bin/bash
-docker-compose -f $HOME/openhands-docker-compose.yml up -d
+docker compose -f $HOME/openhands-docker-compose.yml up -d
 echo "OpenHands gestartet unter http://localhost:3000"
 EOF4
 chmod +x "$HOME/start-openhands.sh"

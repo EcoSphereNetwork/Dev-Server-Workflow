@@ -27,12 +27,12 @@ This guide covers the development workflow and best practices for this project.
 
 1. Development environment:
    ```bash
-   docker-compose up --build
+   docker compose up --build
    ```
 
 2. Run tests:
    ```bash
-   docker-compose run --rm app pytest
+   docker compose run --rm app pytest
    ```
 
 ## Code Quality

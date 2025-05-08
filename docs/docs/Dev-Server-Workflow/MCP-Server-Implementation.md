@@ -187,7 +187,7 @@ Weitere Informationen finden Sie in der [Monitoring-Dokumentation](MCP-Server-Mo
 Alle MCP-Server schreiben Logs in standardisiertem Format. In der Docker-Umgebung können die Logs wie folgt angezeigt werden:
 
 ```bash
-docker-compose logs filesystem-mcp
+docker compose logs filesystem-mcp
 ```
 
 ## Testen der MCP-Server
