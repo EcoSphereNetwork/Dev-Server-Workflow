@@ -1,8 +1,9 @@
-const { app, BrowserWindow, Menu, shell, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, Menu, shell, ipcMain, dialog, session } = require('electron');
 const path = require('path');
 const url = require('url');
 const fs = require('fs');
 const { spawn } = require('child_process');
+const os = require('os');
 
 // Behalte eine globale Referenz auf das Fenster-Objekt.
 // Wenn du dies nicht tust, wird das Fenster automatisch geschlossen,
@@ -25,7 +26,16 @@ function createWindow() {
       allowRunningInsecureContent: false,
       webSecurity: true
     },
-    icon: path.join(__dirname, '../build/icon.png')
+    icon: path.join(__dirname, '../assets/icon.png'),
+    show: false, // Nicht anzeigen, bis es geladen ist
+    backgroundColor: '#f5f5f5', // Hintergrundfarbe während des Ladens
+    titleBarStyle: 'default',
+    autoHideMenuBar: false
+  });
+  
+  // Zeige das Fenster an, wenn es geladen ist
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
   });
 
   // und lade die index.html der App.
@@ -183,6 +193,19 @@ function createWindow() {
 // abgeschlossen hat und bereit ist, Browser-Fenster zu erstellen.
 // Einige APIs können nur nach dem Auftreten dieses Events genutzt werden.
 app.on('ready', () => {
+  // Konfiguriere CORS für Webviews
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Access-Control-Allow-Origin': ['*'],
+        'Access-Control-Allow-Methods': ['*'],
+        'Access-Control-Allow-Headers': ['*'],
+        'Content-Security-Policy': ["default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https: http:;"]
+      }
+    });
+  });
+
   createWindow();
   
   // Starte den Backend-Server

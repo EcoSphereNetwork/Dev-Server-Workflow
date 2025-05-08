@@ -1,10 +1,12 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, shell } = require('electron');
+const os = require('os');
 
 // Exponiere geschützte Methoden, die es dem Renderer-Prozess erlauben,
 // mit dem Hauptprozess über das contextBridge-API zu kommunizieren.
 contextBridge.exposeInMainWorld(
   'electron',
   {
+    // Komponenten-Verwaltung
     startComponent: (component) => {
       ipcRenderer.send('start-component', component);
     },
@@ -20,8 +22,33 @@ contextBridge.exposeInMainWorld(
     onComponentStatus: (callback) => {
       ipcRenderer.on('component-status', (_, data) => callback(data));
     },
+    
+    // Navigation
     onNavigate: (callback) => {
       ipcRenderer.on('navigate', (_, path) => callback(path));
-    }
+    },
+    
+    // System-Informationen
+    getSystemInfo: () => {
+      return {
+        platform: os.platform(),
+        arch: os.arch(),
+        cpus: os.cpus(),
+        totalMemory: os.totalmem(),
+        freeMemory: os.freemem(),
+        hostname: os.hostname(),
+        userInfo: os.userInfo(),
+        uptime: os.uptime(),
+        version: process.version
+      };
+    },
+    
+    // Externe Links
+    openExternal: (url) => {
+      shell.openExternal(url);
+    },
+    
+    // Dienste-Integration
+    isElectron: true
   }
 );
