@@ -21,6 +21,7 @@ show_help() {
     echo "  -a, --all                 Alle MCP-Server stoppen"
     echo "  --n8n                     n8n MCP-Server stoppen"
     echo "  --openhands               OpenHands MCP-Server stoppen"
+    echo "  --generator               MCP-Server-Generator stoppen"
     echo ""
     echo "Beispiel:"
     echo "  $0 --all"
@@ -70,6 +71,7 @@ stop_openhands_mcp_server() {
 # Standardwerte
 STOP_N8N=false
 STOP_OPENHANDS=false
+STOP_GENERATOR=false
 
 # Parse Kommandozeilenargumente
 while [[ $# -gt 0 ]]; do
@@ -81,6 +83,7 @@ while [[ $# -gt 0 ]]; do
         -a|--all)
             STOP_N8N=true
             STOP_OPENHANDS=true
+            STOP_GENERATOR=true
             shift
             ;;
         --n8n)
@@ -89,6 +92,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --openhands)
             STOP_OPENHANDS=true
+            shift
+            ;;
+        --generator)
+            STOP_GENERATOR=true
             shift
             ;;
         *)
@@ -100,12 +107,62 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Überprüfe, ob mindestens ein Server gestoppt werden soll
-if [ "$STOP_N8N" = false ] && [ "$STOP_OPENHANDS" = false ]; then
+if [ "$STOP_N8N" = false ] && [ "$STOP_OPENHANDS" = false ] && [ "$STOP_GENERATOR" = false ]; then
     echo -e "${YELLOW}Warnung: Kein Server zum Stoppen angegeben${NC}"
-    echo "Bitte geben Sie mindestens einen Server mit --n8n, --openhands oder --all an"
+    echo "Bitte geben Sie mindestens einen Server mit --n8n, --openhands, --generator oder --all an"
     show_help
     exit 1
 fi
+
+# Funktion zum Stoppen des MCP-Server-Generators
+stop_generator_mcp_server() {
+    echo -e "${BLUE}Stoppe MCP-Server-Generator...${NC}"
+    
+    if [ -f generator-mcp-server.pid ]; then
+        PID=$(cat generator-mcp-server.pid)
+        
+        if ps -p $PID > /dev/null; then
+            kill $PID
+            echo -e "${GREEN}MCP-Server-Generator gestoppt (PID: $PID)${NC}"
+        else
+            echo -e "${YELLOW}MCP-Server-Generator läuft nicht (PID: $PID)${NC}"
+        fi
+        
+        rm generator-mcp-server.pid
+    else
+        echo -e "${YELLOW}MCP-Server-Generator PID-Datei nicht gefunden${NC}"
+    fi
+    
+    # Stoppe auch alle generierten Server
+    if [ -d "generated_servers" ]; then
+        echo -e "${BLUE}Stoppe generierte MCP-Server...${NC}"
+        for pid_file in generated_servers/*/server.pid; do
+            if [ -f "$pid_file" ]; then
+                PID=$(cat "$pid_file")
+                SERVER_DIR=$(dirname "$pid_file")
+                SERVER_ID=$(basename "$SERVER_DIR")
+                
+                if ps -p $PID > /dev/null; then
+                    kill $PID
+                    echo -e "${GREEN}Generierter MCP-Server $SERVER_ID gestoppt (PID: $PID)${NC}"
+                else
+                    echo -e "${YELLOW}Generierter MCP-Server $SERVER_ID läuft nicht (PID: $PID)${NC}"
+                fi
+                
+                rm "$pid_file"
+                
+                # Aktualisiere den Status in der Konfigurationsdatei
+                CONFIG_FILE="$SERVER_DIR/config.json"
+                if [ -f "$CONFIG_FILE" ]; then
+                    # Verwende temporäre Datei für die Aktualisierung
+                    TMP_FILE="$SERVER_DIR/config.tmp.json"
+                    cat "$CONFIG_FILE" | sed 's/"status": "running"/"status": "stopped"/g' > "$TMP_FILE"
+                    mv "$TMP_FILE" "$CONFIG_FILE"
+                fi
+            fi
+        done
+    fi
+}
 
 # Stoppe die Server
 if [ "$STOP_N8N" = true ]; then
@@ -114,6 +171,10 @@ fi
 
 if [ "$STOP_OPENHANDS" = true ]; then
     stop_openhands_mcp_server
+fi
+
+if [ "$STOP_GENERATOR" = true ]; then
+    stop_generator_mcp_server
 fi
 
 echo -e "${GREEN}Alle Server gestoppt${NC}"

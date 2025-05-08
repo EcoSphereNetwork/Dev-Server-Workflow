@@ -5,6 +5,7 @@
 N8N_URL=${N8N_URL:-"http://localhost:5678"}
 N8N_API_KEY=${N8N_API_KEY:-""}
 OPENHANDS_MAX_WORKERS=${OPENHANDS_MAX_WORKERS:-5}
+GENERATOR_SERVERS_DIR=${GENERATOR_SERVERS_DIR:-"generated_servers"}
 
 # Farben für die Ausgabe
 RED='\033[0;31m'
@@ -26,15 +27,18 @@ show_help() {
     echo "  -n, --n8n-url URL         URL der n8n-Instanz (Standard: $N8N_URL)"
     echo "  -k, --api-key KEY         API-Schlüssel für n8n"
     echo "  -w, --max-workers N       Maximale Anzahl von Worker-Threads für OpenHands (Standard: $OPENHANDS_MAX_WORKERS)"
+    echo "  -d, --servers-dir DIR     Verzeichnis für generierte Server (Standard: $GENERATOR_SERVERS_DIR)"
     echo "  -v, --verbose             Ausführliche Ausgabe"
     echo "  -a, --all                 Alle MCP-Server starten"
     echo "  --n8n                     n8n MCP-Server starten"
     echo "  --openhands               OpenHands MCP-Server starten"
+    echo "  --generator               MCP-Server-Generator starten"
     echo ""
     echo "Umgebungsvariablen:"
     echo "  N8N_URL                   URL der n8n-Instanz"
     echo "  N8N_API_KEY               API-Schlüssel für n8n"
     echo "  OPENHANDS_MAX_WORKERS     Maximale Anzahl von Worker-Threads für OpenHands"
+    echo "  GENERATOR_SERVERS_DIR     Verzeichnis für generierte Server"
     echo ""
     echo "Beispiel:"
     echo "  $0 --all -k my-api-key"
@@ -80,6 +84,7 @@ start_openhands_mcp_server() {
 # Standardwerte
 START_N8N=false
 START_OPENHANDS=false
+START_GENERATOR=false
 VERBOSE_FLAG=""
 
 # Parse Kommandozeilenargumente
@@ -101,6 +106,10 @@ while [[ $# -gt 0 ]]; do
             OPENHANDS_MAX_WORKERS="$2"
             shift 2
             ;;
+        -d|--servers-dir)
+            GENERATOR_SERVERS_DIR="$2"
+            shift 2
+            ;;
         -v|--verbose)
             VERBOSE_FLAG="--verbose"
             shift
@@ -108,6 +117,7 @@ while [[ $# -gt 0 ]]; do
         -a|--all)
             START_N8N=true
             START_OPENHANDS=true
+            START_GENERATOR=true
             shift
             ;;
         --n8n)
@@ -116,6 +126,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --openhands)
             START_OPENHANDS=true
+            shift
+            ;;
+        --generator)
+            START_GENERATOR=true
             shift
             ;;
         *)
@@ -127,12 +141,30 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Überprüfe, ob mindestens ein Server gestartet werden soll
-if [ "$START_N8N" = false ] && [ "$START_OPENHANDS" = false ]; then
+if [ "$START_N8N" = false ] && [ "$START_OPENHANDS" = false ] && [ "$START_GENERATOR" = false ]; then
     echo -e "${YELLOW}Warnung: Kein Server zum Starten angegeben${NC}"
-    echo "Bitte geben Sie mindestens einen Server mit --n8n, --openhands oder --all an"
+    echo "Bitte geben Sie mindestens einen Server mit --n8n, --openhands, --generator oder --all an"
     show_help
     exit 1
 fi
+
+# Funktion zum Starten des MCP-Server-Generators
+start_generator_mcp_server() {
+    echo -e "${BLUE}Starte MCP-Server-Generator...${NC}"
+    
+    # Erstelle das Verzeichnis für generierte Server, falls es nicht existiert
+    mkdir -p "$GENERATOR_SERVERS_DIR"
+    
+    # Starte den MCP-Server-Generator im Hintergrund
+    python3 src/mcp/generator_server.py --servers-dir "$GENERATOR_SERVERS_DIR" $VERBOSE_FLAG &
+    GENERATOR_PID=$!
+    
+    echo -e "${GREEN}MCP-Server-Generator gestartet (PID: $GENERATOR_PID)${NC}"
+    echo "URL: http://localhost:3007"
+    
+    # Speichere die PID
+    echo $GENERATOR_PID > generator-mcp-server.pid
+}
 
 # Starte die Server
 if [ "$START_N8N" = true ]; then
@@ -143,5 +175,9 @@ if [ "$START_OPENHANDS" = true ]; then
     start_openhands_mcp_server
 fi
 
+if [ "$START_GENERATOR" = true ]; then
+    start_generator_mcp_server
+fi
+
 echo -e "${GREEN}Alle Server gestartet${NC}"
-echo "Zum Beenden der Server führen Sie 'kill \$(cat *.pid)' aus"
+echo "Zum Beenden der Server führen Sie './stop-mcp-servers.sh --all' aus"
