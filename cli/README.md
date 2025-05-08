@@ -1,141 +1,108 @@
 # Dev-Server CLI
 
-Eine umfassende Befehlszeilenschnittstelle (CLI) zur Verwaltung des Dev-Server-Workflows, einschließlich MCP-Server, n8n-Workflows, Docker-Container und KI-Integration.
-
-## Übersicht
-
-Die Dev-Server CLI bietet eine einheitliche Schnittstelle zur Verwaltung aller Komponenten des Dev-Server-Workflows. Sie ermöglicht das Starten, Stoppen, Konfigurieren und Überwachen der verschiedenen Dienste sowie die Integration mit KI-Modellen für die Unterstützung bei der Administration.
+Eine umfassende Kommandozeilen-Schnittstelle (CLI) zur Verwaltung des Dev-Server-Workflows.
 
 ## Funktionen
 
-- **Komponentenverwaltung**: Starten, Stoppen und Neustarten von MCP-Servern, n8n, Ollama, OpenHands und mehr
-- **Logverwaltung**: Anzeigen von Logs für alle Komponenten
-- **Ressourcenlisten**: Auflisten von verfügbaren MCP-Servern, Workflows, Modellen und Containern
-- **Konfiguration**: Anpassen von Einstellungen für alle Komponenten
-- **KI-Integration**: Verwendung von ShellGPT mit Llamafile oder Claude für KI-gestützte Administration
-- **Interaktives Menü**: Benutzerfreundliche Menüoberfläche für alle Funktionen
+- **Komponentenverwaltung**: Starten, Stoppen, Neustarten und Überwachen von Komponenten
+- **Dienste-Integration**: Integration mit n8n, AppFlowy, OpenProject, GitLab und Affine
+- **KI-Assistent**: KI-gestützter Assistent für die Automatisierung von Entwicklungsprozessen
+- **Paketmanagement**: Installation, Deinstallation, Aktualisierung und Überprüfung von Paketen
+- **Konfigurationsmanagement**: Verwaltung von Konfigurationsdateien in verschiedenen Formaten
+- **Monitoring**: Überwachung von Diensten, Ressourcen und Containern
+- **Backup und Wiederherstellung**: Sicherung und Wiederherstellung von Komponenten
 
 ## Installation
 
 ```bash
-# Klonen des Repositories (falls noch nicht geschehen)
-git clone https://github.com/EcoSphereNetwork/Dev-Server-Workflow.git
-cd Dev-Server-Workflow
-
-# Installation der CLI
-sudo ./cli/install.sh
+sudo ./install_improved.sh
 ```
-
-Das Installationsskript erstellt einen symbolischen Link in `/usr/local/bin`, sodass die CLI systemweit verfügbar ist.
 
 ## Verwendung
 
-### Grundlegende Befehle
+```bash
+dev-server [Befehl] [Optionen]
+```
+
+### Verfügbare Befehle
+
+- `help`: Zeigt die Hilfe an
+- `status`: Zeigt den Status aller Komponenten an
+- `start [Komponente]`: Startet eine Komponente
+- `stop [Komponente]`: Stoppt eine Komponente
+- `restart [Komponente]`: Startet eine Komponente neu
+- `logs [Komponente]`: Zeigt die Logs einer Komponente an
+- `config [Option] [Wert]`: Konfiguriert eine Option
+- `web-ui [Aktion]`: Verwaltet die Web-UI
+- `list [Ressourcentyp]`: Listet verfügbare Ressourcen auf
+- `install [Komponente]`: Installiert eine Komponente
+- `switch-llm [LLM]`: Wechselt zwischen LLMs (llamafile, claude)
+- `update [Komponente]`: Aktualisiert eine Komponente
+- `backup [Komponente]`: Erstellt ein Backup einer Komponente
+- `restore [Backup]`: Stellt ein Backup wieder her
+- `package [Aktion] [Paket] [Manager] [Optionen]`: Paketmanagement
+- `configure [Aktion] [Datei] [Schlüssel] [Wert] [Extra]`: Konfigurationsmanagement
+- `monitor [Aktion] [Argumente...]`: Monitoring-Funktionen
+- `ai [Prompt]`: Führt einen KI-Befehl aus
+- `menu`: Öffnet das interaktive Menü
+
+### Komponenten
+
+- `all`: Alle Komponenten
+- `mcp`: MCP-Server (Docker Container)
+- `n8n-mcp`: n8n MCP-Server
+- `docker-mcp`: Docker MCP-Server
+- `monitoring`: Monitoring Stack (Prometheus, Grafana, Alertmanager)
+- `n8n`: n8n-Workflow-Engine
+- `ollama`: Ollama LLM-Server
+- `openhands`: OpenHands KI-Agent
+- `appflowy`: AppFlowy Notizen-App
+- `llamafile`: Llamafile LLM
+- `web-ui`: Web-UI für die Verwaltung aller Komponenten
+
+## Beispiele
 
 ```bash
-# Hilfe anzeigen
-dev-server help
-
 # Status aller Komponenten anzeigen
 dev-server status
 
-# Interaktives Menü öffnen
-dev-server menu
-
-# Komponente starten
+# MCP-Server starten
 dev-server start mcp
 
-# Komponente stoppen
-dev-server stop n8n
+# n8n-Logs anzeigen
+dev-server logs n8n
 
-# Logs anzeigen
-dev-server logs ollama
-```
-
-### KI-Integration
-
-Die CLI unterstützt zwei LLM-Backends für die KI-Integration:
-
-1. **Llamafile** (lokal): Ein lokales LLM, das keine Internetverbindung benötigt
-2. **Claude** (Anthropic API): Ein leistungsstarkes Cloud-LLM mit API-Zugriff
-
-#### Konfiguration der KI-Integration
-
-```bash
-# Llamafile installieren
-dev-server install llamafile
-
-# ShellGPT installieren
-dev-server install shellgpt
-
-# Anthropic API-Schlüssel konfigurieren
-dev-server config anthropic-key YOUR_API_KEY
-
-# Claude-Modell ändern
-dev-server config claude-model claude-3-opus-20240229
-
-# Zwischen LLMs wechseln
-dev-server switch-llm llamafile
-dev-server switch-llm claude
-```
-
-#### Verwendung der KI-Integration
-
-```bash
-# KI-Befehl ausführen
+# KI-Assistent verwenden
 dev-server ai "Wie starte ich den MCP-Server?"
 
-# Interaktiven KI-Modus starten
+# AppFlowy installieren
+dev-server install appflowy
+
+# Interaktives Menü öffnen
 dev-server menu
-# Dann Option 6 (KI-Assistent) wählen
 ```
-
-## Komponenten
-
-Die CLI kann folgende Komponenten verwalten:
-
-- **MCP-Server**: Model Context Protocol Server für KI-Agenten
-- **n8n**: Workflow-Automatisierungsplattform
-- **Ollama**: Lokaler LLM-Server
-- **OpenHands**: KI-Agent für Entwicklungsaufgaben
-- **Llamafile**: Lokales LLM für die KI-Integration
 
 ## Konfiguration
 
-Die Konfiguration der CLI wird in `~/.config/dev-server/dev-server.conf` gespeichert und kann über das Menü oder direkt mit dem `config`-Befehl angepasst werden:
+Die Konfigurationsdatei befindet sich unter `cli/config/dev-server.conf`. Sie können die Konfiguration mit dem Befehl `dev-server config` ändern.
 
-```bash
-# Konfiguration anzeigen
-dev-server config show
+## Verzeichnisstruktur
 
-# Llamafile-Pfad ändern
-dev-server config llamafile-path /pfad/zu/llamafile
+- `cli/`: CLI-Skripte und -Funktionen
+- `cli/config/`: Konfigurationsdateien
+- `cli/models/`: LLM-Modelle
+- `logs/`: Logdateien
+- `data/`: Datenverzeichnisse für Komponenten
+- `backups/`: Backup-Verzeichnisse
 
-# Llamafile-Port ändern
-dev-server config llamafile-port 8080
+## Abhängigkeiten
 
-# Verbose-Modus umschalten
-dev-server config verbose
-```
-
-## Fehlerbehebung
-
-Bei Problemen mit der CLI können folgende Schritte helfen:
-
-1. **Logs anzeigen**: `dev-server logs cli`
-2. **Status prüfen**: `dev-server status`
-3. **KI-Hilfe nutzen**: `dev-server ai "Ich habe folgendes Problem: ..."`
-
-## Entwicklung
-
-Die CLI ist in Bash geschrieben und kann leicht erweitert werden. Die Hauptdatei ist `cli/dev-server.sh`, die alle Funktionen und Befehle enthält.
-
-Um neue Funktionen hinzuzufügen:
-
-1. Fügen Sie eine neue Funktion in `dev-server.sh` hinzu
-2. Aktualisieren Sie die `main`-Funktion, um den neuen Befehl zu verarbeiten
-3. Aktualisieren Sie die `show_help`-Funktion, um den neuen Befehl zu dokumentieren
+- Bash 4.0+
+- Docker
+- Docker Compose
+- Python 3.6+
+- Node.js 14+ (für Web-UI)
 
 ## Lizenz
 
-Dieses Projekt ist unter der MIT-Lizenz lizenziert. Weitere Informationen finden Sie in der [LICENSE](../LICENSE)-Datei.
+MIT
