@@ -1,12 +1,36 @@
 #!/bin/bash
 # Skript zum Stoppen der MCP-Server
 
+# Strikte Fehlerbehandlung aktivieren
+set -euo pipefail
+
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Fehlerbehandlung einbinden
+if [[ -f "${BASE_DIR}/cli/error_handler.sh" ]]; then
+    source "${BASE_DIR}/cli/error_handler.sh"
+fi
+
+# Konfigurationsmanager einbinden
+if [[ -f "${BASE_DIR}/cli/config_manager.sh" ]]; then
+    source "${BASE_DIR}/cli/config_manager.sh"
+    # Alle Konfigurationen laden
+    if [[ "$(type -t load_all_configs)" == "function" ]]; then
+        load_all_configs
+    fi
+fi
+
 # Farben für die Ausgabe
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
+
+# Aktuelle Operation für Fehlerbehandlung
+CURRENT_OPERATION=""
+CURRENT_CONTAINER=""
 
 # Funktion zum Anzeigen von Hilfe
 show_help() {
@@ -164,17 +188,54 @@ stop_generator_mcp_server() {
     fi
 }
 
-# Stoppe die Server
-if [ "$STOP_N8N" = true ]; then
-    stop_n8n_mcp_server
+# Fehlerbehandlung einrichten
+if [[ "$(type -t handle_error)" == "function" ]]; then
+    trap 'handle_error $? $LINENO "$BASH_COMMAND"' ERR
 fi
 
-if [ "$STOP_OPENHANDS" = true ]; then
-    stop_openhands_mcp_server
-fi
+# Hauptfunktion
+main() {
+    # Setze aktuelle Operation
+    CURRENT_OPERATION="stop_mcp_servers"
+    
+    # Stoppe die Server
+    if [ "$STOP_N8N" = true ]; then
+        CURRENT_OPERATION="stop_n8n_mcp_server"
+        CURRENT_CONTAINER="n8n-mcp-server"
+        stop_n8n_mcp_server
+    fi
+    
+    if [ "$STOP_OPENHANDS" = true ]; then
+        CURRENT_OPERATION="stop_openhands_mcp_server"
+        CURRENT_CONTAINER="openhands-mcp-server"
+        stop_openhands_mcp_server
+    fi
+    
+    if [ "$STOP_GENERATOR" = true ]; then
+        CURRENT_OPERATION="stop_generator_mcp_server"
+        CURRENT_CONTAINER="generator-mcp-server"
+        stop_generator_mcp_server
+    fi
+    
+    # Wenn keine Server ausgewählt wurden, stoppe alle
+    if [ "$STOP_N8N" = false ] && [ "$STOP_OPENHANDS" = false ] && [ "$STOP_GENERATOR" = false ]; then
+        echo -e "${YELLOW}Keine Server ausgewählt. Stoppe alle Server...${NC}"
+        
+        CURRENT_OPERATION="stop_n8n_mcp_server"
+        CURRENT_CONTAINER="n8n-mcp-server"
+        stop_n8n_mcp_server
+        
+        CURRENT_OPERATION="stop_openhands_mcp_server"
+        CURRENT_CONTAINER="openhands-mcp-server"
+        stop_openhands_mcp_server
+        
+        CURRENT_OPERATION="stop_generator_mcp_server"
+        CURRENT_CONTAINER="generator-mcp-server"
+        stop_generator_mcp_server
+    fi
+    
+    echo -e "${GREEN}Alle Server gestoppt${NC}"
+}
 
-if [ "$STOP_GENERATOR" = true ]; then
-    stop_generator_mcp_server
-fi
-
-echo -e "${GREEN}Alle Server gestoppt${NC}"
+# Führe die Hauptfunktion aus
+main
