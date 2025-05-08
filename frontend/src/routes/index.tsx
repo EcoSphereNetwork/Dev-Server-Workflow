@@ -8,8 +8,9 @@ import MCPServers from '../pages/MCPServers';
 import MCPServerManager from '../pages/MCPServerManager';
 import Workflows from '../pages/Workflows';
 import Settings from '../pages/Settings';
+import UserSettings from '../pages/UserSettings';
 import Services from '../pages/Services';
-import ServiceView from '../pages/ServiceView';
+import ServiceDetail from '../pages/ServiceDetail';
 import Monitoring from '../pages/Monitoring';
 import DockerManager from '../pages/DockerManager';
 import useAuthStore from '../store/auth';
@@ -41,10 +42,11 @@ const AppRoutes: React.FC = () => {
           <Route path="mcp-manager" element={<MCPServerManager />} />
           <Route path="workflows" element={<Workflows />} />
           <Route path="services" element={<Services />} />
-          <Route path="services/:serviceId" element={<ServiceView />} />
+          <Route path="services/:id" element={<ServiceDetail />} />
           <Route path="monitoring" element={<Monitoring />} />
           <Route path="docker" element={<DockerManager />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="user-settings" element={<UserSettings />} />
         </Route>
         
         <Route path="*" element={<Navigate to="/" replace />} />
