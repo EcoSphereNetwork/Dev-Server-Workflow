@@ -1,0 +1,40 @@
+--- dev-server.sh.orig
++++ dev-server.sh
+@@ -308,6 +308,17 @@
+                 fi
+             fi
+             ;;
++        "monitoring")
++            log "INFO" "Starte Monitoring-Stack..."
++            if [ -f "$WORKSPACE_DIR/cli/functions.sh" ]; then
++                source "$WORKSPACE_DIR/cli/functions.sh"
++                start_monitoring
++                if [ $? -eq 0 ]; then
++                    log "SUCCESS" "Monitoring-Stack erfolgreich gestartet"
++                else
++                    log "ERROR" "Fehler beim Starten des Monitoring-Stacks"
++                fi
++            fi
++            ;;
+         *)
+             log "ERROR" "Unbekannte Komponente: $component"
+             echo "Verfügbare Komponenten: all, mcp, n8n, ollama, openhands, llamafile"
+@@ -420,6 +431,17 @@
+                 log "WARNING" "Llamafile läuft nicht"
+             fi
+             ;;
++        "monitoring")
++            log "INFO" "Stoppe Monitoring-Stack..."
++            if [ -f "$WORKSPACE_DIR/cli/functions.sh" ]; then
++                source "$WORKSPACE_DIR/cli/functions.sh"
++                stop_monitoring
++                if [ $? -eq 0 ]; then
++                    log "SUCCESS" "Monitoring-Stack erfolgreich gestoppt"
++                else
++                    log "ERROR" "Fehler beim Stoppen des Monitoring-Stacks"
++                fi
++            fi
++            ;;
+         *)
+             log "ERROR" "Unbekannte Komponente: $component"
+             echo "Verfügbare Komponenten: all, mcp, n8n, ollama, openhands, llamafile"

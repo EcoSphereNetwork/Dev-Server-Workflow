@@ -22,17 +22,17 @@ def main():
     
     # Überprüfe, ob die Workflow-Dateien existieren
     workflow_files = [
-        "n8n-setup-main.py",
-        "n8n-setup-utils.py",
-        "n8n-setup-install.py",
-        "n8n-setup-credentials.py",
-        "n8n-setup-workflows.py",
-        "n8n-setup-workflows-github.py",
-        "n8n-setup-workflows-document.py",
-        "n8n-setup-workflows-openhands.py",
-        "n8n-setup-workflows-special.py",
-        "n8n-setup-workflows-mcp.py",
-        "n8n-mcp-server.py"
+        "n8n_setup_main.py",
+        "n8n_setup_utils.py",
+        "n8n_setup_install.py",
+        "n8n_setup_credentials.py",
+        "n8n_setup_workflows.py",
+        "n8n_setup_workflows_github.py",
+        "n8n_setup_workflows_document.py",
+        "n8n_setup_workflows_openhands.py",
+        "n8n_setup_workflows_special.py",
+        "n8n_setup_workflows_mcp.py",
+        "n8n_mcp_server.py"
     ]
     
     for file in workflow_files:

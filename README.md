@@ -372,6 +372,8 @@ await agent.run("Lies den Inhalt der Datei README.md")
 
 ## 🔧 Fehlerbehebung
 
+Für eine detaillierte Anleitung zur Fehlerbehebung, siehe die [Troubleshooting-Dokumentation](./docs/docs/troubleshooting/index.md).
+
 ### GitHub Integration
 
 - **Problem**: Webhook wird nicht ausgelöst
@@ -395,6 +397,14 @@ await agent.run("Lies den Inhalt der Datei README.md")
 
 - **Problem**: OpenHands kann keine Verbindung zum MCP-Server herstellen
   **Lösung**: Überprüfen Sie die Konfiguration in `openhands-mcp-config.json` und stellen Sie sicher, dass die Umgebungsvariablen korrekt gesetzt sind
+
+### Docker Issues
+
+- **Problem**: Docker-Container starten nicht
+  **Lösung**: Überprüfen Sie die Docker-Logs mit `docker logs <container-name>` und stellen Sie sicher, dass alle erforderlichen Umgebungsvariablen gesetzt sind
+
+- **Problem**: Port-Konflikte
+  **Lösung**: Ändern Sie die Port-Mappings in der Docker-Compose-Datei oder stoppen Sie konkurrierende Dienste
 
 ## 🤝 Mitwirken
 

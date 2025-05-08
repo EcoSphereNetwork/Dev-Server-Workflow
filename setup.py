@@ -163,7 +163,7 @@ def install_workflows(args):
     print("=== Installing workflows ===")
     
     # Bereite die Befehlszeilenargumente vor
-    cmd = [sys.executable, 'src/n8n_setup-main.py']
+    cmd = [sys.executable, 'src/n8n_setup_main.py']
     
     # Füge die .env-Datei hinzu
     cmd.extend(['--env-file', args.env_file])
@@ -187,3 +187,4 @@ def install_workflows(args):
     subprocess.run(cmd)
 
 if __name__ == "__main__":
+    sys.exit(main())
