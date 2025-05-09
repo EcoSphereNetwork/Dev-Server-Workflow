@@ -23,164 +23,6 @@ error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-saschi@server1:/tmp/acme-test$ cd /opt/n8n
-sudo docker-compose down
-sudo docker-compose up -d
-sudo: docker-compose: Befehl nicht gefunden
-sudo: docker-compose: Befehl nicht gefunden
-saschi@server1:/opt/n8n$ sudo docker compose down
-WARN[0000] /opt/n8n/docker-compose.yml: the attribute version is obsolete, it will be ignored, please remove it to avoid potential confusion 
-[+] Running 2/2
- ✔ Container n8n-n8n-1  Removed                                            1.6s 
- ✔ Network n8n_default  Removed   
-
-Wie stelle ich in meinem ubuntu 22 ein, das beide kommandos, docker-compose und docker compose den befehl ausführen?
-Bearbeiten
-
-Es scheint, dass auf Ihrem Ubuntu 22.04 System der Befehl docker-compose nicht gefunden wird, während docker compose funktioniert. Dies liegt daran, dass Docker inzwischen den Compose-Befehl als Unterfunktion von Docker integriert hat (docker compose), während das separate docker-compose Tool nicht installiert ist.
-
-Um beide Befehle verwenden zu können, gibt es zwei Lösungswege:
-
-    Ein Alias erstellen: Sie können einen Alias in Ihrer Shell-Konfiguration hinzufügen:
-
-bash
-
-echo 'alias docker-compose="docker compose"' >> ~/.bashrc
-source ~/.bashrc
-
-Dies leitet alle docker-compose Aufrufe an docker compose weiter.
-Docker Compose Plugin installieren: Alternativ können Sie das separate Docker Compose-Plugin installieren:
-
-bash
-
-sudo apt update
-sudo apt install docker-compose-plugin
-
-Oder wenn Sie die eigenständige Version bevorzugen:
-
-    bash
-
-    sudo apt update
-    sudo apt install docker-compose
-
-Die erste Methode (Alias) ist einfacher und sicherer, da Sie immer die bereits installierte Version von Docker Compose verwenden. Die zweite Methode installiert zusätzliche Software, die möglicherweise gewartet werden muss.
-
-Nach der Einrichtung sollten beide Befehle wie gewünscht funktionieren.
-EcoSphereNetwork/Dev-Server-Workflow
-
-main
-
-GITHUB
-
-Ich möchte meine scripte überarbeiten. sie sollen prüfen, welche pakete und wwelche versionen bereits installiert sind und dann entsprechend die benötigten installationen durchführen. für docker compose soll ein alias angelegt werden. welche dateien von mir müssen überarbeitet werden? kann du das für mich tun und mir jeweils die vollständig überarbeitete version geben?
-Bearbeiten
-
-Nach Durchsicht Ihrer Dokumente sehe ich, dass mehrere Skripte überarbeitet werden sollten, um Paketversionen zu prüfen und einen Alias für Docker Compose einzurichten. Die Hauptdateien, die überarbeitet werden müssen, sind:
-
-    scripts/install-mcp-servers.sh - Installationsskript für MCP-Server
-    scripts/start-mcp-servers.sh - Skript zum Starten der MCP-Server
-    scripts/install-all.sh - Hauptinstallationsskript für das gesamte Projekt
-    start-web-ui.sh - Skript zum Starten der Web-UI
-    dev-server-cli.sh - Das CLI-Hauptskript
-
-Ich werde diese Dateien für Sie überarbeiten und eine vollständige, aktualisierte Version von jeder bereitstellen.
-1. scripts/install-mcp-servers.sh (überarbeitet)
-2. scripts/start-mcp-servers.sh (überarbeitet)
-
-Continue
-Bearbeiten
-
-Ich werde mit der Überarbeitung der Skripte fortfahren. Hier ist die Fortsetzung von start-mcp-servers.sh und dann die weiteren Skripte.
-3. scripts/install-all.sh (überarbeitet)
-
-Continue
-Bearbeiten
-
-Ich werde mit der Überarbeitung von install-all.sh fortfahren und dann die restlichen Skripte fertigstellen.
-4. start-web-ui.sh (überarbeitet)
-5. dev-server-cli.sh (überarbeitet)
-
-Weiter
-Bearbeiten
-
-Ich werde das letzte Skript dev-server-cli.sh jetzt überarbeiten.
-Zusammenfassung der Änderungen
-
-Ich habe alle fünf Skripte erfolgreich überarbeitet, um Paketversionen zu prüfen und einen Alias für Docker Compose einzurichten. Hier ist eine Zusammenfassung der wichtigsten Verbesserungen in jedem Skript:
-
-    install-mcp-servers.sh:
-        Hinzufügung von Funktionen zur Überprüfung installierter Pakete und deren Versionen
-        Implementierung einer Funktion zum Einrichten eines Alias für docker-compose
-        Verbesserung der Erkennung und Installation von Systemabhängigkeiten
-        Fehlerbehandlung und bessere Benutzerführung
-    start-mcp-servers.sh:
-        Prüfung der Docker- un
-
-Weiter
-Bearbeiten
-
-Hier ist die vollständige Zusammenfassung der Änderungen:
-Zusammenfassung der Änderungen
-
-Ich habe alle fünf Skripte erfolgreich überarbeitet, um Paketversionen zu prüfen und einen Alias für Docker Compose einzurichten. Hier ist eine Zusammenfassung der wichtigsten Verbesserungen in jedem Skript:
-
-    install-mcp-servers.sh:
-        Hinzufügung von Funktionen zur Überprüfung installierter Pakete und deren Versionen
-        Implementierung einer Funktion zum Einrichten eines Alias für docker-compose
-        Verbesserung der Erkennung und Installation von Systemabhängigkeiten
-        Fehlerbehandlung und bessere Benutzerführung
-    start-mcp-servers.sh:
-        Prüfung der Docker- und Docker Compose-Versionen
-        Einrichtung des docker-compose Alias für eine bessere Kompatibilität
-        Verbesserte Logging-Funktionalität
-        Hinzufügen von detaillierten Serverstatus-Prüfungen
-    install-all.sh:
-        Umfassende Prüfung und Installation aller Abhängigkeiten
-        Verbesserte Versionserkennung und Aktualisierungsvorschläge
-        Zuverlässigere n8n-Installation mit Versionsüberprüfung
-        Automatische Einrichtung des docker-compose Alias
-    start-web-ui.sh:
-        Verbesserte Docker und Docker Compose-Versionsüberprüfung
-        Intelligente Erkennung und Verwendung des passenden Docker Compose-Befehls
-        Automatische Installation fehlender Pakete wie OpenSSL
-        Einrichtung des docker-compose Alias für die aktuelle Sitzung
-    dev-server-cli.sh:
-        Umfassendere Abhängigkeitsprüfungen für alle benötigten Komponenten
-        Dynamische Erkennung und Verwendung des passenden Docker Compose-Befehls
-        Neue Optionen für Abhängigkeitsprüfung (--check-deps) und Alias-Einrichtung (--setup-alias)
-        Verbesserte Komponentenverwaltung mit detaillierten Statusberichten
-
-Alle Skripte verfügen jetzt über:
-
-    Eine Funktion check_version() zum Überprüfen installierter Paketversionen
-    Eine Funktion setup_docker_compose_alias() zum Einrichten eines Alias für docker-compose
-    Automatische Erkennung des Betriebssystems für bessere Kompatibilität
-    Verbessertes Fehlerbehandlung und Logging
-    Detailliertere Benutzerführung mit farbigen Ausgaben
-
-Diese Verbesserungen machen Ihre Skripte robuster und benutzerfreundlicher, indem sie:
-
-    Automatisch fehlende Abhängigkeiten identifizieren und installieren
-    Veraltete Versionen erkennen und Aktualisierungsvorschläge machen
-    Die Kompatibilität zwischen docker-compose und docker compose sicherstellen
-    Detaillierte Anweisungen für den Benutzer bereitstellen
-
-Damit sollten Ihre Skripte nun in einer Vielzahl von Umgebungen besser funktionieren und dem Benutzer eine klarere Anleitung geben, falls etwas nicht wie erwartet funktioniert.
-
-saschi@server1:~/Dev-Server-Workflow/scripts$ sudo ./install-all.sh
-[sudo] Passwort für saschi: 
-./install-all.sh: Zeile 45: Syntaxfehler beim unerwarteten Wort »}«
-./install-all.sh: Zeile 45: `    }'
-Bearbeiten
-
-Es gibt einen Syntaxfehler in der Datei install-all.sh. Der Fehler liegt in der check_version()-Funktion, wo eine schließende geschweifte Klammer } ohne passende öffnende Klammer erscheint. Ich werde den Fehler beheben und Ihnen den korrigierten Code für die Funktion zeigen.
-
-Das Problem liegt in Zeile 45, wo der Vergleich der Versionen fehlerhaft ist. Die Funktion verwendet geschweifte Klammern an einer Stelle, wo sie nicht hingehören.
-
-Hier ist die korrigierte Version der betroffenen Funktion:
-
-bash
-
 # Funktion zum Überprüfen einer Paketversion
 check_version() {
     local package=$1
@@ -643,3 +485,102 @@ check_python_dependencies() {
     
     return 0
 }
+
+# Hauptfunktion
+main() {
+    log "Starte Installation des Dev-Server-Workflow-Projekts..."
+    
+    # Anzahl der Schritte
+    local total_steps=6
+    local current_step=1
+    
+    # Schritt 1: Prüfe Abhängigkeiten
+    show_progress $current_step $total_steps "Prüfe Abhängigkeiten..."
+    check_docker || exit 1
+    check_docker_compose || exit 1
+    start_docker_daemon || exit 1
+    check_python_dependencies || exit 1
+    current_step=$((current_step + 1))
+    
+    # Schritt 2: Installiere die MCP-Server
+    show_progress $current_step $total_steps "Installiere die MCP-Server..."
+    ./install-mcp-servers.sh
+    check_result "Installation der MCP-Server fehlgeschlagen."
+    current_step=$((current_step + 1))
+    
+    # Schritt 3: Starte die MCP-Server
+    show_progress $current_step $total_steps "Starte die MCP-Server..."
+    cd docker-mcp-servers && ./start-mcp-servers.sh
+    check_result "Starten der MCP-Server fehlgeschlagen."
+    cd ..
+    current_step=$((current_step + 1))
+    
+    # Schritt 4: Installiere n8n
+    show_progress $current_step $total_steps "Installiere n8n..."
+    
+    # Überprüfe, ob n8n bereits installiert ist
+    if ! command -v n8n &> /dev/null; then
+        log "n8n ist nicht installiert. Installiere n8n..."
+        install_n8n
+        check_result "Installation von n8n fehlgeschlagen."
+    else
+        log "n8n ist bereits installiert."
+    fi
+    
+    # Starte n8n im Hintergrund
+    log "Starte n8n im Hintergrund..."
+    n8n start &
+    sleep 10
+    
+    current_step=$((current_step + 1))
+    
+    # Schritt 5: Integriere die MCP-Server mit n8n
+    show_progress $current_step $total_steps "Integriere die MCP-Server mit n8n..."
+    
+    # Frage nach dem n8n-API-Key
+    read -p "Bitte geben Sie den n8n-API-Key ein: " n8n_api_key
+    
+    ./scripts/integrate-mcp-with-n8n.py --n8n-api-key "$n8n_api_key"
+    check_result "Integration der MCP-Server mit n8n fehlgeschlagen."
+    current_step=$((current_step + 1))
+    
+    # Schritt 6: Integriere die MCP-Server mit OpenHands
+    show_progress $current_step $total_steps "Integriere die MCP-Server mit OpenHands..."
+    
+    # Frage nach dem GitHub-Token
+    read -p "Bitte geben Sie das GitHub-Token ein (oder drücken Sie Enter, um zu überspringen): " github_token
+    
+    # Frage nach dem OpenHands-Konfigurationsverzeichnis
+    read -p "Bitte geben Sie das OpenHands-Konfigurationsverzeichnis ein (oder drücken Sie Enter, um zu überspringen): " openhands_config_dir
+    
+    if [ -n "$openhands_config_dir" ]; then
+        if [ -n "$github_token" ]; then
+            ./scripts/integrate-mcp-with-openhands.py --openhands-config-dir "$openhands_config_dir" --github-token "$github_token"
+        else
+            ./scripts/integrate-mcp-with-openhands.py --openhands-config-dir "$openhands_config_dir"
+        fi
+        check_result "Integration der MCP-Server mit OpenHands fehlgeschlagen."
+    else
+        log "Integration mit OpenHands übersprungen."
+    fi
+    
+    # Installation abgeschlossen
+    log "Installation des Dev-Server-Workflow-Projekts abgeschlossen!"
+    log "Sie können die MCP-Server mit dem folgenden Befehl stoppen:"
+    log "  cd docker-mcp-servers && ./stop-mcp-servers.sh"
+    log "Sie können n8n mit dem folgenden Befehl stoppen:"
+    log "  pkill -f n8n"
+    
+    return 0
+}
+
+# Funktion zum Überprüfen, ob ein Befehl erfolgreich ausgeführt wurde
+check_result() {
+    if [ $? -ne 0 ]; then
+        error "$1"
+        exit 1
+    fi
+}
+
+# Führe die Hauptfunktion aus
+main
