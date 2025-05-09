@@ -1,0 +1,54 @@
+"""
+Common Python library for the Dev-Server-Workflow project.
+
+This library contains common functions and classes for all Python scripts
+in the Dev-Server-Workflow project.
+"""
+
+# Import core modules
+from core import (
+    ConfigManager, setup_logging, get_logger,
+    BASE_DIR, SCRIPTS_DIR, COMMON_DIR, SRC_DIR, LOGS_DIR, CONFIG_DIR, DATA_DIR, DOCKER_DIR
+)
+
+# Import utility modules
+from utils import (
+    DockerUtils, ProcessManager, NetworkUtils, SystemUtils
+)
+
+# For backward compatibility
+def parse_arguments(description: str, epilog: str = ""):
+    """
+    Parse command line arguments.
+    
+    Args:
+        description: Description of the script
+        epilog: Epilog for the help
+        
+    Returns:
+        argparse.Namespace: Parsed arguments
+    """
+    import argparse
+    
+    parser = argparse.ArgumentParser(description=description, epilog=epilog)
+    
+    # Common arguments
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
+    parser.add_argument("--quiet", "-q", action="store_true", help="No output")
+    parser.add_argument("--log-file", "-l", help="Path to the log file")
+    parser.add_argument("--log-level", choices=["debug", "info", "warning", "error", "critical"], default="info", help="Log level")
+    parser.add_argument("--config", "-c", help="Path to the configuration file")
+    parser.add_argument("--env-file", "-e", help="Path to the .env file")
+    
+    return parser.parse_args()
+
+# Create standard logger
+logger = get_logger("common")
+
+# Export all symbols
+__all__ = [
+    'ConfigManager', 'setup_logging', 'get_logger', 'parse_arguments',
+    'DockerUtils', 'ProcessManager', 'NetworkUtils', 'SystemUtils',
+    'BASE_DIR', 'SCRIPTS_DIR', 'COMMON_DIR', 'SRC_DIR', 'LOGS_DIR', 'CONFIG_DIR', 'DATA_DIR', 'DOCKER_DIR',
+    'logger'
+]
