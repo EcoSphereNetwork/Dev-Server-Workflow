@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 """
-MCP-Server n8n Integration
+MCP-Server OpenHands Integration
 
-Dieses Skript integriert die MCP-Server mit n8n, indem es die Workflows importiert
-und die Umgebungsvariablen konfiguriert.
+Dieses Skript integriert die MCP-Server mit OpenHands, indem es die erforderliche
+Konfigurationsdatei erstellt und in das OpenHands-Konfigurationsverzeichnis kopiert.
 """
 
 import argparse
 import json
 import logging
 import os
+import shutil
 import sys
-import time
-import requests
-import subprocess
+from pathlib import Path
 
 # Konfiguration des Loggings
 logging.basicConfig(
@@ -21,10 +20,10 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler('mcp-n8n-integration.log')
+        logging.FileHandler('mcp-openhands-integration.log')
     ]
 )
-logger = logging.getLogger('mcp-n8n-integration')
+logger = logging.getLogger('mcp-openhands-integration')
 
 # Standard-MCP-Server-Konfiguration
 DEFAULT_MCP_SERVERS = [
@@ -70,170 +69,300 @@ DEFAULT_MCP_SERVERS = [
     }
 ]
 
-def load_config(config_path):
-    """Lädt die MCP-Server-Konfiguration aus einer JSON-Datei."""
+def create_openhands_config(output_path, mcp_servers, github_token=None):
+    """Erstellt eine OpenHands-Konfigurationsdatei für die MCP-Server.
+    
+    Args:
+        output_path: Pfad zur Ausgabedatei
+        mcp_servers: Liste der MCP-Server-Konfigurationen
+        github_token: GitHub-Token für die GitHub-MCP-Server (optional)
+        
+    Returns:
+        True bei Erfolg, False bei Fehler
+    """
     try:
-        with open(config_path, 'r') as f:
-            config = json.load(f)
-            return config.get('mcp', {}).get('servers', DEFAULT_MCP_SERVERS)
-    except Exception as e:
-        logger.warning(f"Fehler beim Laden der Konfiguration: {e}")
-        return DEFAULT_MCP_SERVERS
-
-def create_n8n_environment_variables(n8n_url, n8n_api_key, mcp_servers):
-    """Erstellt Umgebungsvariablen in n8n für die MCP-Server."""
-    try:
-        # Erstelle die MCP_SERVERS_CONFIG-Variable
-        mcp_servers_config = {
-            "servers": mcp_servers
+        # Erstelle die Konfiguration
+        config = {
+            "mcp": {
+                "enabled": True,
+                "servers": mcp_servers,
+                "autoApproveTools": True,
+                "autoApproveToolsList": [
+                    "read_file",
+                    "write_file",
+                    "list_directory",
+                    "execute_command",
+                    "search_wikipedia",
+                    "create_github_issue",
+                    "create_github_pr",
+                    "update_work_package",
+                    "sync_documentation",
+                    "capture_screenshot",
+                    "browse_website",
+                    "scrape_content",
+                    "remember_information",
+                    "recall_information"
+                ]
+            }
         }
         
-        # Konvertiere die Konfiguration in einen JSON-String
-        mcp_servers_config_json = json.dumps(mcp_servers_config)
+        # Füge GitHub-Token hinzu, wenn vorhanden
+        if github_token:
+            for server in config["mcp"]["servers"]:
+                if "github" in server["name"]:
+                    server["auth"] = {
+                        "type": "token",
+                        "token": github_token
+                    }
         
-        # Erstelle die Umgebungsvariable in n8n
-        headers = {
-            "X-N8N-API-KEY": n8n_api_key,
-            "Content-Type": "application/json"
-        }
+        # Erstelle das Verzeichnis, falls es nicht existiert
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
-        # Überprüfe, ob die Variable bereits existiert
-        response = requests.get(
-            f"{n8n_url}/api/v1/variables",
-            headers=headers
-        )
+        # Schreibe die Konfiguration in eine Datei
+        with open(output_path, 'w') as f:
+            json.dump(config, f, indent=2)
         
-        if response.status_code == 200:
-            variables = response.json()
-            for variable in variables["data"]:
-                if variable["key"] == "MCP_SERVERS_CONFIG":
-                    # Variable existiert bereits, aktualisiere sie
-                    logger.info("MCP_SERVERS_CONFIG-Variable existiert bereits, aktualisiere sie...")
-                    response = requests.patch(
-                        f"{n8n_url}/api/v1/variables/{variable['id']}",
-                        headers=headers,
-                        json={"value": mcp_servers_config_json}
-                    )
-                    
-                    if response.status_code in (200, 201):
-                        logger.info("✅ MCP_SERVERS_CONFIG-Variable wurde erfolgreich aktualisiert.")
-                        return True
-                    else:
-                        logger.error(f"❌ Fehler beim Aktualisieren der Variable: {response.status_code} - {response.text}")
-                        return False
-        
-        # Variable existiert nicht, erstelle sie
-        payload = {
-            "key": "MCP_SERVERS_CONFIG",
-            "value": mcp_servers_config_json
-        }
-        
-        response = requests.post(
-            f"{n8n_url}/api/v1/variables",
-            headers=headers,
-            json=payload
-        )
-        
-        if response.status_code in (200, 201):
-            logger.info("✅ MCP_SERVERS_CONFIG-Umgebungsvariable wurde erfolgreich erstellt.")
-            return True
-        else:
-            logger.error(f"❌ Fehler beim Erstellen der Umgebungsvariable: {response.status_code} - {response.text}")
-            return False
+        logger.info(f"✅ OpenHands-Konfigurationsdatei wurde erfolgreich erstellt: {output_path}")
+        return True
     
     except Exception as e:
-        logger.error(f"❌ Unerwarteter Fehler beim Erstellen der Umgebungsvariablen: {e}")
+        logger.error(f"❌ Fehler beim Erstellen der OpenHands-Konfigurationsdatei: {e}")
         return False
 
-def import_workflows(n8n_api_key):
-    """Importiert die Workflows in n8n."""
-    try:
-        # Führe das Import-Skript aus
-        import_script = "/workspace/Dev-Server-Workflow/scripts/import-workflows.py"
-        result = subprocess.run(
-            [import_script, "--n8n-api-key", n8n_api_key],
-            capture_output=True,
-            text=True
-        )
+def copy_config_to_openhands(source_path, openhands_config_dir):
+    """Kopiert die Konfigurationsdatei in das OpenHands-Konfigurationsverzeichnis.
+    
+    Args:
+        source_path: Pfad zur Quelldatei
+        openhands_config_dir: Pfad zum OpenHands-Konfigurationsverzeichnis
         
-        if result.returncode == 0:
-            logger.info("✅ Workflows wurden erfolgreich importiert.")
-            logger.info(result.stdout)
-            return True
-        else:
-            logger.error(f"❌ Fehler beim Importieren der Workflows: {result.stderr}")
-            return False
+    Returns:
+        True bei Erfolg, False bei Fehler
+    """
+    try:
+        # Erstelle das Zielverzeichnis, falls es nicht existiert
+        os.makedirs(openhands_config_dir, exist_ok=True)
+        
+        # Kopiere die Datei
+        target_path = os.path.join(openhands_config_dir, "mcp-config.json")
+        shutil.copy2(source_path, target_path)
+        
+        logger.info(f"✅ Konfigurationsdatei wurde erfolgreich nach {target_path} kopiert.")
+        
+        # Erstelle auch ein Start-Skript für OpenHands
+        create_openhands_start_script(openhands_config_dir)
+        
+        return True
     
     except Exception as e:
-        logger.error(f"❌ Unerwarteter Fehler beim Importieren der Workflows: {e}")
+        logger.error(f"❌ Fehler beim Kopieren der Konfigurationsdatei: {e}")
         return False
 
-def test_mcp_integration(n8n_url):
-    """Testet die Integration der MCP-Server mit n8n."""
+def create_openhands_start_script(openhands_config_dir):
+    """Erstellt ein Start-Skript für OpenHands.
+    
+    Args:
+        openhands_config_dir: Pfad zum OpenHands-Konfigurationsverzeichnis
+        
+    Returns:
+        True bei Erfolg, False bei Fehler
+    """
     try:
-        # Sende eine Testanfrage an den Integration-Hub
-        test_data = {
-            "source_type": "mcp_server",
-            "server_name": "test-mcp",
-            "event_type": "test",
-            "title": "MCP Integration Test",
-            "description": "This is a test event to verify the MCP integration with n8n.",
-            "severity": "info",
-            "components": ["test", "integration"],
-            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-        }
+        # Pfad zum Start-Skript
+        start_script_path = os.path.join(openhands_config_dir, "start-mcp-servers.sh")
         
-        response = requests.post(
-            f"{n8n_url}/webhook/event",
-            json=test_data
-        )
+        # Inhalt des Start-Skripts
+        script_content = """#!/bin/bash
+
+# Script to start the MCP servers for OpenHands
+
+# Change to the MCP servers directory
+MCP_DIR="$HOME/Dev-Server-Workflow/docker-mcp-servers"
+WORKSPACE_MCP_DIR="/workspace/Dev-Server-Workflow/docker-mcp-servers"
+
+if [ -d "$MCP_DIR" ]; then
+    cd "$MCP_DIR"
+    echo "Using MCP directory: $MCP_DIR"
+elif [ -d "$WORKSPACE_MCP_DIR" ]; then
+    cd "$WORKSPACE_MCP_DIR"
+    echo "Using MCP directory: $WORKSPACE_MCP_DIR"
+else
+    echo "MCP directory not found. Please provide the correct path."
+    echo "Usage: $0 [path/to/mcp-servers]"
+    
+    if [ -n "$1" ] && [ -d "$1" ]; then
+        cd "$1"
+        echo "Using provided MCP directory: $1"
+    else
+        echo "Error: MCP directory not found."
+        exit 1
+    fi
+fi
+
+# Start the MCP servers
+./start-mcp-servers.sh
+
+# Wait for the servers to start
+echo "Waiting for the MCP servers to start..."
+sleep 5
+
+# Test the MCP servers
+if [ -f "./test-mcp-servers.py" ]; then
+    echo "Testing the MCP servers..."
+    python3 ./test-mcp-servers.py
+else
+    echo "Test script not found. Skipping tests."
+fi
+
+echo "MCP servers are ready for OpenHands!"
+"""
         
-        if response.status_code in (200, 201):
-            logger.info("✅ MCP-Integration wurde erfolgreich getestet.")
-            logger.info(f"Antwort: {response.json()}")
-            return True
-        else:
-            logger.error(f"❌ Fehler beim Testen der MCP-Integration: {response.status_code} - {response.text}")
-            return False
+        # Schreibe das Start-Skript
+        with open(start_script_path, 'w') as f:
+            f.write(script_content)
+        
+        # Mache das Skript ausführbar
+        os.chmod(start_script_path, 0o755)
+        
+        logger.info(f"✅ Start-Skript wurde erfolgreich erstellt: {start_script_path}")
+        return True
     
     except Exception as e:
-        logger.error(f"❌ Unerwarteter Fehler beim Testen der MCP-Integration: {e}")
+        logger.error(f"❌ Fehler beim Erstellen des Start-Skripts: {e}")
         return False
+
+def detect_openhands_config_dir():
+    """Versucht, das OpenHands-Konfigurationsverzeichnis automatisch zu erkennen.
+    
+    Returns:
+        Pfad zum OpenHands-Konfigurationsverzeichnis oder None, wenn nicht gefunden
+    """
+    # Mögliche Standardpfade
+    standard_paths = [
+        os.path.expanduser("~/.config/openhands"),
+        os.path.expanduser("~/.openhands"),
+        "/workspace/openhands-config",
+        os.path.expanduser("~/openhands-config")
+    ]
+    
+    # Prüfe auch Umgebungsvariablen
+    env_paths = []
+    for env_var in ["OPENHANDS_CONFIG_DIR", "OPENHANDS_CONFIG", "OPENHANDS_DIR"]:
+        if env_var in os.environ:
+            env_paths.append(os.environ[env_var])
+    
+    # Prüfe alle Pfade
+    for path in env_paths + standard_paths:
+        if os.path.isdir(path):
+            logger.info(f"Gefundenes OpenHands-Konfigurationsverzeichnis: {path}")
+            return path
+    
+    # Versuche, nach einer OpenHands-Installation zu suchen
+    for openhands_dir in ["openhands", ".openhands", "OpenHands", ".OpenHands"]:
+        for root_dir in [os.path.expanduser("~"), "/workspace", "/opt", "/usr/local"]:
+            path = os.path.join(root_dir, openhands_dir)
+            config_path = os.path.join(path, "config")
+            
+            if os.path.isdir(config_path):
+                logger.info(f"Gefundenes OpenHands-Konfigurationsverzeichnis: {config_path}")
+                return config_path
+    
+    logger.warning("Konnte das OpenHands-Konfigurationsverzeichnis nicht automatisch erkennen.")
+    return None
+
+def find_docker_mcp_servers_dir():
+    """Versucht, das Verzeichnis mit den MCP-Servern zu finden.
+    
+    Returns:
+        Pfad zum MCP-Server-Verzeichnis oder None, wenn nicht gefunden
+    """
+    # Mögliche Standardpfade
+    standard_paths = [
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docker-mcp-servers"),
+        os.path.expanduser("~/Dev-Server-Workflow/docker-mcp-servers"),
+        "/workspace/Dev-Server-Workflow/docker-mcp-servers",
+        "/opt/Dev-Server-Workflow/docker-mcp-servers"
+    ]
+    
+    # Prüfe alle Pfade
+    for path in standard_paths:
+        if os.path.isdir(path):
+            logger.info(f"Gefundenes MCP-Server-Verzeichnis: {path}")
+            return path
+    
+    # Versuche, es in übergeordneten Verzeichnissen zu finden
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    for _ in range(5):  # Maximum 5 Verzeichnisebenen nach oben
+        parent_dir = os.path.dirname(current_dir)
+        if parent_dir == current_dir:  # Wurzelverzeichnis erreicht
+            break
+        
+        potential_path = os.path.join(parent_dir, "docker-mcp-servers")
+        if os.path.isdir(potential_path):
+            logger.info(f"Gefundenes MCP-Server-Verzeichnis: {potential_path}")
+            return potential_path
+        
+        current_dir = parent_dir
+    
+    logger.warning("Konnte das MCP-Server-Verzeichnis nicht automatisch finden.")
+    return None
 
 def main():
     """Hauptfunktion des Skripts."""
-    parser = argparse.ArgumentParser(description="MCP-Server n8n Integration mit verbesserten Workflows")
-    parser.add_argument("--config", default="/workspace/Dev-Server-Workflow/docker-mcp-servers/openhands-mcp-config.json", help="Pfad zur MCP-Konfigurationsdatei")
-    parser.add_argument("--n8n-url", default="http://localhost:5678", help="URL der n8n-Instanz")
-    parser.add_argument("--n8n-api-key", required=True, help="API-Key der n8n-Instanz")
-    parser.add_argument("--test", action="store_true", help="Teste die Integration nach der Konfiguration")
+    parser = argparse.ArgumentParser(description="MCP-Server OpenHands Integration")
+    parser.add_argument("--config", help="Pfad zur Ausgabekonfigurationsdatei", 
+                        default=None)
+    parser.add_argument("--openhands-config-dir", help="Pfad zum OpenHands-Konfigurationsverzeichnis",
+                        default=None)
+    parser.add_argument("--github-token", help="GitHub-Token für die GitHub-MCP-Server")
+    parser.add_argument("--docker-mcp-dir", help="Pfad zum MCP-Server-Verzeichnis",
+                        default=None)
     
     args = parser.parse_args()
     
-    # Lade die Server-Konfiguration
-    servers = load_config(args.config)
+    # Finde das MCP-Server-Verzeichnis, wenn nicht angegeben
+    docker_mcp_dir = args.docker_mcp_dir
+    if not docker_mcp_dir:
+        docker_mcp_dir = find_docker_mcp_servers_dir()
     
-    if not servers:
-        logger.error("Keine MCP-Server in der Konfiguration gefunden.")
+    # Bestimme den Pfad zur Konfigurationsdatei
+    config_path = args.config
+    if not config_path:
+        if docker_mcp_dir:
+            config_path = os.path.join(docker_mcp_dir, "openhands-mcp-config.json")
+        else:
+            config_path = "openhands-mcp-config.json"
+    
+    # Erstelle die OpenHands-Konfigurationsdatei
+    if not create_openhands_config(config_path, DEFAULT_MCP_SERVERS, args.github_token):
+        logger.error("OpenHands-Konfigurationsdatei konnte nicht erstellt werden.")
         return 1
     
-    # Erstelle Umgebungsvariablen in n8n
-    if not create_n8n_environment_variables(args.n8n_url, args.n8n_api_key, servers):
-        logger.error("Umgebungsvariablen konnten nicht erstellt werden.")
-        return 1
+    # Finde das OpenHands-Konfigurationsverzeichnis, wenn nicht angegeben
+    openhands_config_dir = args.openhands_config_dir
+    if not openhands_config_dir:
+        openhands_config_dir = detect_openhands_config_dir()
     
-    # Importiere die Workflows
-    if not import_workflows(args.n8n_api_key):
-        logger.error("Workflows konnten nicht importiert werden.")
-        return 1
-    
-    # Teste die Integration, wenn gewünscht
-    if args.test:
-        if not test_mcp_integration(args.n8n_url):
-            logger.error("Integration konnte nicht getestet werden.")
+    # Kopiere die Konfigurationsdatei in das OpenHands-Konfigurationsverzeichnis, falls angegeben
+    if openhands_config_dir:
+        if not copy_config_to_openhands(config_path, openhands_config_dir):
+            logger.error("Konfigurationsdatei konnte nicht in das OpenHands-Konfigurationsverzeichnis kopiert werden.")
             return 1
+    else:
+        logger.warning("OpenHands-Konfigurationsverzeichnis nicht angegeben oder gefunden.")
+        logger.warning("Die Konfigurationsdatei wurde erstellt, aber nicht in das OpenHands-Konfigurationsverzeichnis kopiert.")
+        logger.warning(f"Die Konfigurationsdatei befindet sich hier: {config_path}")
+        logger.warning("Um die Integration abzuschließen, kopieren Sie die Konfigurationsdatei in das OpenHands-Konfigurationsverzeichnis:")
+        logger.warning(f"  cp {config_path} /path/to/openhands/config/mcp-config.json")
     
-    logger.info("✅ MCP-Server wurden erfolgreich mit n8n integriert!")
+    logger.info("✅ MCP-Server wurden erfolgreich mit OpenHands integriert!")
+    logger.info(f"Die Konfigurationsdatei wurde erstellt: {config_path}")
+    
+    if openhands_config_dir:
+        logger.info(f"Die Konfigurationsdatei wurde in das OpenHands-Konfigurationsverzeichnis kopiert: {openhands_config_dir}")
+        logger.info("Ein Start-Skript wurde erstellt, um die MCP-Server zu starten:")
+        logger.info(f"  {os.path.join(openhands_config_dir, 'start-mcp-servers.sh')}")
+    
     return 0
 
 if __name__ == "__main__":
