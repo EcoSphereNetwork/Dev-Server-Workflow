@@ -6,6 +6,7 @@
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 RED='\033[0;31m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Funktion zum Anzeigen von Nachrichten
@@ -35,12 +36,12 @@ check_version() {
     local version_output
     version_output=$($version_cmd)
     local current_version
-    current_version=$(echo "$version_output" | grep -oE "$version_regex")
+    current_version=$(echo "$version_output" | grep -oE "$version_regex" | head -1)
 
     if [ -z "$current_version" ]; then
         warn "Konnte die Version von $package nicht ermitteln."
         return 2
-    }
+    fi
 
     if [ "$(printf '%s\n' "$min_version" "$current_version" | sort -V | head -n1)" != "$min_version" ]; then
         log "$package Version $current_version gefunden (Minimum: $min_version)."
@@ -48,7 +49,7 @@ check_version() {
     else
         warn "$package Version $current_version ist älter als die benötigte Version $min_version."
         return 3
-    }
+    fi
 }
 
 # Funktion zum Einrichten eines Alias für docker-compose
@@ -146,7 +147,7 @@ check_docker() {
         
         log "Docker wurde installiert. Bitte starten Sie die Shell neu, um die Docker-Gruppe zu aktivieren."
         log "Führen Sie dann dieses Skript erneut aus."
-        return 0
+        exit 0
     fi
     
     # Überprüfe die Docker-Version
