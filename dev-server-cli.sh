@@ -1,4 +1,14 @@
 #!/bin/bash
+
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
 # Dev-Server CLI mit verbesserter Paket- und Versionsverwaltung
 # Dieses Skript bietet eine Befehlszeilenschnittstelle für die Verwaltung des Dev-Server-Workflows
 
@@ -43,11 +53,11 @@ fi
 setup_docker_compose_alias() {
     # Prüfen, ob docker compose Befehl verfügbar ist
     if command -v docker &> /dev/null && docker compose version &> /dev/null; then
-        echo -e "${GREEN}Docker Compose Plugin ist installiert.${NC}"
+        log_info "${GREEN}Docker Compose Plugin ist installiert.${NC}"
         
         # Prüfen, ob docker-compose Befehl verfügbar ist
         if ! command -v docker-compose &> /dev/null; then
-            echo -e "${BLUE}Richte Alias für docker-compose ein...${NC}"
+            log_info "${BLUE}Richte Alias für docker-compose ein...${NC}"
             
             # Prüfen, welche Shell verwendet wird
             local shell_rc
@@ -63,20 +73,20 @@ setup_docker_compose_alias() {
             # Prüfen, ob der Alias bereits existiert
             if ! grep -q "alias docker-compose='docker compose'" "$shell_rc"; then
                 echo 'alias docker-compose="docker compose"' >> "$shell_rc"
-                echo -e "${GREEN}Alias zu $shell_rc hinzugefügt.${NC}"
-                echo -e "${YELLOW}Bitte führen Sie 'source $shell_rc' aus, oder starten Sie ein neues Terminal, um den Alias zu aktivieren.${NC}"
+                log_info "${GREEN}Alias zu $shell_rc hinzugefügt.${NC}"
+                log_info "${YELLOW}Bitte führen Sie 'source $shell_rc' aus, oder starten Sie ein neues Terminal, um den Alias zu aktivieren.${NC}"
                 
                 # Temporär für die aktuelle Sitzung einrichten
                 alias docker-compose="docker compose"
-                echo -e "${GREEN}Alias temporär für die aktuelle Sitzung eingerichtet.${NC}"
+                log_info "${GREEN}Alias temporär für die aktuelle Sitzung eingerichtet.${NC}"
             else
-                echo -e "${GREEN}Alias existiert bereits in $shell_rc.${NC}"
+                log_info "${GREEN}Alias existiert bereits in $shell_rc.${NC}"
             fi
         else
-            echo -e "${GREEN}docker-compose Befehl ist bereits verfügbar.${NC}"
+            log_info "${GREEN}docker-compose Befehl ist bereits verfügbar.${NC}"
         fi
     else
-        echo -e "${YELLOW}Docker Compose Plugin ist nicht installiert. Kann keinen Alias einrichten.${NC}"
+        log_info "${YELLOW}Docker Compose Plugin ist nicht installiert. Kann keinen Alias einrichten.${NC}"
     fi
 }
 
@@ -94,75 +104,75 @@ check_version() {
     local version_output
     version_output=$($version_cmd)
     local current_version
-    current_version=$(echo "$version_output" | grep -oE "$version_regex" | head -1)
+    current_version=$(log_info "$version_output" | grep -oE "$version_regex" | head -1)
 
     if [ -z "$current_version" ]; then
-        echo -e "${YELLOW}Konnte die Version von $package nicht ermitteln.${NC}"
+        log_info "${YELLOW}Konnte die Version von $package nicht ermitteln.${NC}"
         return 2
     }
 
     if [ "$(printf '%s\n' "$min_version" "$current_version" | sort -V | head -n1)" != "$min_version" ]; then
-        echo -e "${GREEN}$package Version $current_version gefunden (Minimum: $min_version).${NC}"
+        log_info "${GREEN}$package Version $current_version gefunden (Minimum: $min_version).${NC}"
         return 0
     else
-        echo -e "${YELLOW}$package Version $current_version ist älter als die benötigte Version $min_version.${NC}"
+        log_info "${YELLOW}$package Version $current_version ist älter als die benötigte Version $min_version.${NC}"
         return 3
     fi
 }
 
 # Funktion zum Überprüfen und Installieren von Abhängigkeiten
 check_dependencies() {
-    echo -e "${BLUE}Überprüfe Abhängigkeiten...${NC}"
+    log_info "${BLUE}Überprüfe Abhängigkeiten...${NC}"
     
     # Prüfe Docker-Installation
     if ! command -v docker &> /dev/null; then
-        echo -e "${RED}Docker ist nicht installiert. Bitte installieren Sie Docker.${NC}"
-        echo -e "${YELLOW}Installationsanweisungen: https://docs.docker.com/get-docker/${NC}"
+        log_info "${RED}Docker ist nicht installiert. Bitte installieren Sie Docker.${NC}"
+        log_info "${YELLOW}Installationsanweisungen: https://docs.docker.com/get-docker/${NC}"
         return 1
     fi
     
     # Prüfe Docker-Version
     check_version "docker" "20.10.0" "docker --version" "([0-9]+\.[0-9]+\.[0-9]+)"
     if [ $? -eq 3 ]; then
-        echo -e "${YELLOW}Docker Version ist veraltet. Ein Update wird empfohlen.${NC}"
+        log_info "${YELLOW}Docker Version ist veraltet. Ein Update wird empfohlen.${NC}"
     fi
     
     # Prüfe Docker Compose Installation
     if command -v docker &> /dev/null && docker compose version &> /dev/null; then
-        echo -e "${GREEN}Docker Compose Plugin ist installiert.${NC}"
+        log_info "${GREEN}Docker Compose Plugin ist installiert.${NC}"
         
         # Richte den docker-compose Alias ein
         setup_docker_compose_alias
         
     elif command -v docker-compose &> /dev/null; then
-        echo -e "${GREEN}Eigenständiges Docker Compose ist installiert.${NC}"
+        log_info "${GREEN}Eigenständiges Docker Compose ist installiert.${NC}"
         
         # Prüfe Version
         check_version "docker-compose" "1.29.0" "docker-compose --version" "([0-9]+\.[0-9]+\.[0-9]+)"
         if [ $? -eq 3 ]; then
-            echo -e "${YELLOW}Docker Compose ist veraltet. Ein Update wird empfohlen.${NC}"
+            log_info "${YELLOW}Docker Compose ist veraltet. Ein Update wird empfohlen.${NC}"
         fi
     else
-        echo -e "${RED}Docker Compose ist nicht installiert. Bitte installieren Sie Docker Compose.${NC}"
-        echo -e "${YELLOW}Installationsanweisungen: https://docs.docker.com/compose/install/${NC}"
+        log_info "${RED}Docker Compose ist nicht installiert. Bitte installieren Sie Docker Compose.${NC}"
+        log_info "${YELLOW}Installationsanweisungen: https://docs.docker.com/compose/install/${NC}"
         return 1
     fi
     
     # Prüfe Python-Installation
     if ! command -v python3 &> /dev/null; then
-        echo -e "${RED}Python 3 ist nicht installiert. Bitte installieren Sie Python 3.${NC}"
+        log_info "${RED}Python 3 ist nicht installiert. Bitte installieren Sie Python 3.${NC}"
         return 1
     fi
     
     # Prüfe Python-Version
     check_version "python3" "3.6.0" "python3 --version" "([0-9]+\.[0-9]+\.[0-9]+)"
     if [ $? -eq 3 ]; then
-        echo -e "${YELLOW}Python-Version ist veraltet. Ein Update wird empfohlen.${NC}"
+        log_info "${YELLOW}Python-Version ist veraltet. Ein Update wird empfohlen.${NC}"
     fi
     
     # Prüfe pip-Installation
     if ! command -v pip3 &> /dev/null; then
-        echo -e "${RED}pip3 ist nicht installiert. Bitte installieren Sie pip3.${NC}"
+        log_info "${RED}pip3 ist nicht installiert. Bitte installieren Sie pip3.${NC}"
         return 1
     fi
     
@@ -170,56 +180,56 @@ check_dependencies() {
     required_packages=("pyyaml" "requests" "docker")
     for package in "${required_packages[@]}"; do
         if ! python3 -c "import $package" &>/dev/null; then
-            echo -e "${YELLOW}Python-Paket '$package' ist nicht installiert. Installiere...${NC}"
+            log_info "${YELLOW}Python-Paket '$package' ist nicht installiert. Installiere...${NC}"
             pip3 install --user "$package"
         else
-            echo -e "${GREEN}Python-Paket '$package' ist installiert.${NC}"
+            log_info "${GREEN}Python-Paket '$package' ist installiert.${NC}"
         fi
     done
     
-    echo -e "${GREEN}Alle Abhängigkeiten sind installiert.${NC}"
+    log_info "${GREEN}Alle Abhängigkeiten sind installiert.${NC}"
     return 0
 }
 
 # Funktion zum Anzeigen von Hilfe
 show_help() {
-    echo -e "${BLUE}Dev-Server CLI${NC}"
-    echo "Dieses Skript bietet eine Befehlszeilenschnittstelle für die Verwaltung des Dev-Server-Workflows."
+    log_info "${BLUE}Dev-Server CLI${NC}"
+    log_info "Dieses Skript bietet eine Befehlszeilenschnittstelle für die Verwaltung des Dev-Server-Workflows."
     echo ""
-    echo "Verwendung:"
-    echo "  $0 [Optionen] [Befehl]"
+    log_info "Verwendung:"
+    log_info "  $0 [Optionen] [Befehl]"
     echo ""
-    echo "Optionen:"
-    echo "  -h, --help                Zeigt diese Hilfe an"
-    echo "  -v, --verbose             Aktiviert ausführliche Ausgabe"
-    echo "  --check-deps              Überprüft die erforderlichen Abhängigkeiten"
-    echo "  --setup-alias             Richtet einen Alias für docker-compose ein"
+    log_info "Optionen:"
+    log_info "  -h, --help                Zeigt diese Hilfe an"
+    log_info "  -v, --verbose             Aktiviert ausführliche Ausgabe"
+    log_info "  --check-deps              Überprüft die erforderlichen Abhängigkeiten"
+    log_info "  --setup-alias             Richtet einen Alias für docker-compose ein"
     echo ""
-    echo "Befehle:"
-    echo "  ui                        Startet die interaktive Benutzeroberfläche"
-    echo "  status                    Zeigt den Status aller Komponenten an"
-    echo "  start <komponente>        Startet eine Komponente und ihre Abhängigkeiten"
-    echo "  stop <komponente>         Stoppt eine Komponente und ihre Abhängigkeiten"
-    echo "  restart <komponente>      Startet eine Komponente neu"
-    echo "  logs <komponente>         Zeigt die Logs einer Komponente an"
-    echo "  config                    Verwaltet die Konfiguration"
-    echo "  backup                    Erstellt ein Backup"
-    echo "  restore <backup>          Stellt ein Backup wieder her"
-    echo "  monitor                   Überwacht die Systemressourcen"
-    echo "  help                      Zeigt diese Hilfe an"
+    log_info "Befehle:"
+    log_info "  ui                        Startet die interaktive Benutzeroberfläche"
+    log_info "  status                    Zeigt den Status aller Komponenten an"
+    log_info "  start <komponente>        Startet eine Komponente und ihre Abhängigkeiten"
+    log_info "  stop <komponente>         Stoppt eine Komponente und ihre Abhängigkeiten"
+    log_info "  restart <komponente>      Startet eine Komponente neu"
+    log_info "  logs <komponente>         Zeigt die Logs einer Komponente an"
+    log_info "  config                    Verwaltet die Konfiguration"
+    log_info "  backup                    Erstellt ein Backup"
+    log_info "  restore <backup>          Stellt ein Backup wieder her"
+    log_info "  monitor                   Überwacht die Systemressourcen"
+    log_info "  help                      Zeigt diese Hilfe an"
     echo ""
-    echo "Komponenten:"
-    echo "  n8n                       Workflow-Automatisierung"
-    echo "  web-ui                    Web-Benutzeroberfläche"
-    echo "  mcp                       MCP-Server für AI-Integration"
-    echo "  all                       Alle Komponenten"
+    log_info "Komponenten:"
+    log_info "  n8n                       Workflow-Automatisierung"
+    log_info "  web-ui                    Web-Benutzeroberfläche"
+    log_info "  mcp                       MCP-Server für AI-Integration"
+    log_info "  all                       Alle Komponenten"
     echo ""
-    echo "Beispiele:"
-    echo "  $0 ui                     Startet die interaktive Benutzeroberfläche"
-    echo "  $0 status                 Zeigt den Status aller Komponenten an"
-    echo "  $0 start n8n              Startet n8n und seine Abhängigkeiten"
-    echo "  $0 stop web-ui            Stoppt die Web-UI und ihre Abhängigkeiten"
-    echo "  $0 logs n8n               Zeigt die Logs von n8n an"
+    log_info "Beispiele:"
+    log_info "  $0 ui                     Startet die interaktive Benutzeroberfläche"
+    log_info "  $0 status                 Zeigt den Status aller Komponenten an"
+    log_info "  $0 start n8n              Startet n8n und seine Abhängigkeiten"
+    log_info "  $0 stop web-ui            Stoppt die Web-UI und ihre Abhängigkeiten"
+    log_info "  $0 logs n8n               Zeigt die Logs von n8n an"
 }
 
 # Standardwerte
@@ -266,8 +276,8 @@ if command -v docker &> /dev/null && docker compose version &> /dev/null; then
 elif command -v docker-compose &> /dev/null; then
     DOCKER_COMPOSE_CMD="docker-compose"
 else
-    echo -e "${RED}Weder Docker Compose Plugin noch eigenständiges Docker Compose sind installiert.${NC}"
-    echo -e "${YELLOW}Bitte installieren Sie Docker Compose: https://docs.docker.com/compose/install/${NC}"
+    log_info "${RED}Weder Docker Compose Plugin noch eigenständiges Docker Compose sind installiert.${NC}"
+    log_info "${YELLOW}Bitte installieren Sie Docker Compose: https://docs.docker.com/compose/install/${NC}"
     exit 1
 fi
 
@@ -278,40 +288,40 @@ case "$COMMAND" in
         if [[ -f "${BASE_DIR}/cli/interactive_ui.sh" ]]; then
             "${BASE_DIR}/cli/interactive_ui.sh"
         else
-            echo -e "${RED}Interaktive Benutzeroberfläche nicht gefunden${NC}"
+            log_info "${RED}Interaktive Benutzeroberfläche nicht gefunden${NC}"
             exit 1
         fi
         ;;
     status)
         # Zeige Status aller Komponenten an
-        echo -e "${BLUE}Status der Komponenten:${NC}"
+        log_info "${BLUE}Status der Komponenten:${NC}"
         
         # Prüfe Docker-Container
-        echo -e "\n${GREEN}Docker-Container:${NC}"
+        log_info "\n${GREEN}Docker-Container:${NC}"
         $DOCKER_COMPOSE_CMD ps
         
         # Prüfe n8n
-        echo -e "\n${GREEN}n8n-Status:${NC}"
+        log_info "\n${GREEN}n8n-Status:${NC}"
         if pgrep -f "n8n" > /dev/null; then
-            echo -e "${GREEN}n8n läuft${NC}"
+            log_info "${GREEN}n8n läuft${NC}"
         else
-            echo -e "${RED}n8n läuft nicht${NC}"
+            log_info "${RED}n8n läuft nicht${NC}"
         fi
         
         # Prüfe MCP-Server
-        echo -e "\n${GREEN}MCP-Server-Status:${NC}"
+        log_info "\n${GREEN}MCP-Server-Status:${NC}"
         if [[ -f "${BASE_DIR}/src/common/dependency_manager.sh" ]]; then
             "${BASE_DIR}/src/common/dependency_manager.sh" list
         else
-            echo -e "${YELLOW}Dependency Manager nicht gefunden, prüfe Docker-Container...${NC}"
+            log_info "${YELLOW}Dependency Manager nicht gefunden, prüfe Docker-Container...${NC}"
             docker ps --filter "name=mcp"
         fi
         ;;
     start)
         # Starte eine Komponente
         if [[ $# -eq 0 ]]; then
-            echo -e "${RED}Keine Komponente angegeben${NC}"
-            echo "Verwendung: $0 start <komponente>"
+            log_info "${RED}Keine Komponente angegeben${NC}"
+            log_info "Verwendung: $0 start <komponente>"
             exit 1
         fi
         
@@ -319,75 +329,75 @@ case "$COMMAND" in
         
         case "$COMPONENT" in
             n8n)
-                echo -e "${BLUE}Starte n8n...${NC}"
+                log_info "${BLUE}Starte n8n...${NC}"
                 if command -v n8n &> /dev/null; then
                     n8n start &
-                    echo -e "${GREEN}n8n wurde gestartet.${NC}"
+                    log_info "${GREEN}n8n wurde gestartet.${NC}"
                 else
-                    echo -e "${RED}n8n ist nicht installiert.${NC}"
-                    echo -e "${YELLOW}Installieren Sie n8n mit 'npm install -g n8n'${NC}"
+                    log_info "${RED}n8n ist nicht installiert.${NC}"
+                    log_info "${YELLOW}Installieren Sie n8n mit 'npm install -g n8n'${NC}"
                     exit 1
                 fi
                 ;;
             web-ui)
-                echo -e "${BLUE}Starte Web-UI...${NC}"
+                log_info "${BLUE}Starte Web-UI...${NC}"
                 if [[ -f "${BASE_DIR}/start-web-ui.sh" ]]; then
                     "${BASE_DIR}/start-web-ui.sh"
                 else
-                    echo -e "${RED}Web-UI-Startskript nicht gefunden${NC}"
+                    log_info "${RED}Web-UI-Startskript nicht gefunden${NC}"
                     exit 1
                 fi
                 ;;
             mcp)
-                echo -e "${BLUE}Starte MCP-Server...${NC}"
+                log_info "${BLUE}Starte MCP-Server...${NC}"
                 if [[ -f "${BASE_DIR}/scripts/start-mcp-servers.sh" ]]; then
                     "${BASE_DIR}/scripts/start-mcp-servers.sh" --all
                 elif [[ -f "${BASE_DIR}/start-mcp-servers.sh" ]]; then
                     "${BASE_DIR}/start-mcp-servers.sh" --all
                 else
-                    echo -e "${RED}MCP-Server-Startskript nicht gefunden${NC}"
+                    log_info "${RED}MCP-Server-Startskript nicht gefunden${NC}"
                     exit 1
                 fi
                 ;;
             all)
-                echo -e "${BLUE}Starte alle Komponenten...${NC}"
+                log_info "${BLUE}Starte alle Komponenten...${NC}"
                 
                 # Starte n8n
                 if command -v n8n &> /dev/null; then
-                    echo -e "${BLUE}Starte n8n...${NC}"
+                    log_info "${BLUE}Starte n8n...${NC}"
                     n8n start &
-                    echo -e "${GREEN}n8n wurde gestartet.${NC}"
+                    log_info "${GREEN}n8n wurde gestartet.${NC}"
                 else
-                    echo -e "${YELLOW}n8n ist nicht installiert, überspringe...${NC}"
+                    log_info "${YELLOW}n8n ist nicht installiert, überspringe...${NC}"
                 fi
                 
                 # Starte Web-UI
                 if [[ -f "${BASE_DIR}/start-web-ui.sh" ]]; then
-                    echo -e "${BLUE}Starte Web-UI...${NC}"
+                    log_info "${BLUE}Starte Web-UI...${NC}"
                     "${BASE_DIR}/start-web-ui.sh"
                 else
-                    echo -e "${YELLOW}Web-UI-Startskript nicht gefunden, überspringe...${NC}"
+                    log_info "${YELLOW}Web-UI-Startskript nicht gefunden, überspringe...${NC}"
                 fi
                 
                 # Starte MCP-Server
                 if [[ -f "${BASE_DIR}/scripts/start-mcp-servers.sh" ]]; then
-                    echo -e "${BLUE}Starte MCP-Server...${NC}"
+                    log_info "${BLUE}Starte MCP-Server...${NC}"
                     "${BASE_DIR}/scripts/start-mcp-servers.sh" --all
                 elif [[ -f "${BASE_DIR}/start-mcp-servers.sh" ]]; then
-                    echo -e "${BLUE}Starte MCP-Server...${NC}"
+                    log_info "${BLUE}Starte MCP-Server...${NC}"
                     "${BASE_DIR}/start-mcp-servers.sh" --all
                 else
-                    echo -e "${YELLOW}MCP-Server-Startskript nicht gefunden, überspringe...${NC}"
+                    log_info "${YELLOW}MCP-Server-Startskript nicht gefunden, überspringe...${NC}"
                 fi
                 
-                echo -e "${GREEN}Alle Komponenten wurden gestartet.${NC}"
+                log_info "${GREEN}Alle Komponenten wurden gestartet.${NC}"
                 ;;
             *)
                 if [[ -f "${BASE_DIR}/src/common/dependency_manager.sh" ]]; then
                     "${BASE_DIR}/src/common/dependency_manager.sh" start "$COMPONENT"
                 else
-                    echo -e "${RED}Unbekannte Komponente: $COMPONENT${NC}"
-                    echo "Bekannte Komponenten: n8n, web-ui, mcp, all"
+                    log_info "${RED}Unbekannte Komponente: $COMPONENT${NC}"
+                    log_info "Bekannte Komponenten: n8n, web-ui, mcp, all"
                     exit 1
                 fi
                 ;;
@@ -396,8 +406,8 @@ case "$COMMAND" in
     stop)
         # Stoppe eine Komponente
         if [[ $# -eq 0 ]]; then
-            echo -e "${RED}Keine Komponente angegeben${NC}"
-            echo "Verwendung: $0 stop <komponente>"
+            log_info "${RED}Keine Komponente angegeben${NC}"
+            log_info "Verwendung: $0 stop <komponente>"
             exit 1
         fi
         
@@ -405,68 +415,68 @@ case "$COMMAND" in
         
         case "$COMPONENT" in
             n8n)
-                echo -e "${BLUE}Stoppe n8n...${NC}"
+                log_info "${BLUE}Stoppe n8n...${NC}"
                 pkill -f "n8n" || true
-                echo -e "${GREEN}n8n wurde gestoppt.${NC}"
+                log_info "${GREEN}n8n wurde gestoppt.${NC}"
                 ;;
             web-ui)
-                echo -e "${BLUE}Stoppe Web-UI...${NC}"
+                log_info "${BLUE}Stoppe Web-UI...${NC}"
                 if [[ -f "${BASE_DIR}/stop-web-ui.sh" ]]; then
                     "${BASE_DIR}/stop-web-ui.sh"
                 else
-                    echo -e "${YELLOW}Web-UI-Stoppskript nicht gefunden, verwende Docker Compose...${NC}"
+                    log_info "${YELLOW}Web-UI-Stoppskript nicht gefunden, verwende Docker Compose...${NC}"
                     $DOCKER_COMPOSE_CMD -f "docker-compose.web-ui.yml" down
-                    echo -e "${GREEN}Web-UI wurde gestoppt.${NC}"
+                    log_info "${GREEN}Web-UI wurde gestoppt.${NC}"
                 fi
                 ;;
             mcp)
-                echo -e "${BLUE}Stoppe MCP-Server...${NC}"
+                log_info "${BLUE}Stoppe MCP-Server...${NC}"
                 if [[ -f "${BASE_DIR}/scripts/stop-mcp-servers.sh" ]]; then
                     "${BASE_DIR}/scripts/stop-mcp-servers.sh" --all
                 elif [[ -f "${BASE_DIR}/stop-mcp-servers.sh" ]]; then
                     "${BASE_DIR}/stop-mcp-servers.sh" --all
                 else
-                    echo -e "${RED}MCP-Server-Stoppskript nicht gefunden${NC}"
+                    log_info "${RED}MCP-Server-Stoppskript nicht gefunden${NC}"
                     exit 1
                 fi
                 ;;
             all)
-                echo -e "${BLUE}Stoppe alle Komponenten...${NC}"
+                log_info "${BLUE}Stoppe alle Komponenten...${NC}"
                 
                 # Stoppe n8n
-                echo -e "${BLUE}Stoppe n8n...${NC}"
+                log_info "${BLUE}Stoppe n8n...${NC}"
                 pkill -f "n8n" || true
-                echo -e "${GREEN}n8n wurde gestoppt.${NC}"
+                log_info "${GREEN}n8n wurde gestoppt.${NC}"
                 
                 # Stoppe Web-UI
                 if [[ -f "${BASE_DIR}/stop-web-ui.sh" ]]; then
-                    echo -e "${BLUE}Stoppe Web-UI...${NC}"
+                    log_info "${BLUE}Stoppe Web-UI...${NC}"
                     "${BASE_DIR}/stop-web-ui.sh"
                 else
-                    echo -e "${YELLOW}Web-UI-Stoppskript nicht gefunden, verwende Docker Compose...${NC}"
+                    log_info "${YELLOW}Web-UI-Stoppskript nicht gefunden, verwende Docker Compose...${NC}"
                     $DOCKER_COMPOSE_CMD -f "docker-compose.web-ui.yml" down || true
-                    echo -e "${GREEN}Web-UI wurde gestoppt.${NC}"
+                    log_info "${GREEN}Web-UI wurde gestoppt.${NC}"
                 fi
                 
                 # Stoppe MCP-Server
                 if [[ -f "${BASE_DIR}/scripts/stop-mcp-servers.sh" ]]; then
-                    echo -e "${BLUE}Stoppe MCP-Server...${NC}"
+                    log_info "${BLUE}Stoppe MCP-Server...${NC}"
                     "${BASE_DIR}/scripts/stop-mcp-servers.sh" --all
                 elif [[ -f "${BASE_DIR}/stop-mcp-servers.sh" ]]; then
-                    echo -e "${BLUE}Stoppe MCP-Server...${NC}"
+                    log_info "${BLUE}Stoppe MCP-Server...${NC}"
                     "${BASE_DIR}/stop-mcp-servers.sh" --all
                 else
-                    echo -e "${YELLOW}MCP-Server-Stoppskript nicht gefunden, überspringe...${NC}"
+                    log_info "${YELLOW}MCP-Server-Stoppskript nicht gefunden, überspringe...${NC}"
                 fi
                 
-                echo -e "${GREEN}Alle Komponenten wurden gestoppt.${NC}"
+                log_info "${GREEN}Alle Komponenten wurden gestoppt.${NC}"
                 ;;
             *)
                 if [[ -f "${BASE_DIR}/src/common/dependency_manager.sh" ]]; then
                     "${BASE_DIR}/src/common/dependency_manager.sh" stop "$COMPONENT"
                 else
-                    echo -e "${RED}Unbekannte Komponente: $COMPONENT${NC}"
-                    echo "Bekannte Komponenten: n8n, web-ui, mcp, all"
+                    log_info "${RED}Unbekannte Komponente: $COMPONENT${NC}"
+                    log_info "Bekannte Komponenten: n8n, web-ui, mcp, all"
                     exit 1
                 fi
                 ;;
@@ -475,8 +485,8 @@ case "$COMMAND" in
     restart)
         # Starte eine Komponente neu
         if [[ $# -eq 0 ]]; then
-            echo -e "${RED}Keine Komponente angegeben${NC}"
-            echo "Verwendung: $0 restart <komponente>"
+            log_info "${RED}Keine Komponente angegeben${NC}"
+            log_info "Verwendung: $0 restart <komponente>"
             exit 1
         fi
         
@@ -488,8 +498,8 @@ case "$COMMAND" in
     logs)
         # Zeige Logs einer Komponente an
         if [[ $# -eq 0 ]]; then
-            echo -e "${RED}Keine Komponente angegeben${NC}"
-            echo "Verwendung: $0 logs <komponente>"
+            log_info "${RED}Keine Komponente angegeben${NC}"
+            log_info "Verwendung: $0 logs <komponente>"
             exit 1
         fi
         
@@ -497,21 +507,21 @@ case "$COMMAND" in
         
         case "$COMPONENT" in
             n8n)
-                echo -e "${BLUE}Zeige Logs von n8n an...${NC}"
-                echo -e "${YELLOW}n8n-Logs sind nicht über dieses Skript verfügbar.${NC}"
-                echo "Bitte starten Sie n8n im Vordergrund oder prüfen Sie die n8n-Logdateien."
+                log_info "${BLUE}Zeige Logs von n8n an...${NC}"
+                log_info "${YELLOW}n8n-Logs sind nicht über dieses Skript verfügbar.${NC}"
+                log_info "Bitte starten Sie n8n im Vordergrund oder prüfen Sie die n8n-Logdateien."
                 ;;
             web-ui)
-                echo -e "${BLUE}Zeige Logs der Web-UI an...${NC}"
+                log_info "${BLUE}Zeige Logs der Web-UI an...${NC}"
                 $DOCKER_COMPOSE_CMD -f "docker-compose.web-ui.yml" logs --tail=100
                 ;;
             mcp)
-                echo -e "${BLUE}Zeige Logs der MCP-Server an...${NC}"
+                log_info "${BLUE}Zeige Logs der MCP-Server an...${NC}"
                 if [[ -d "/tmp/mcp-logs" ]]; then
-                    cat /tmp/mcp-logs/*.log 2>/dev/null || echo -e "${YELLOW}Keine Log-Dateien gefunden.${NC}"
+                    cat /tmp/mcp-logs/*.log 2>/dev/null || log_info "${YELLOW}Keine Log-Dateien gefunden.${NC}"
                 else
-                    echo -e "${YELLOW}MCP-Server-Logs nicht gefunden.${NC}"
-                    echo "Bitte prüfen Sie die Docker-Logs:"
+                    log_info "${YELLOW}MCP-Server-Logs nicht gefunden.${NC}"
+                    log_info "Bitte prüfen Sie die Docker-Logs:"
                     docker logs $(docker ps --filter "name=mcp" -q)
                 fi
                 ;;
@@ -520,7 +530,7 @@ case "$COMMAND" in
                 if docker ps --format "{{.Names}}" | grep -q "$COMPONENT"; then
                     docker logs "$COMPONENT"
                 else
-                    echo -e "${RED}Komponente $COMPONENT ist kein laufender Docker-Container${NC}"
+                    log_info "${RED}Komponente $COMPONENT ist kein laufender Docker-Container${NC}"
                     exit 1
                 fi
                 ;;
@@ -537,7 +547,7 @@ case "$COMMAND" in
                 "${BASE_DIR}/cli/config_manager.sh" "$@"
             fi
         else
-            echo -e "${RED}Konfigurationsmanager nicht gefunden${NC}"
+            log_info "${RED}Konfigurationsmanager nicht gefunden${NC}"
             exit 1
         fi
         ;;
@@ -549,7 +559,7 @@ case "$COMMAND" in
         BACKUP_NAME="backup_$(date +%Y%m%d_%H%M%S)"
         BACKUP_FILE="${BACKUP_DIR}/${BACKUP_NAME}.tar.gz"
         
-        echo -e "${BLUE}Erstelle Backup $BACKUP_NAME...${NC}"
+        log_info "${BLUE}Erstelle Backup $BACKUP_NAME...${NC}"
         
         # Erstelle temporäres Verzeichnis
         TMP_DIR="${BACKUP_DIR}/tmp"
@@ -560,11 +570,11 @@ case "$COMMAND" in
         cp -r "${BASE_DIR}/config" "$TMP_DIR/" 2>/dev/null || true
         
         # Erstelle Backup-Info-Datei
-        echo "Backup erstellt am: $(date)" > "$TMP_DIR/backup_info.txt"
-        echo "Hostname: $(hostname)" >> "$TMP_DIR/backup_info.txt"
-        echo "Benutzer: $(whoami)" >> "$TMP_DIR/backup_info.txt"
-        echo "Docker-Version: $(docker --version)" >> "$TMP_DIR/backup_info.txt"
-        echo "Laufende Container:" >> "$TMP_DIR/backup_info.txt"
+        log_info "Backup erstellt am: $(date)" > "$TMP_DIR/backup_info.txt"
+        log_info "Hostname: $(hostname)" >> "$TMP_DIR/backup_info.txt"
+        log_info "Benutzer: $(whoami)" >> "$TMP_DIR/backup_info.txt"
+        log_info "Docker-Version: $(docker --version)" >> "$TMP_DIR/backup_info.txt"
+        log_info "Laufende Container:" >> "$TMP_DIR/backup_info.txt"
         docker ps --format "{{.Names}}" >> "$TMP_DIR/backup_info.txt"
         
         # Erstelle Archiv
@@ -573,13 +583,13 @@ case "$COMMAND" in
         # Lösche temporäres Verzeichnis
         rm -rf "$TMP_DIR"
         
-        echo -e "${GREEN}Backup erstellt: $BACKUP_FILE${NC}"
+        log_info "${GREEN}Backup erstellt: $BACKUP_FILE${NC}"
         ;;
     restore)
         # Stelle Backup wieder her
         if [[ $# -eq 0 ]]; then
-            echo -e "${RED}Kein Backup angegeben${NC}"
-            echo "Verwendung: $0 restore <backup>"
+            log_info "${RED}Kein Backup angegeben${NC}"
+            log_info "Verwendung: $0 restore <backup>"
             exit 1
         fi
         
@@ -594,12 +604,12 @@ case "$COMMAND" in
             elif [[ -f "${BACKUP_DIR}/${BACKUP_FILE}.tar.gz" ]]; then
                 BACKUP_FILE="${BACKUP_DIR}/${BACKUP_FILE}.tar.gz"
             else
-                echo -e "${RED}Backup $BACKUP_FILE nicht gefunden${NC}"
+                log_info "${RED}Backup $BACKUP_FILE nicht gefunden${NC}"
                 exit 1
             fi
         fi
         
-        echo -e "${BLUE}Stelle Backup $BACKUP_FILE wieder her...${NC}"
+        log_info "${BLUE}Stelle Backup $BACKUP_FILE wieder her...${NC}"
         
         # Erstelle temporäres Verzeichnis
         TMP_DIR="${BASE_DIR}/backups/tmp"
@@ -609,7 +619,7 @@ case "$COMMAND" in
         tar -xzf "$BACKUP_FILE" -C "$TMP_DIR"
         
         # Stoppe alle Container
-        echo -e "${BLUE}Stoppe alle Container...${NC}"
+        log_info "${BLUE}Stoppe alle Container...${NC}"
         "$0" stop all
         
         # Kopiere Konfigurationsdateien
@@ -619,13 +629,13 @@ case "$COMMAND" in
         # Lösche temporäres Verzeichnis
         rm -rf "$TMP_DIR"
         
-        echo -e "${GREEN}Backup wiederhergestellt${NC}"
-        echo -e "${YELLOW}Starten Sie die Container neu, um die Änderungen zu übernehmen${NC}"
+        log_info "${GREEN}Backup wiederhergestellt${NC}"
+        log_info "${YELLOW}Starten Sie die Container neu, um die Änderungen zu übernehmen${NC}"
         ;;
     monitor)
         # Überwache Systemressourcen
-        echo -e "${BLUE}Überwache Systemressourcen...${NC}"
-        echo -e "${BLUE}Drücken Sie Strg+C, um zu beenden${NC}"
+        log_info "${BLUE}Überwache Systemressourcen...${NC}"
+        log_info "${BLUE}Drücken Sie Strg+C, um zu beenden${NC}"
         echo ""
         
         # Prüfe, ob htop installiert ist
@@ -642,7 +652,7 @@ case "$COMMAND" in
         ;;
     *)
         # Unbekannter Befehl
-        echo -e "${RED}Unbekannter Befehl: $COMMAND${NC}"
+        log_info "${RED}Unbekannter Befehl: $COMMAND${NC}"
         show_help
         exit 1
         ;;

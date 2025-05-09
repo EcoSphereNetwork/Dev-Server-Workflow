@@ -1,4 +1,14 @@
 #!/bin/bash
+
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
 # Interactive UI for Dev-Server-Workflow
 # This script provides an interactive menu-based interface for managing the Dev-Server-Workflow
 
@@ -29,11 +39,11 @@ trap 'handle_error $? $LINENO "$BASH_COMMAND"' ERR
 # Check if dialog is installed
 check_dialog() {
     if ! command -v dialog &> /dev/null; then
-        echo -e "${YELLOW}[WARN] Dialog is not installed. Installing...${NC}"
+        log_info "${YELLOW}[WARN] Dialog is not installed. Installing...${NC}"
         apt-get update && apt-get install -y dialog
         
         if ! command -v dialog &> /dev/null; then
-            echo -e "${RED}[ERROR] Failed to install dialog. Using fallback text-based menu.${NC}"
+            log_info "${RED}[ERROR] Failed to install dialog. Using fallback text-based menu.${NC}"
             return 1
         fi
     fi
@@ -71,7 +81,7 @@ show_main_menu_dialog() {
         8) show_installation_dialog ;;
         9) show_documentation_dialog ;;
         10) show_about_dialog ;;
-        11) clear; echo -e "${GREEN}Auf Wiedersehen!${NC}"; exit 0 ;;
+        11) clear; log_info "${GREEN}Auf Wiedersehen!${NC}"; exit 0 ;;
         *) show_main_menu_dialog ;;
     esac
 }
@@ -80,27 +90,27 @@ show_main_menu_dialog() {
 show_status_dialog() {
     # Collect status information
     local status_output=$(
-        echo "=== System Status ==="
-        echo "Datum: $(date)"
-        echo "Hostname: $(hostname)"
-        echo "Kernel: $(uname -r)"
-        echo "CPU: $(grep "model name" /proc/cpuinfo | head -1 | cut -d: -f2 | sed 's/^[ \t]*//')"
-        echo "RAM: $(free -h | grep Mem | awk '{print $2}')"
-        echo "Disk: $(df -h / | grep / | awk '{print $2}')"
+        log_info "=== System Status ==="
+        log_info "Datum: $(date)"
+        log_info "Hostname: $(hostname)"
+        log_info "Kernel: $(uname -r)"
+        log_info "CPU: $(grep "model name" /proc/cpuinfo | head -1 | cut -d: -f2 | sed 's/^[ \t]*//')"
+        log_info "RAM: $(free -h | grep Mem | awk '{print $2}')"
+        log_info "Disk: $(df -h / | grep / | awk '{print $2}')"
         echo ""
-        echo "=== Docker Status ==="
-        echo "Docker Version: $(docker --version)"
-        echo "Laufende Container: $(docker ps -q | wc -l)"
-        echo "Alle Container: $(docker ps -a -q | wc -l)"
-        echo "Images: $(docker images -q | wc -l)"
-        echo "Volumes: $(docker volume ls -q | wc -l)"
-        echo "Networks: $(docker network ls -q | wc -l)"
+        log_info "=== Docker Status ==="
+        log_info "Docker Version: $(docker --version)"
+        log_info "Laufende Container: $(docker ps -q | wc -l)"
+        log_info "Alle Container: $(docker ps -a -q | wc -l)"
+        log_info "Images: $(docker images -q | wc -l)"
+        log_info "Volumes: $(docker volume ls -q | wc -l)"
+        log_info "Networks: $(docker network ls -q | wc -l)"
         echo ""
-        echo "=== MCP-Server Status ==="
-        docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E 'mcp$|mcp-bridge$' || echo "Keine MCP-Server gefunden"
+        log_info "=== MCP-Server Status ==="
+        docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E 'mcp$|mcp-bridge$' || log_info "Keine MCP-Server gefunden"
         echo ""
-        echo "=== n8n Status ==="
-        docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep "n8n" || echo "n8n nicht gefunden"
+        log_info "=== n8n Status ==="
+        docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep "n8n" || log_info "n8n nicht gefunden"
     )
     
     # Show status in dialog
@@ -182,7 +192,7 @@ show_mcp_servers_dialog() {
         *)
             if [[ -n "$choice" ]]; then
                 # Get selected server
-                local selected_server=$(echo "$mcp_servers" | sed -n "${choice}p")
+                local selected_server=$(log_info "$mcp_servers" | sed -n "${choice}p")
                 
                 show_mcp_server_actions_dialog "$selected_server"
             else
@@ -218,7 +228,7 @@ show_mcp_server_actions_dialog() {
         1)
             # Show server status
             local status_output=$(
-                echo "=== MCP-Server: $server_name ==="
+                log_info "=== MCP-Server: $server_name ==="
                 echo ""
                 docker inspect "$server_name" | jq -r '.[0] | "Status: " + .State.Status + "\nStartzeit: " + .State.StartedAt + "\nImage: " + .Config.Image + "\nPorts: " + (.NetworkSettings.Ports | tostring) + "\nVolumes: " + (.Mounts | map(.Source + " -> " + .Destination) | join("\n"))'
             )
@@ -242,7 +252,7 @@ show_mcp_server_actions_dialog() {
         3)
             # List tools
             local tools_output=$(
-                echo "=== Tools für MCP-Server: $server_name ==="
+                log_info "=== Tools für MCP-Server: $server_name ==="
                 echo ""
                 cd "${BASE_DIR}/docker-mcp-ecosystem"
                 ./scripts/mcp-server-manager.sh list-tools --server "$server_name" 2>&1
@@ -268,7 +278,7 @@ show_mcp_server_actions_dialog() {
                     3>&1 1>&2 2>&3)
                 
                 local tool_output=$(
-                    echo "=== Tool aufrufen: $tool_name für MCP-Server: $server_name ==="
+                    log_info "=== Tool aufrufen: $tool_name für MCP-Server: $server_name ==="
                     echo ""
                     cd "${BASE_DIR}/docker-mcp-ecosystem"
                     ./scripts/mcp-server-manager.sh call-tool --server "$server_name" --tool "$tool_name" --args "$args" 2>&1
@@ -284,7 +294,7 @@ show_mcp_server_actions_dialog() {
         5)
             # List resources
             local resources_output=$(
-                echo "=== Ressourcen für MCP-Server: $server_name ==="
+                log_info "=== Ressourcen für MCP-Server: $server_name ==="
                 echo ""
                 cd "${BASE_DIR}/docker-mcp-ecosystem"
                 ./scripts/mcp-server-manager.sh list-resources --server "$server_name" 2>&1
@@ -305,7 +315,7 @@ show_mcp_server_actions_dialog() {
             
             if [[ -n "$resource_id" ]]; then
                 local resource_output=$(
-                    echo "=== Ressource abrufen: $resource_id für MCP-Server: $server_name ==="
+                    log_info "=== Ressource abrufen: $resource_id für MCP-Server: $server_name ==="
                     echo ""
                     cd "${BASE_DIR}/docker-mcp-ecosystem"
                     ./scripts/mcp-server-manager.sh get-resource --server "$server_name" --resource "$resource_id" 2>&1
@@ -321,7 +331,7 @@ show_mcp_server_actions_dialog() {
         7)
             # List prompts
             local prompts_output=$(
-                echo "=== Prompts für MCP-Server: $server_name ==="
+                log_info "=== Prompts für MCP-Server: $server_name ==="
                 echo ""
                 cd "${BASE_DIR}/docker-mcp-ecosystem"
                 ./scripts/mcp-server-manager.sh list-prompts --server "$server_name" 2>&1
@@ -347,7 +357,7 @@ show_mcp_server_actions_dialog() {
                     3>&1 1>&2 2>&3)
                 
                 local prompt_output=$(
-                    echo "=== Prompt aufrufen: $prompt_id für MCP-Server: $server_name ==="
+                    log_info "=== Prompt aufrufen: $prompt_id für MCP-Server: $server_name ==="
                     echo ""
                     cd "${BASE_DIR}/docker-mcp-ecosystem"
                     ./scripts/mcp-server-manager.sh call-prompt --server "$server_name" --prompt "$prompt_id" --prompt-args "$args" 2>&1
@@ -455,7 +465,7 @@ show_n8n_dialog() {
         1)
             # Show n8n status
             local status_output=$(
-                echo "=== n8n Status ==="
+                log_info "=== n8n Status ==="
                 echo ""
                 docker inspect n8n | jq -r '.[0] | "Status: " + .State.Status + "\nStartzeit: " + .State.StartedAt + "\nImage: " + .Config.Image + "\nPorts: " + (.NetworkSettings.Ports | tostring) + "\nVolumes: " + (.Mounts | map(.Source + " -> " + .Destination) | join("\n"))'
             )
@@ -479,7 +489,7 @@ show_n8n_dialog() {
         3)
             # List workflows
             local workflows_output=$(
-                echo "=== n8n Workflows ==="
+                log_info "=== n8n Workflows ==="
                 echo ""
                 docker exec n8n n8n list workflows
             )
@@ -617,7 +627,7 @@ show_logs_dialog() {
         *)
             if [[ -n "$choice" ]]; then
                 # Get selected container
-                local selected_container=$(echo "$containers" | sed -n "${choice}p")
+                local selected_container=$(log_info "$containers" | sed -n "${choice}p")
                 
                 # Show logs
                 local logs=$(docker logs "$selected_container" 2>&1 | tail -n 500)
@@ -656,13 +666,13 @@ show_config_dialog() {
             
             if [[ -f "${BASE_DIR}/.env" ]]; then
                 config_output+="=== .env Konfiguration ===\n\n"
-                config_output+=$(grep -v "^#" "${BASE_DIR}/.env" | grep "=" || echo "Keine Konfiguration gefunden")
+                config_output+=$(grep -v "^#" "${BASE_DIR}/.env" | grep "=" || log_info "Keine Konfiguration gefunden")
                 config_output+="\n\n"
             fi
             
             if [[ -f "${BASE_DIR}/cli/config.sh" ]]; then
                 config_output+="=== config.sh Konfiguration ===\n\n"
-                config_output+=$(grep -E "^[A-Z_]+=.*" "${BASE_DIR}/cli/config.sh" || echo "Keine Konfiguration gefunden")
+                config_output+=$(grep -E "^[A-Z_]+=.*" "${BASE_DIR}/cli/config.sh" || log_info "Keine Konfiguration gefunden")
             fi
             
             dialog --clear --backtitle "Dev-Server-Workflow" \
@@ -736,10 +746,10 @@ show_config_dialog() {
                     if grep -q "^$var_name=" "${BASE_DIR}/.env"; then
                         sed -i "s|^$var_name=.*|$var_name=$var_value|" "${BASE_DIR}/.env"
                     else
-                        echo "$var_name=$var_value" >> "${BASE_DIR}/.env"
+                        log_info "$var_name=$var_value" >> "${BASE_DIR}/.env"
                     fi
                 else
-                    echo "$var_name=$var_value" > "${BASE_DIR}/.env"
+                    log_info "$var_name=$var_value" > "${BASE_DIR}/.env"
                 fi
                 
                 dialog --clear --backtitle "Dev-Server-Workflow" \
@@ -787,19 +797,19 @@ show_monitoring_dialog() {
                 --infobox "Sammle System-Ressourcen..." 5 40
             
             local resources_output=$(
-                echo "=== CPU-Auslastung ==="
+                log_info "=== CPU-Auslastung ==="
                 top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print "CPU-Auslastung: " 100 - $1 "%"}'
                 echo ""
-                echo "=== Speicherauslastung ==="
+                log_info "=== Speicherauslastung ==="
                 free -h
                 echo ""
-                echo "=== Festplattennutzung ==="
+                log_info "=== Festplattennutzung ==="
                 df -h
                 echo ""
-                echo "=== Top-Prozesse nach CPU-Auslastung ==="
+                log_info "=== Top-Prozesse nach CPU-Auslastung ==="
                 ps aux --sort=-%cpu | head -11
                 echo ""
-                echo "=== Top-Prozesse nach Speicherauslastung ==="
+                log_info "=== Top-Prozesse nach Speicherauslastung ==="
                 ps aux --sort=-%mem | head -11
             )
             
@@ -962,11 +972,11 @@ show_backup_dialog() {
                 fi
                 
                 # Create backup info file
-                echo "Backup erstellt am: $(date)" > "$backup_dir/backup_info.txt"
-                echo "Hostname: $(hostname)" >> "$backup_dir/backup_info.txt"
-                echo "Benutzer: $(whoami)" >> "$backup_dir/backup_info.txt"
-                echo "Docker-Version: $(docker --version)" >> "$backup_dir/backup_info.txt"
-                echo "Laufende Container:" >> "$backup_dir/backup_info.txt"
+                log_info "Backup erstellt am: $(date)" > "$backup_dir/backup_info.txt"
+                log_info "Hostname: $(hostname)" >> "$backup_dir/backup_info.txt"
+                log_info "Benutzer: $(whoami)" >> "$backup_dir/backup_info.txt"
+                log_info "Docker-Version: $(docker --version)" >> "$backup_dir/backup_info.txt"
+                log_info "Laufende Container:" >> "$backup_dir/backup_info.txt"
                 docker ps --format "{{.Names}}" >> "$backup_dir/backup_info.txt"
                 
                 # Create archive
@@ -1020,7 +1030,7 @@ show_backup_dialog() {
                 *)
                     if [[ -n "$choice" ]]; then
                         # Get selected backup
-                        local selected_backup=$(echo "$backups" | sed -n "${choice}p")
+                        local selected_backup=$(log_info "$backups" | sed -n "${choice}p")
                         local backup_name=$(basename "$selected_backup")
                         
                         dialog --clear --backtitle "Dev-Server-Workflow" \
@@ -1135,7 +1145,7 @@ show_backup_dialog() {
                 *)
                     if [[ -n "$choice" ]]; then
                         # Get selected backup
-                        local selected_backup=$(echo "$backups" | sed -n "${choice}p")
+                        local selected_backup=$(log_info "$backups" | sed -n "${choice}p")
                         local backup_name=$(basename "$selected_backup")
                         
                         dialog --clear --backtitle "Dev-Server-Workflow" \
@@ -1418,16 +1428,16 @@ show_documentation_dialog() {
 # Show about dialog
 show_about_dialog() {
     local about=$(
-        echo "=== Dev-Server-Workflow ==="
+        log_info "=== Dev-Server-Workflow ==="
         echo ""
-        echo "Version: 1.0.0"
-        echo "Autor: EcoSphereNetwork"
+        log_info "Version: 1.0.0"
+        log_info "Autor: EcoSphereNetwork"
         echo ""
-        echo "Eine umfassende Lösung für die Verwaltung von MCP-Servern und Workflows."
+        log_info "Eine umfassende Lösung für die Verwaltung von MCP-Servern und Workflows."
         echo ""
-        echo "GitHub: https://github.com/EcoSphereNetwork/Dev-Server-Workflow"
+        log_info "GitHub: https://github.com/EcoSphereNetwork/Dev-Server-Workflow"
         echo ""
-        echo "Lizenz: MIT"
+        log_info "Lizenz: MIT"
     )
     
     dialog --clear --backtitle "Dev-Server-Workflow" \
@@ -1440,21 +1450,21 @@ show_about_dialog() {
 # Show main menu using text-based interface
 show_main_menu_text() {
     clear
-    echo -e "${BLUE}=== Dev-Server-Workflow ===${NC}"
+    log_info "${BLUE}=== Dev-Server-Workflow ===${NC}"
     echo ""
-    echo "1. Status anzeigen"
-    echo "2. MCP-Server verwalten"
-    echo "3. n8n verwalten"
-    echo "4. Logs anzeigen"
-    echo "5. Konfiguration"
-    echo "6. Monitoring"
-    echo "7. Backup und Wiederherstellung"
-    echo "8. Installation"
-    echo "9. Dokumentation"
-    echo "10. Über"
-    echo "11. Beenden"
+    log_info "1. Status anzeigen"
+    log_info "2. MCP-Server verwalten"
+    log_info "3. n8n verwalten"
+    log_info "4. Logs anzeigen"
+    log_info "5. Konfiguration"
+    log_info "6. Monitoring"
+    log_info "7. Backup und Wiederherstellung"
+    log_info "8. Installation"
+    log_info "9. Dokumentation"
+    log_info "10. Über"
+    log_info "11. Beenden"
     echo ""
-    echo -e "${YELLOW}Wählen Sie eine Option (1-11):${NC} "
+    log_info "${YELLOW}Wählen Sie eine Option (1-11):${NC} "
     read -r choice
     
     case "$choice" in
@@ -1468,7 +1478,7 @@ show_main_menu_text() {
         8) show_installation_text ;;
         9) show_documentation_text ;;
         10) show_about_text ;;
-        11) clear; echo -e "${GREEN}Auf Wiedersehen!${NC}"; exit 0 ;;
+        11) clear; log_info "${GREEN}Auf Wiedersehen!${NC}"; exit 0 ;;
         *) show_main_menu_text ;;
     esac
 }
@@ -1476,22 +1486,22 @@ show_main_menu_text() {
 # Text-based menu functions (simplified versions of the dialog-based functions)
 show_status_text() {
     clear
-    echo -e "${BLUE}=== Systemstatus ===${NC}"
+    log_info "${BLUE}=== Systemstatus ===${NC}"
     echo ""
-    echo "Datum: $(date)"
-    echo "Hostname: $(hostname)"
-    echo "Kernel: $(uname -r)"
+    log_info "Datum: $(date)"
+    log_info "Hostname: $(hostname)"
+    log_info "Kernel: $(uname -r)"
     echo ""
-    echo -e "${BLUE}=== Docker Status ===${NC}"
+    log_info "${BLUE}=== Docker Status ===${NC}"
     echo ""
-    echo "Docker Version: $(docker --version)"
-    echo "Laufende Container: $(docker ps -q | wc -l)"
+    log_info "Docker Version: $(docker --version)"
+    log_info "Laufende Container: $(docker ps -q | wc -l)"
     echo ""
-    echo -e "${BLUE}=== MCP-Server Status ===${NC}"
+    log_info "${BLUE}=== MCP-Server Status ===${NC}"
     echo ""
-    docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E 'mcp$|mcp-bridge$' || echo "Keine MCP-Server gefunden"
+    docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E 'mcp$|mcp-bridge$' || log_info "Keine MCP-Server gefunden"
     echo ""
-    echo -e "${YELLOW}Drücken Sie Enter, um fortzufahren...${NC}"
+    log_info "${YELLOW}Drücken Sie Enter, um fortzufahren...${NC}"
     read -r
     show_main_menu_text
 }
@@ -1499,107 +1509,107 @@ show_status_text() {
 # Placeholder for other text-based menu functions
 show_mcp_servers_text() {
     clear
-    echo -e "${BLUE}=== MCP-Server verwalten ===${NC}"
+    log_info "${BLUE}=== MCP-Server verwalten ===${NC}"
     echo ""
-    echo "Diese Funktion ist in der textbasierten Benutzeroberfläche noch nicht implementiert."
+    log_info "Diese Funktion ist in der textbasierten Benutzeroberfläche noch nicht implementiert."
     echo ""
-    echo -e "${YELLOW}Drücken Sie Enter, um fortzufahren...${NC}"
+    log_info "${YELLOW}Drücken Sie Enter, um fortzufahren...${NC}"
     read -r
     show_main_menu_text
 }
 
 show_n8n_text() {
     clear
-    echo -e "${BLUE}=== n8n verwalten ===${NC}"
+    log_info "${BLUE}=== n8n verwalten ===${NC}"
     echo ""
-    echo "Diese Funktion ist in der textbasierten Benutzeroberfläche noch nicht implementiert."
+    log_info "Diese Funktion ist in der textbasierten Benutzeroberfläche noch nicht implementiert."
     echo ""
-    echo -e "${YELLOW}Drücken Sie Enter, um fortzufahren...${NC}"
+    log_info "${YELLOW}Drücken Sie Enter, um fortzufahren...${NC}"
     read -r
     show_main_menu_text
 }
 
 show_logs_text() {
     clear
-    echo -e "${BLUE}=== Logs anzeigen ===${NC}"
+    log_info "${BLUE}=== Logs anzeigen ===${NC}"
     echo ""
-    echo "Diese Funktion ist in der textbasierten Benutzeroberfläche noch nicht implementiert."
+    log_info "Diese Funktion ist in der textbasierten Benutzeroberfläche noch nicht implementiert."
     echo ""
-    echo -e "${YELLOW}Drücken Sie Enter, um fortzufahren...${NC}"
+    log_info "${YELLOW}Drücken Sie Enter, um fortzufahren...${NC}"
     read -r
     show_main_menu_text
 }
 
 show_config_text() {
     clear
-    echo -e "${BLUE}=== Konfiguration ===${NC}"
+    log_info "${BLUE}=== Konfiguration ===${NC}"
     echo ""
-    echo "Diese Funktion ist in der textbasierten Benutzeroberfläche noch nicht implementiert."
+    log_info "Diese Funktion ist in der textbasierten Benutzeroberfläche noch nicht implementiert."
     echo ""
-    echo -e "${YELLOW}Drücken Sie Enter, um fortzufahren...${NC}"
+    log_info "${YELLOW}Drücken Sie Enter, um fortzufahren...${NC}"
     read -r
     show_main_menu_text
 }
 
 show_monitoring_text() {
     clear
-    echo -e "${BLUE}=== Monitoring ===${NC}"
+    log_info "${BLUE}=== Monitoring ===${NC}"
     echo ""
-    echo "Diese Funktion ist in der textbasierten Benutzeroberfläche noch nicht implementiert."
+    log_info "Diese Funktion ist in der textbasierten Benutzeroberfläche noch nicht implementiert."
     echo ""
-    echo -e "${YELLOW}Drücken Sie Enter, um fortzufahren...${NC}"
+    log_info "${YELLOW}Drücken Sie Enter, um fortzufahren...${NC}"
     read -r
     show_main_menu_text
 }
 
 show_backup_text() {
     clear
-    echo -e "${BLUE}=== Backup und Wiederherstellung ===${NC}"
+    log_info "${BLUE}=== Backup und Wiederherstellung ===${NC}"
     echo ""
-    echo "Diese Funktion ist in der textbasierten Benutzeroberfläche noch nicht implementiert."
+    log_info "Diese Funktion ist in der textbasierten Benutzeroberfläche noch nicht implementiert."
     echo ""
-    echo -e "${YELLOW}Drücken Sie Enter, um fortzufahren...${NC}"
+    log_info "${YELLOW}Drücken Sie Enter, um fortzufahren...${NC}"
     read -r
     show_main_menu_text
 }
 
 show_installation_text() {
     clear
-    echo -e "${BLUE}=== Installation ===${NC}"
+    log_info "${BLUE}=== Installation ===${NC}"
     echo ""
-    echo "Diese Funktion ist in der textbasierten Benutzeroberfläche noch nicht implementiert."
+    log_info "Diese Funktion ist in der textbasierten Benutzeroberfläche noch nicht implementiert."
     echo ""
-    echo -e "${YELLOW}Drücken Sie Enter, um fortzufahren...${NC}"
+    log_info "${YELLOW}Drücken Sie Enter, um fortzufahren...${NC}"
     read -r
     show_main_menu_text
 }
 
 show_documentation_text() {
     clear
-    echo -e "${BLUE}=== Dokumentation ===${NC}"
+    log_info "${BLUE}=== Dokumentation ===${NC}"
     echo ""
-    echo "Diese Funktion ist in der textbasierten Benutzeroberfläche noch nicht implementiert."
+    log_info "Diese Funktion ist in der textbasierten Benutzeroberfläche noch nicht implementiert."
     echo ""
-    echo -e "${YELLOW}Drücken Sie Enter, um fortzufahren...${NC}"
+    log_info "${YELLOW}Drücken Sie Enter, um fortzufahren...${NC}"
     read -r
     show_main_menu_text
 }
 
 show_about_text() {
     clear
-    echo -e "${BLUE}=== Über ===${NC}"
+    log_info "${BLUE}=== Über ===${NC}"
     echo ""
-    echo "Dev-Server-Workflow"
-    echo "Version: 1.0.0"
-    echo "Autor: EcoSphereNetwork"
+    log_info "Dev-Server-Workflow"
+    log_info "Version: 1.0.0"
+    log_info "Autor: EcoSphereNetwork"
     echo ""
-    echo "Eine umfassende Lösung für die Verwaltung von MCP-Servern und Workflows."
+    log_info "Eine umfassende Lösung für die Verwaltung von MCP-Servern und Workflows."
     echo ""
-    echo "GitHub: https://github.com/EcoSphereNetwork/Dev-Server-Workflow"
+    log_info "GitHub: https://github.com/EcoSphereNetwork/Dev-Server-Workflow"
     echo ""
-    echo "Lizenz: MIT"
+    log_info "Lizenz: MIT"
     echo ""
-    echo -e "${YELLOW}Drücken Sie Enter, um fortzufahren...${NC}"
+    log_info "${YELLOW}Drücken Sie Enter, um fortzufahren...${NC}"
     read -r
     show_main_menu_text
 }

@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # Verbessertes Start-Web-UI-Skript mit Versionsprüfung und Docker-Compose-Alias
 # Startet die Web-UI für den Dev-Server
 
@@ -18,19 +28,19 @@ CURRENT_OPERATION=""
 
 # Funktion zum Anzeigen von Nachrichten
 log() {
-    echo -e "${GREEN}[INFO]${NC} $1"
+    log_info "${GREEN}[INFO]${NC} $1"
 }
 
 warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
+    log_info "${YELLOW}[WARN]${NC} $1"
 }
 
 error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+    log_info "${RED}[ERROR]${NC} $1"
 }
 
 info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
+    log_info "${BLUE}[INFO]${NC} $1"
 }
 
 info "=== Dev-Server Web-UI Starter ==="
@@ -90,7 +100,7 @@ check_version() {
     local version_output
     version_output=$($version_cmd)
     local current_version
-    current_version=$(echo "$version_output" | grep -oE "$version_regex" | head -1)
+    current_version=$(log_info "$version_output" | grep -oE "$version_regex" | head -1)
 
     if [ -z "$current_version" ]; then
         warn "Konnte die Version von $package nicht ermitteln."
@@ -305,32 +315,32 @@ main() {
         
         # Zeige Dienste und Ports an
         info "Verfügbare Dienste:"
-        echo -e "${GREEN}Dev-Server UI:${NC} https://dev-server.$DOMAIN"
-        echo -e "${GREEN}n8n:${NC} https://n8n.$DOMAIN"
-        echo -e "${GREEN}AppFlowy:${NC} https://appflowy.$DOMAIN"
-        echo -e "${GREEN}OpenProject:${NC} https://openproject.$DOMAIN"
-        echo -e "${GREEN}GitLab:${NC} https://gitlab.$DOMAIN"
-        echo -e "${GREEN}Affine:${NC} https://affine.$DOMAIN"
-        echo -e "${GREEN}Monitoring (Grafana):${NC} https://monitoring.$DOMAIN"
-        echo -e "${GREEN}Prometheus:${NC} https://monitoring.$DOMAIN/prometheus/"
-        echo -e "${GREEN}Alertmanager:${NC} https://monitoring.$DOMAIN/alertmanager/"
-        echo -e "${GREEN}Docker (Portainer):${NC} https://docker.$DOMAIN"
-        echo -e "${GREEN}MCP-Manager:${NC} https://mcp.$DOMAIN"
-        echo -e "${GREEN}API-Docs:${NC} https://api.$DOMAIN"
-        echo -e "${GREEN}Auth (Keycloak):${NC} https://auth.$DOMAIN"
+        log_info "${GREEN}Dev-Server UI:${NC} https://dev-server.$DOMAIN"
+        log_info "${GREEN}n8n:${NC} https://n8n.$DOMAIN"
+        log_info "${GREEN}AppFlowy:${NC} https://appflowy.$DOMAIN"
+        log_info "${GREEN}OpenProject:${NC} https://openproject.$DOMAIN"
+        log_info "${GREEN}GitLab:${NC} https://gitlab.$DOMAIN"
+        log_info "${GREEN}Affine:${NC} https://affine.$DOMAIN"
+        log_info "${GREEN}Monitoring (Grafana):${NC} https://monitoring.$DOMAIN"
+        log_info "${GREEN}Prometheus:${NC} https://monitoring.$DOMAIN/prometheus/"
+        log_info "${GREEN}Alertmanager:${NC} https://monitoring.$DOMAIN/alertmanager/"
+        log_info "${GREEN}Docker (Portainer):${NC} https://docker.$DOMAIN"
+        log_info "${GREEN}MCP-Manager:${NC} https://mcp.$DOMAIN"
+        log_info "${GREEN}API-Docs:${NC} https://api.$DOMAIN"
+        log_info "${GREEN}Auth (Keycloak):${NC} https://auth.$DOMAIN"
         
         warn "Hinweis: Stellen Sie sicher, dass die folgenden Einträge in Ihrer /etc/hosts-Datei vorhanden sind:"
-        echo -e "${YELLOW}127.0.0.1 dev-server.$DOMAIN${NC}"
-        echo -e "${YELLOW}127.0.0.1 n8n.$DOMAIN${NC}"
-        echo -e "${YELLOW}127.0.0.1 appflowy.$DOMAIN${NC}"
-        echo -e "${YELLOW}127.0.0.1 openproject.$DOMAIN${NC}"
-        echo -e "${YELLOW}127.0.0.1 gitlab.$DOMAIN${NC}"
-        echo -e "${YELLOW}127.0.0.1 affine.$DOMAIN${NC}"
-        echo -e "${YELLOW}127.0.0.1 monitoring.$DOMAIN${NC}"
-        echo -e "${YELLOW}127.0.0.1 docker.$DOMAIN${NC}"
-        echo -e "${YELLOW}127.0.0.1 mcp.$DOMAIN${NC}"
-        echo -e "${YELLOW}127.0.0.1 api.$DOMAIN${NC}"
-        echo -e "${YELLOW}127.0.0.1 auth.$DOMAIN${NC}"
+        log_info "${YELLOW}127.0.0.1 dev-server.$DOMAIN${NC}"
+        log_info "${YELLOW}127.0.0.1 n8n.$DOMAIN${NC}"
+        log_info "${YELLOW}127.0.0.1 appflowy.$DOMAIN${NC}"
+        log_info "${YELLOW}127.0.0.1 openproject.$DOMAIN${NC}"
+        log_info "${YELLOW}127.0.0.1 gitlab.$DOMAIN${NC}"
+        log_info "${YELLOW}127.0.0.1 affine.$DOMAIN${NC}"
+        log_info "${YELLOW}127.0.0.1 monitoring.$DOMAIN${NC}"
+        log_info "${YELLOW}127.0.0.1 docker.$DOMAIN${NC}"
+        log_info "${YELLOW}127.0.0.1 mcp.$DOMAIN${NC}"
+        log_info "${YELLOW}127.0.0.1 api.$DOMAIN${NC}"
+        log_info "${YELLOW}127.0.0.1 auth.$DOMAIN${NC}"
     else
         error "Fehler beim Starten der Web-UI."
         exit 1

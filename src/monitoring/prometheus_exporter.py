@@ -1,4 +1,26 @@
 #!/usr/bin/env python3
+
+import os
+import sys
+from pathlib import Path
+
+# Füge das Verzeichnis der gemeinsamen Bibliothek zum Pfad hinzu
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR / "scripts" / "common" / "python"))
+
+# Importiere die gemeinsame Bibliothek
+from common import (
+    setup_logging, ConfigManager, DockerUtils, ProcessManager,
+    NetworkUtils, SystemUtils, parse_arguments
+)
+
+# Konfiguriere Logging
+logger = setup_logging("INFO")
+
+# Lade Konfiguration
+config_manager = ConfigManager()
+config = config_manager.load_env_file(".env")
+
 # Prometheus Exporter for Dev-Server-Workflow
 # This script collects metrics from the MCP servers and exports them to Prometheus
 
@@ -17,7 +39,7 @@ try:
     import docker
     from prometheus_client import start_http_server, Gauge, Counter, Summary
 except ImportError:
-    print("Required packages not installed. Installing...")
+    logger.info("Required packages not installed. Installing...")
     subprocess.check_call([sys.executable, "-m", "pip", "install", "psutil", "docker", "prometheus_client"])
     import psutil
     import docker

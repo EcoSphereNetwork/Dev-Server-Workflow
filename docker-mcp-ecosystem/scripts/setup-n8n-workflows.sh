@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # n8n-Workflow-Setup-Skript
 # Dieses Skript richtet die n8n-Workflows für die MCP-Server ein.
 
@@ -16,18 +26,18 @@ N8N_API_KEY=""
 
 # Hilfe-Funktion
 function show_help {
-    echo -e "${BLUE}n8n-Workflow-Setup-Skript${NC}"
+    log_info "${BLUE}n8n-Workflow-Setup-Skript${NC}"
     echo ""
-    echo "Verwendung: $0 [Optionen]"
+    log_info "Verwendung: $0 [Optionen]"
     echo ""
-    echo "Optionen:"
-    echo "  --n8n-url URL         Die URL der n8n-Instanz (Standard: http://n8n:5678)"
-    echo "  --n8n-api-key KEY     Der API-Schlüssel für die n8n-Instanz (erforderlich)"
-    echo "  --help                Zeigt diese Hilfe an"
+    log_info "Optionen:"
+    log_info "  --n8n-url URL         Die URL der n8n-Instanz (Standard: http://n8n:5678)"
+    log_info "  --n8n-api-key KEY     Der API-Schlüssel für die n8n-Instanz (erforderlich)"
+    log_info "  --help                Zeigt diese Hilfe an"
     echo ""
-    echo "Beispiele:"
-    echo "  $0 --n8n-api-key YOUR_API_KEY                         # Richtet die n8n-Workflows ein"
-    echo "  $0 --n8n-url http://localhost:5678 --n8n-api-key YOUR_API_KEY"
+    log_info "Beispiele:"
+    log_info "  $0 --n8n-api-key YOUR_API_KEY                         # Richtet die n8n-Workflows ein"
+    log_info "  $0 --n8n-url http://localhost:5678 --n8n-api-key YOUR_API_KEY"
     echo ""
 }
 
@@ -47,7 +57,7 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         *)
-            echo -e "${RED}Unbekannte Option: $1${NC}"
+            log_info "${RED}Unbekannte Option: $1${NC}"
             show_help
             exit 1
             ;;
@@ -56,7 +66,7 @@ done
 
 # Überprüfen, ob ein API-Schlüssel angegeben wurde
 if [ -z "$N8N_API_KEY" ]; then
-    echo -e "${RED}Fehler: Kein n8n-API-Schlüssel angegeben.${NC}"
+    log_info "${RED}Fehler: Kein n8n-API-Schlüssel angegeben.${NC}"
     show_help
     exit 1
 fi
@@ -65,36 +75,36 @@ fi
 cd "$(dirname "$0")/.."
 
 # Teste die Verbindung zur n8n-Instanz
-echo -e "${BLUE}Teste Verbindung zur n8n-Instanz...${NC}"
+log_info "${BLUE}Teste Verbindung zur n8n-Instanz...${NC}"
 if ! curl -s -H "X-N8N-API-KEY: $N8N_API_KEY" "$N8N_URL/healthz" > /dev/null; then
-    echo -e "${RED}Verbindung zur n8n-Instanz fehlgeschlagen.${NC}"
+    log_info "${RED}Verbindung zur n8n-Instanz fehlgeschlagen.${NC}"
     exit 1
 fi
-echo -e "${GREEN}Verbindung zur n8n-Instanz erfolgreich.${NC}"
+log_info "${GREEN}Verbindung zur n8n-Instanz erfolgreich.${NC}"
 
 # Funktion zum Importieren eines Workflows
 import_workflow() {
     local workflow_file="$1"
     local workflow_name=$(jq -r '.name' "$workflow_file")
     
-    echo -e "${BLUE}Importiere Workflow $workflow_name...${NC}"
+    log_info "${BLUE}Importiere Workflow $workflow_name...${NC}"
     
     # Prüfe, ob der Workflow bereits existiert
     local existing_workflow=$(curl -s -H "X-N8N-API-KEY: $N8N_API_KEY" "$N8N_URL/api/v1/workflows?filter=$workflow_name" | jq -r '.data[] | select(.name == "'"$workflow_name"'") | .id')
     
     if [ -n "$existing_workflow" ]; then
-        echo -e "${YELLOW}Workflow $workflow_name existiert bereits. Aktualisiere...${NC}"
+        log_info "${YELLOW}Workflow $workflow_name existiert bereits. Aktualisiere...${NC}"
         curl -s -X PUT -H "X-N8N-API-KEY: $N8N_API_KEY" -H "Content-Type: application/json" -d @"$workflow_file" "$N8N_URL/api/v1/workflows/$existing_workflow" > /dev/null
     else
-        echo -e "${GREEN}Erstelle neuen Workflow $workflow_name...${NC}"
+        log_info "${GREEN}Erstelle neuen Workflow $workflow_name...${NC}"
         curl -s -X POST -H "X-N8N-API-KEY: $N8N_API_KEY" -H "Content-Type: application/json" -d @"$workflow_file" "$N8N_URL/api/v1/workflows" > /dev/null
     fi
     
-    echo -e "${GREEN}Workflow $workflow_name importiert.${NC}"
+    log_info "${GREEN}Workflow $workflow_name importiert.${NC}"
 }
 
 # Importiere alle Workflows
-echo -e "${BLUE}Importiere alle n8n-Workflows...${NC}"
+log_info "${BLUE}Importiere alle n8n-Workflows...${NC}"
 
 # Erstelle Verzeichnis für n8n-Workflows, falls es nicht existiert
 mkdir -p n8n/workflows
@@ -562,4 +572,4 @@ import_workflow "n8n/workflows/mcp-server-trigger.json"
 import_workflow "n8n/workflows/mcp-server-integration.json"
 import_workflow "n8n/workflows/brave-search-integration.json"
 
-echo -e "${GREEN}Alle n8n-Workflows wurden importiert.${NC}"
+log_info "${GREEN}Alle n8n-Workflows wurden importiert.${NC}"

@@ -1,4 +1,14 @@
 #!/bin/bash
+
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
 # Installationsfunktionen für die Dev-Server CLI Komponenten
 
 # Source common functions
@@ -365,9 +375,9 @@ EOF
         
         # Füge AppFlowy-Konfiguration hinzu, falls nicht vorhanden
         if ! grep -q "APPFLOWY_PORT" "$config_file"; then
-            echo -e "\n# AppFlowy-Konfiguration" >> "$config_file"
-            echo "APPFLOWY_PORT=${appflowy_port}" >> "$config_file"
-            echo "APPFLOWY_DATA_DIR=\"${appflowy_data_dir}\"" >> "$config_file"
+            log_info "\n# AppFlowy-Konfiguration" >> "$config_file"
+            log_info "APPFLOWY_PORT=${appflowy_port}" >> "$config_file"
+            log_info "APPFLOWY_DATA_DIR=\"${appflowy_data_dir}\"" >> "$config_file"
         fi
         
         return 0
@@ -570,7 +580,7 @@ install_component() {
             ;;
         *)
             log_error "Unbekannte Komponente: $component"
-            echo "Verfügbare Komponenten: all, docker, docker-compose, n8n, mcp, openhands, appflowy, llamafile, ollama, web-ui"
+            log_info "Verfügbare Komponenten: all, docker, docker-compose, n8n, mcp, openhands, appflowy, llamafile, ollama, web-ui"
             return 1
             ;;
     esac
@@ -580,8 +590,8 @@ install_component() {
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     if [ $# -eq 0 ]; then
         log_error "Keine Komponente angegeben."
-        echo "Verwendung: $0 <Komponente>"
-        echo "Verfügbare Komponenten: all, docker, docker-compose, n8n, mcp, openhands, appflowy, llamafile, ollama, web-ui"
+        log_info "Verwendung: $0 <Komponente>"
+        log_info "Verfügbare Komponenten: all, docker, docker-compose, n8n, mcp, openhands, appflowy, llamafile, ollama, web-ui"
         exit 1
     fi
     

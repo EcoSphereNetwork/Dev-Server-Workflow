@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # Dieses Skript ersetzt alle Vorkommen von "docker compose" durch "docker compose" in allen Dateien
 
 # Setze strikte Fehlerbehandlung
@@ -11,7 +21,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
-echo -e "${YELLOW}Ersetze 'docker compose' durch 'docker compose' in allen Dateien...${NC}"
+log_info "${YELLOW}Ersetze 'docker compose' durch 'docker compose' in allen Dateien...${NC}"
 
 # Finde alle Dateien, die "docker compose" enthalten
 FILES=$(find /workspace/Dev-Server-Workflow -type f -name "*.sh" -o -name "*.md" | xargs grep -l "docker compose" | sort)
@@ -24,7 +34,7 @@ REPLACEMENTS=0
 for FILE in $FILES; do
     # Überspringe Dateien, die nicht existieren oder nicht lesbar sind
     if [ ! -f "$FILE" ] || [ ! -r "$FILE" ]; then
-        echo -e "${RED}Datei $FILE existiert nicht oder ist nicht lesbar. Überspringe...${NC}"
+        log_info "${RED}Datei $FILE existiert nicht oder ist nicht lesbar. Überspringe...${NC}"
         continue
     fi
 
@@ -32,7 +42,7 @@ for FILE in $FILES; do
     COUNT=$(grep -c "docker compose" "$FILE" || true)
     
     if [ "$COUNT" -gt 0 ]; then
-        echo -e "${YELLOW}Bearbeite $FILE ($COUNT Vorkommen)...${NC}"
+        log_info "${YELLOW}Bearbeite $FILE ($COUNT Vorkommen)...${NC}"
         
         # Ersetze "docker compose" durch "docker compose", aber nicht in URLs oder Pfaden
         # Wir verwenden sed mit einem komplexen Muster, um nur eigenständige "docker compose" Befehle zu ersetzen
@@ -56,7 +66,7 @@ for FILE in $FILES; do
         REMAINING=$(grep -c "docker compose" "$FILE" || true)
         REPLACED=$((COUNT - REMAINING))
         
-        echo -e "${GREEN}$REPLACED Ersetzungen in $FILE durchgeführt.${NC}"
+        log_info "${GREEN}$REPLACED Ersetzungen in $FILE durchgeführt.${NC}"
         
         # Aktualisiere die Zähler
         CHANGED_FILES=$((CHANGED_FILES + 1))
@@ -64,4 +74,4 @@ for FILE in $FILES; do
     fi
 done
 
-echo -e "${GREEN}Fertig! $REPLACEMENTS Ersetzungen in $CHANGED_FILES Dateien durchgeführt.${NC}"
+log_info "${GREEN}Fertig! $REPLACEMENTS Ersetzungen in $CHANGED_FILES Dateien durchgeführt.${NC}"

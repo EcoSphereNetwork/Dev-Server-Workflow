@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # Lade die gemeinsame Bibliothek
-source "$SCRIPT_DIR/../common/mcp_common.sh"
+source "$BASE_DIR/scripts/common/shell/common.sh"
 
 info "=== Installiere MCP-Server und OpenHands ==="
 

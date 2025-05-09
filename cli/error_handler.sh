@@ -1,4 +1,14 @@
 #!/bin/bash
+
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
 # Error Handler for Dev-Server-Workflow
 # This script provides consistent error handling across all scripts
 
@@ -47,34 +57,34 @@ handle_error() {
     local timestamp=$(date +"%Y-%m-%d %H:%M:%S")
 
     # Log the error
-    echo -e "${RED}[ERROR] Command '$command' in line $line_number failed with code $exit_code${NC}"
-    echo "[$timestamp] ERROR: Command '$command' in line $line_number failed with code $exit_code" >> "$ERROR_LOG_FILE"
+    log_info "${RED}[ERROR] Command '$command' in line $line_number failed with code $exit_code${NC}"
+    log_info "[$timestamp] ERROR: Command '$command' in line $line_number failed with code $exit_code" >> "$ERROR_LOG_FILE"
 
     # Perform rollback actions based on the current operation
     case "$CURRENT_OPERATION" in
         "start_container")
-            echo -e "${YELLOW}[ROLLBACK] Stopping failed container: $CURRENT_CONTAINER${NC}"
-            echo "[$timestamp] ROLLBACK: Stopping failed container: $CURRENT_CONTAINER" >> "$ERROR_LOG_FILE"
+            log_info "${YELLOW}[ROLLBACK] Stopping failed container: $CURRENT_CONTAINER${NC}"
+            log_info "[$timestamp] ROLLBACK: Stopping failed container: $CURRENT_CONTAINER" >> "$ERROR_LOG_FILE"
             docker stop "$CURRENT_CONTAINER" 2>/dev/null || true
             ;;
         "install_component")
-            echo -e "${YELLOW}[ROLLBACK] Removing failed installation: $CURRENT_COMPONENT${NC}"
-            echo "[$timestamp] ROLLBACK: Removing failed installation: $CURRENT_COMPONENT" >> "$ERROR_LOG_FILE"
+            log_info "${YELLOW}[ROLLBACK] Removing failed installation: $CURRENT_COMPONENT${NC}"
+            log_info "[$timestamp] ROLLBACK: Removing failed installation: $CURRENT_COMPONENT" >> "$ERROR_LOG_FILE"
             # Add specific rollback logic here
             ;;
         "update_config")
-            echo -e "${YELLOW}[ROLLBACK] Restoring previous configuration${NC}"
-            echo "[$timestamp] ROLLBACK: Restoring previous configuration" >> "$ERROR_LOG_FILE"
+            log_info "${YELLOW}[ROLLBACK] Restoring previous configuration${NC}"
+            log_info "[$timestamp] ROLLBACK: Restoring previous configuration" >> "$ERROR_LOG_FILE"
             # Add specific rollback logic here
             ;;
         "network_operation")
-            echo -e "${YELLOW}[ROLLBACK] Cleaning up network resources${NC}"
-            echo "[$timestamp] ROLLBACK: Cleaning up network resources" >> "$ERROR_LOG_FILE"
+            log_info "${YELLOW}[ROLLBACK] Cleaning up network resources${NC}"
+            log_info "[$timestamp] ROLLBACK: Cleaning up network resources" >> "$ERROR_LOG_FILE"
             # Add specific rollback logic here
             ;;
         *)
-            echo -e "${YELLOW}[INFO] No specific rollback action defined for operation: $CURRENT_OPERATION${NC}"
-            echo "[$timestamp] INFO: No specific rollback action defined for operation: $CURRENT_OPERATION" >> "$ERROR_LOG_FILE"
+            log_info "${YELLOW}[INFO] No specific rollback action defined for operation: $CURRENT_OPERATION${NC}"
+            log_info "[$timestamp] INFO: No specific rollback action defined for operation: $CURRENT_OPERATION" >> "$ERROR_LOG_FILE"
             ;;
     esac
 
@@ -84,19 +94,19 @@ handle_error() {
 # Function to set the current operation
 set_operation() {
     CURRENT_OPERATION="$1"
-    echo -e "${BLUE}[INFO] Starting operation: $CURRENT_OPERATION${NC}"
+    log_info "${BLUE}[INFO] Starting operation: $CURRENT_OPERATION${NC}"
 }
 
 # Function to set the current container
 set_container() {
     CURRENT_CONTAINER="$1"
-    echo -e "${BLUE}[INFO] Working with container: $CURRENT_CONTAINER${NC}"
+    log_info "${BLUE}[INFO] Working with container: $CURRENT_CONTAINER${NC}"
 }
 
 # Function to set the current component
 set_component() {
     CURRENT_COMPONENT="$1"
-    echo -e "${BLUE}[INFO] Working with component: $CURRENT_COMPONENT${NC}"
+    log_info "${BLUE}[INFO] Working with component: $CURRENT_COMPONENT${NC}"
 }
 
 # Function to check command existence
@@ -105,9 +115,9 @@ check_command() {
     local install_hint="${2:-}"
     
     if ! command -v "$cmd" &> /dev/null; then
-        echo -e "${RED}[ERROR] Required command not found: $cmd${NC}"
+        log_info "${RED}[ERROR] Required command not found: $cmd${NC}"
         if [[ -n "$install_hint" ]]; then
-            echo -e "${YELLOW}[HINT] $install_hint${NC}"
+            log_info "${YELLOW}[HINT] $install_hint${NC}"
         fi
         return ${ERROR_CODES["COMMAND_NOT_FOUND"]}
     fi
@@ -122,10 +132,10 @@ check_file() {
     
     if [[ ! -f "$file" ]]; then
         if [[ "$create" == "true" ]]; then
-            echo -e "${YELLOW}[WARN] File not found, creating: $file${NC}"
+            log_info "${YELLOW}[WARN] File not found, creating: $file${NC}"
             touch "$file" || return ${ERROR_CODES["PERMISSION_DENIED"]}
         else
-            echo -e "${RED}[ERROR] Required file not found: $file${NC}"
+            log_info "${RED}[ERROR] Required file not found: $file${NC}"
             return ${ERROR_CODES["FILE_NOT_FOUND"]}
         fi
     fi
@@ -140,10 +150,10 @@ check_directory() {
     
     if [[ ! -d "$dir" ]]; then
         if [[ "$create" == "true" ]]; then
-            echo -e "${YELLOW}[WARN] Directory not found, creating: $dir${NC}"
+            log_info "${YELLOW}[WARN] Directory not found, creating: $dir${NC}"
             mkdir -p "$dir" || return ${ERROR_CODES["PERMISSION_DENIED"]}
         else
-            echo -e "${RED}[ERROR] Required directory not found: $dir${NC}"
+            log_info "${RED}[ERROR] Required directory not found: $dir${NC}"
             return ${ERROR_CODES["FILE_NOT_FOUND"]}
         fi
     fi
@@ -158,7 +168,7 @@ validate_input() {
     local error_message="${3:-Invalid input format}"
     
     if [[ ! "$input" =~ $pattern ]]; then
-        echo -e "${RED}[ERROR] $error_message${NC}"
+        log_info "${RED}[ERROR] $error_message${NC}"
         return ${ERROR_CODES["VALIDATION_ERROR"]}
     fi
     
@@ -172,7 +182,7 @@ execute_with_timeout() {
     
     # Check if timeout command exists
     if ! command -v timeout &> /dev/null; then
-        echo -e "${YELLOW}[WARN] 'timeout' command not found, executing without timeout${NC}"
+        log_info "${YELLOW}[WARN] 'timeout' command not found, executing without timeout${NC}"
         $cmd
         return $?
     fi
@@ -181,7 +191,7 @@ execute_with_timeout() {
     local exit_code=$?
     
     if [[ $exit_code -eq 124 ]]; then
-        echo -e "${RED}[ERROR] Command timed out after $timeout seconds: $cmd${NC}"
+        log_info "${RED}[ERROR] Command timed out after $timeout seconds: $cmd${NC}"
         return ${ERROR_CODES["TIMEOUT"]}
     fi
     
@@ -193,7 +203,7 @@ check_container_running() {
     local container="$1"
     
     if ! docker ps --format '{{.Names}}' | grep -q "^${container}$"; then
-        echo -e "${RED}[ERROR] Container not running: $container${NC}"
+        log_info "${RED}[ERROR] Container not running: $container${NC}"
         return ${ERROR_CODES["CONTAINER_ERROR"]}
     fi
     
@@ -208,12 +218,12 @@ check_network() {
     
     # Check if nc command exists
     if ! command -v nc &> /dev/null; then
-        echo -e "${YELLOW}[WARN] 'nc' command not found, skipping network check${NC}"
+        log_info "${YELLOW}[WARN] 'nc' command not found, skipping network check${NC}"
         return ${ERROR_CODES["SUCCESS"]}
     fi
     
     if ! nc -z -w "$timeout" "$host" "$port"; then
-        echo -e "${RED}[ERROR] Network connection failed: $host:$port${NC}"
+        log_info "${RED}[ERROR] Network connection failed: $host:$port${NC}"
         return ${ERROR_CODES["NETWORK_ERROR"]}
     fi
     
@@ -228,23 +238,23 @@ log_message() {
     
     case "$level" in
         "INFO")
-            echo -e "${GREEN}[INFO] $message${NC}"
+            log_info "${GREEN}[INFO] $message${NC}"
             ;;
         "WARN")
-            echo -e "${YELLOW}[WARN] $message${NC}"
+            log_info "${YELLOW}[WARN] $message${NC}"
             ;;
         "ERROR")
-            echo -e "${RED}[ERROR] $message${NC}"
+            log_info "${RED}[ERROR] $message${NC}"
             ;;
         "DEBUG")
-            echo -e "${BLUE}[DEBUG] $message${NC}"
+            log_info "${BLUE}[DEBUG] $message${NC}"
             ;;
         *)
-            echo -e "[${level}] $message"
+            log_info "[${level}] $message"
             ;;
     esac
     
-    echo "[$timestamp] $level: $message" >> "$ERROR_LOG_FILE"
+    log_info "[$timestamp] $level: $message" >> "$ERROR_LOG_FILE"
 }
 
 # Function to get error code name from code
@@ -253,12 +263,12 @@ get_error_name() {
     
     for name in "${!ERROR_CODES[@]}"; do
         if [[ "${ERROR_CODES[$name]}" -eq "$code" ]]; then
-            echo "$name"
+            log_info "$name"
             return 0
         fi
     done
     
-    echo "UNKNOWN_ERROR"
+    log_info "UNKNOWN_ERROR"
     return 0
 }
 
@@ -267,11 +277,11 @@ get_error_code() {
     local name="$1"
     
     if [[ -n "${ERROR_CODES[$name]}" ]]; then
-        echo "${ERROR_CODES[$name]}"
+        log_info "${ERROR_CODES[$name]}"
         return 0
     fi
     
-    echo "${ERROR_CODES["UNKNOWN_ERROR"]}"
+    log_info "${ERROR_CODES["UNKNOWN_ERROR"]}"
     return 0
 }
 
@@ -281,22 +291,22 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     
     # Show usage if no arguments provided
     if [[ $# -eq 0 ]]; then
-        echo "Usage: $0 <function> [arguments...]"
+        log_info "Usage: $0 <function> [arguments...]"
         echo ""
-        echo "Available functions:"
-        echo "  set_operation <operation>            Set the current operation"
-        echo "  set_container <container>            Set the current container"
-        echo "  set_component <component>            Set the current component"
-        echo "  check_command <command> [hint]       Check if a command exists"
-        echo "  check_file <file> [create]           Check if a file exists"
-        echo "  check_directory <dir> [create]       Check if a directory exists"
-        echo "  validate_input <input> <pattern> [msg] Validate input against a pattern"
-        echo "  execute_with_timeout <timeout> <cmd> Execute a command with timeout"
-        echo "  check_container_running <container>  Check if a container is running"
-        echo "  check_network <host> [port] [timeout] Check network connectivity"
-        echo "  log_message <level> <message>        Log a message"
-        echo "  get_error_name <code>                Get error name from code"
-        echo "  get_error_code <name>                Get error code from name"
+        log_info "Available functions:"
+        log_info "  set_operation <operation>            Set the current operation"
+        log_info "  set_container <container>            Set the current container"
+        log_info "  set_component <component>            Set the current component"
+        log_info "  check_command <command> [hint]       Check if a command exists"
+        log_info "  check_file <file> [create]           Check if a file exists"
+        log_info "  check_directory <dir> [create]       Check if a directory exists"
+        log_info "  validate_input <input> <pattern> [msg] Validate input against a pattern"
+        log_info "  execute_with_timeout <timeout> <cmd> Execute a command with timeout"
+        log_info "  check_container_running <container>  Check if a container is running"
+        log_info "  check_network <host> [port] [timeout] Check network connectivity"
+        log_info "  log_message <level> <message>        Log a message"
+        log_info "  get_error_name <code>                Get error name from code"
+        log_info "  get_error_code <name>                Get error code from name"
         exit 1
     fi
     

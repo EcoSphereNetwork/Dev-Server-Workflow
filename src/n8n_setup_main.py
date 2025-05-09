@@ -1,4 +1,26 @@
 #!/usr/bin/env python3
+
+import os
+import sys
+from pathlib import Path
+
+# Füge das Verzeichnis der gemeinsamen Bibliothek zum Pfad hinzu
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR / "scripts" / "common" / "python"))
+
+# Importiere die gemeinsame Bibliothek
+from common import (
+    setup_logging, ConfigManager, DockerUtils, ProcessManager,
+    NetworkUtils, SystemUtils, parse_arguments
+)
+
+# Konfiguriere Logging
+logger = setup_logging("INFO")
+
+# Lade Konfiguration
+config_manager = ConfigManager()
+config = config_manager.load_env_file(".env")
+
 """
 n8n Setup - Hauptskript
 
@@ -305,14 +327,14 @@ def setup_mcp_server(n8n_url: str, api_key: str, port: int = 3333) -> bool:
     Returns:
         bool: True, wenn die Einrichtung erfolgreich war, sonst False
     """
-    print("Setting up MCP server for n8n...")
+    logger.info("Setting up MCP server for n8n...")
     
     # Verwende die vorhandene MCP-Server-Datei oder erstelle eine neue
     src_dir = Path(__file__).parent
     mcp_server_path = src_dir / 'n8n-mcp-server.py'
     
     if not mcp_server_path.exists():
-        print("Creating MCP server script...")
+        logger.info("Creating MCP server script...")
         with open(mcp_server_path, 'w') as f:
             f.write(N8N_MCP_SERVER_TEMPLATE)
         print(f"MCP server script created at {mcp_server_path.absolute()}")
@@ -327,9 +349,9 @@ def setup_mcp_server(n8n_url: str, api_key: str, port: int = 3333) -> bool:
     try:
         import aiohttp
     except ImportError:
-        print("Installing required dependencies...")
+        logger.info("Installing required dependencies...")
         subprocess.run([sys.executable, "-m", "pip", "install", "aiohttp"], check=True)
-        print("Dependencies installed successfully")
+        logger.info("Dependencies installed successfully")
     
     # Generiere eine systemd-Service-Datei für den MCP-Server (falls Linux)
     if os.name == 'posix':
@@ -353,11 +375,11 @@ WantedBy=multi-user.target
             f.write(service_content)
         
         print(f"SystemD service file created at {service_file}")
-        print("To install the service run:")
+        logger.info("To install the service run:")
         print(f"  sudo cp {service_file} /etc/systemd/system/")
-        print("  sudo systemctl daemon-reload")
-        print("  sudo systemctl enable n8n-mcp-server")
-        print("  sudo systemctl start n8n-mcp-server")
+        logger.info("  sudo systemctl daemon-reload")
+        logger.info("  sudo systemctl enable n8n-mcp-server")
+        logger.info("  sudo systemctl start n8n-mcp-server")
     
     # Erzeuge Konfiguration für OpenHands
     openhands_config = {
@@ -379,10 +401,10 @@ WantedBy=multi-user.target
         json.dump(openhands_config, f, indent=2)
     
     print(f"OpenHands MCP configuration generated at {openhands_config_path.absolute()}")
-    print("Add this file to your OpenHands configuration.")
+    logger.info("Add this file to your OpenHands configuration.")
     
     # Teste den MCP-Server
-    print("\nTesting MCP server configuration...")
+    logger.info("\nTesting MCP server configuration...")
     try:
         # Überprüfe, ob die Konfigurationsdatei gültig ist
         print(f"MCP server script path: {mcp_server_path.absolute()}")
@@ -390,34 +412,34 @@ WantedBy=multi-user.target
         
         # Überprüfe, ob die Datei ausführbar ist
         if os.name == 'posix' and not os.access(mcp_server_path, os.X_OK):
-            print("Making MCP server script executable...")
+            logger.info("Making MCP server script executable...")
             os.chmod(mcp_server_path, 0o755)
         
         # Überprüfe, ob die erforderlichen Umgebungsvariablen gesetzt sind
         if not n8n_url:
-            print("Warning: N8N_URL is not set. Using default: http://localhost:5678")
+            logger.info("Warning: N8N_URL is not set. Using default: http://localhost:5678")
         
         if not api_key:
-            print("Warning: N8N_API_KEY is not set. The MCP server will not be able to connect to n8n.")
+            logger.info("Warning: N8N_API_KEY is not set. The MCP server will not be able to connect to n8n.")
         else:
-            print("N8N_API_KEY is set. The MCP server should be able to connect to n8n.")
+            logger.info("N8N_API_KEY is set. The MCP server should be able to connect to n8n.")
         
         # Überprüfe, ob aiohttp installiert ist
         try:
             import importlib.util
             aiohttp_spec = importlib.util.find_spec("aiohttp")
             if aiohttp_spec is None:
-                print("Warning: aiohttp is not installed. The MCP server requires this package.")
-                print("You can install it with: pip install aiohttp")
+                logger.info("Warning: aiohttp is not installed. The MCP server requires this package.")
+                logger.info("You can install it with: pip install aiohttp")
             else:
-                print("aiohttp is installed. The MCP server should be able to run.")
+                logger.info("aiohttp is installed. The MCP server should be able to run.")
         except ImportError:
-            print("Warning: Unable to check if aiohttp is installed.")
+            logger.info("Warning: Unable to check if aiohttp is installed.")
         
-        print("MCP server configuration is valid and ready to use with OpenHands")
+        logger.info("MCP server configuration is valid and ready to use with OpenHands")
     except Exception as e:
         print(f"Error testing MCP server: {str(e)}")
-        print("You may need to manually verify the server is working correctly")
+        logger.info("You may need to manually verify the server is working correctly")
 
 def main() -> None:
     """
@@ -429,7 +451,7 @@ def main() -> None:
         # Überprüfe, ob die .env-Datei existiert, wenn angegeben
         if args.env_file and not os.path.isfile(args.env_file):
             print(f"Error: Environment file {args.env_file} not found.")
-            print("Please create the file or specify a different file with --env-file.")
+            logger.info("Please create the file or specify a different file with --env-file.")
             return 1
         
         # Load environment variables from .env file if provided
@@ -444,8 +466,8 @@ def main() -> None:
         
         # Validiere die Eingabeparameter
         if not n8n_url:
-            print("Error: n8n URL is required.")
-            print("Please provide it with --n8n-url or set N8N_URL in your .env file.")
+            logger.info("Error: n8n URL is required.")
+            logger.info("Please provide it with --n8n-url or set N8N_URL in your .env file.")
             return 1
         
         # Install n8n if requested
@@ -453,10 +475,10 @@ def main() -> None:
             try:
                 print(f"Installing n8n using Docker...")
                 install_n8n_docker()
-                print("n8n installation completed successfully.")
+                logger.info("n8n installation completed successfully.")
             except Exception as e:
                 print(f"Error installing n8n: {str(e)}")
-                print("You may need to install n8n manually.")
+                logger.info("You may need to install n8n manually.")
                 
                 # Frage den Benutzer, ob er fortfahren möchte
                 if input("Do you want to continue with workflow setup? (y/n): ").lower() != 'y':
@@ -464,7 +486,7 @@ def main() -> None:
             
             # If API key was not provided, try to get one
             if not api_key and 'N8N_USER' in env_vars and 'N8N_PASSWORD' in env_vars:
-                print("Waiting for n8n to fully start up before getting API key...")
+                logger.info("Waiting for n8n to fully start up before getting API key...")
                 time.sleep(10)  # Wait a bit more for n8n to fully initialize
                 
                 try:
@@ -476,11 +498,11 @@ def main() -> None:
                     print(f"Got API key: {api_key}")
                 except Exception as e:
                     print(f"Failed to get API key: {str(e)}")
-                    print("You may need to get an API key manually from n8n.")
+                    logger.info("You may need to get an API key manually from n8n.")
         
         if not api_key:
-            print("No API key provided. Please provide an API key to create workflows.")
-            print("You can provide it with --api-key or set N8N_API_KEY in your .env file.")
+            logger.info("No API key provided. Please provide an API key to create workflows.")
+            logger.info("You can provide it with --api-key or set N8N_API_KEY in your .env file.")
             return 1
             
         # Überprüfe, ob n8n erreichbar ist
@@ -491,10 +513,10 @@ def main() -> None:
                 print(f"n8n is reachable at {n8n_url}")
             else:
                 print(f"Warning: n8n returned status code {response.status_code} at {n8n_url}")
-                print("The workflow setup may fail if n8n is not properly configured.")
+                logger.info("The workflow setup may fail if n8n is not properly configured.")
         except Exception as e:
             print(f"Warning: Could not connect to n8n at {n8n_url}: {str(e)}")
-            print("The workflow setup may fail if n8n is not properly configured.")
+            logger.info("The workflow setup may fail if n8n is not properly configured.")
             
             # Frage den Benutzer, ob er fortfahren möchte
             if input("Do you want to continue with workflow setup? (y/n): ").lower() != 'y':
@@ -504,7 +526,7 @@ def main() -> None:
         print(f"Error during initialization: {str(e)}")
         return 1
     
-    print("Setting up credentials...")
+    logger.info("Setting up credentials...")
     # Set up credentials
     github_cred = None
     openproject_cred = None
@@ -518,14 +540,14 @@ def main() -> None:
         if github_cred:
             print(f"Created GitHub credential with ID: {github_cred['id']}")
     else:
-        print("No GitHub token provided. Skipping GitHub credential setup.")
+        logger.info("No GitHub token provided. Skipping GitHub credential setup.")
     
     if openproject_token:
         openproject_cred = setup_openproject_credential(n8n_url, api_key, openproject_token)
         if openproject_cred:
             print(f"Created OpenProject credential with ID: {openproject_cred['id']}")
     else:
-        print("No OpenProject token provided. Skipping OpenProject credential setup.")
+        logger.info("No OpenProject token provided. Skipping OpenProject credential setup.")
     
     # Lade Discord Webhook URL
     discord_webhook_url = env_vars.get('DISCORD_WEBHOOK_URL')
@@ -555,7 +577,7 @@ def main() -> None:
         if openhands_cred:
             print(f"Created OpenHands credential with ID: {openhands_cred['id']}")
     
-    print("Creating workflows...")
+    logger.info("Creating workflows...")
     
     # GitHub-OpenProject Integration
     if 'github' in args.workflows:
@@ -659,7 +681,7 @@ def main() -> None:
             if activate_workflow(n8n_url, api_key, mcp_workflow['id']):
                 print(f"Activated MCP Server workflow")
     
-    print("\nWorkflow setup complete!")
+    logger.info("\nWorkflow setup complete!")
     print(f"You can access your n8n instance at: {n8n_url}")
     
     # Display webhook URLs for integration
@@ -669,7 +691,7 @@ def main() -> None:
         if webhook_node:
             webhook_path = webhook_node.get('parameters', {}).get('path', '/webhook')
             print(f"\nDocument Sync Webhook URL: {n8n_url}{webhook_path}")
-            print("Use this URL to integrate with AFFiNE/AppFlowy.")
+            logger.info("Use this URL to integrate with AFFiNE/AppFlowy.")
     
     if 'openhands' in args.workflows:
         webhook_node = next((node for node in OPENHANDS_WORKFLOW['nodes'] 
@@ -677,7 +699,7 @@ def main() -> None:
         if webhook_node:
             webhook_path = webhook_node.get('parameters', {}).get('path', '/openhands/webhook')
             print(f"\nOpenHands Webhook URL: {n8n_url}{webhook_path}")
-            print("Use this URL to receive notifications from OpenHands.")
+            logger.info("Use this URL to receive notifications from OpenHands.")
     
     if 'mcp' in args.workflows:
         webhook_node = next((node for node in MCP_SERVER_WORKFLOW['nodes'] 
@@ -685,12 +707,12 @@ def main() -> None:
         if webhook_node:
             webhook_path = webhook_node.get('parameters', {}).get('path', '/mcp/endpoint')
             print(f"\nMCP Server URL: {n8n_url}{webhook_path}")
-            print("Use this URL to integrate with MCP clients like OpenHands.")
+            logger.info("Use this URL to integrate with MCP clients like OpenHands.")
     
-    print("\nNext steps:")
-    print("1. Configure your GitHub repositories to send webhooks to n8n")
-    print("2. Set up webhook endpoints in AFFiNE/AppFlowy to notify n8n of document updates")
-    print("3. Configure OpenHands to notify n8n when PRs are created")
+    logger.info("\nNext steps:")
+    logger.info("1. Configure your GitHub repositories to send webhooks to n8n")
+    logger.info("2. Set up webhook endpoints in AFFiNE/AppFlowy to notify n8n of document updates")
+    logger.info("3. Configure OpenHands to notify n8n when PRs are created")
     
     # Set up MCP Server if requested
     if args.mcp:

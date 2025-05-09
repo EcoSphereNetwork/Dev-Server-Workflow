@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # Verbessertes Installationsskript für MCP-Server mit Versionsprüfung
 
 # Farben für die Ausgabe
@@ -11,15 +21,15 @@ NC='\033[0m' # No Color
 
 # Funktion zum Anzeigen von Nachrichten
 log() {
-    echo -e "${GREEN}[INFO]${NC} $1"
+    log_info "${GREEN}[INFO]${NC} $1"
 }
 
 warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
+    log_info "${YELLOW}[WARN]${NC} $1"
 }
 
 error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+    log_info "${RED}[ERROR]${NC} $1"
 }
 
 # Funktion zum Überprüfen einer Paketversion
@@ -36,7 +46,7 @@ check_version() {
     local version_output
     version_output=$($version_cmd)
     local current_version
-    current_version=$(echo "$version_output" | grep -oE "$version_regex" | head -1)
+    current_version=$(log_info "$version_output" | grep -oE "$version_regex" | head -1)
 
     if [ -z "$current_version" ]; then
         warn "Konnte die Version von $package nicht ermitteln."
@@ -115,7 +125,7 @@ check_docker() {
                 sudo apt-get update
                 sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
                 curl -fsSL https://download.docker.com/linux/"$OS"/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-                echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/$OS $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+                log_info "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/$OS $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
                 sudo apt-get update
                 sudo apt-get install -y docker-ce docker-ce-cli containerd.io
                 ;;

@@ -1,4 +1,26 @@
 #!/usr/bin/env python3
+
+import os
+import sys
+from pathlib import Path
+
+# Füge das Verzeichnis der gemeinsamen Bibliothek zum Pfad hinzu
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR / "scripts" / "common" / "python"))
+
+# Importiere die gemeinsame Bibliothek
+from common import (
+    setup_logging, ConfigManager, DockerUtils, ProcessManager,
+    NetworkUtils, SystemUtils, parse_arguments
+)
+
+# Konfiguriere Logging
+logger = setup_logging("INFO")
+
+# Lade Konfiguration
+config_manager = ConfigManager()
+config = config_manager.load_env_file(".env")
+
 # ruff: noqa: E501
 """
 Repository Reorganization Script
@@ -1577,7 +1599,7 @@ def main() -> None:
 
         # Run project analysis if requested
         if args.analyze:
-            console.print("\n[bold blue]Analyzing project...[/bold blue]")
+            console.logger.info("\n[bold blue]Analyzing project...[/bold blue]")
             analysis = reorganizer._analyze_project()
             
             console.print(f"\n[bold green]Project Analysis:[/bold green]")
@@ -1586,31 +1608,31 @@ def main() -> None:
             console.print(f"Language: {analysis.language}")
             
             if analysis.dependencies:
-                console.print("\nDependencies:")
+                console.logger.info("\nDependencies:")
                 for module, imports in analysis.dependencies.items():
                     console.print(f"  {module}:")
                     for imp in imports:
                         console.print(f"    - {imp}")
             
             if analysis.issues:
-                console.print("\nIssues Found:")
+                console.logger.info("\nIssues Found:")
                 for issue in analysis.issues:
                     severity = issue["severity"].upper()
                     color = "red" if severity == "HIGH" else "yellow"
                     console.print(f"  [{color}]{severity}[/{color}] {issue['message']}")
             
             if analysis.recommendations:
-                console.print("\nRecommendations:")
+                console.logger.info("\nRecommendations:")
                 for rec in analysis.recommendations:
                     console.print(f"  - {rec['message']}")
 
         # Run security checks if requested
         if args.security_check:
-            console.print("\n[bold blue]Running security checks...[/bold blue]")
+            console.logger.info("\n[bold blue]Running security checks...[/bold blue]")
             findings = reorganizer._run_security_checks()
             
             if findings:
-                console.print("\n[bold red]Security Issues Found:[/bold red]")
+                console.logger.info("\n[bold red]Security Issues Found:[/bold red]")
                 for finding in findings:
                     severity = finding["severity"].upper()
                     color = "red" if severity == "HIGH" else "yellow"
@@ -1620,42 +1642,42 @@ def main() -> None:
                     if finding['fix']:
                         console.print(f"Fix: {finding['fix']}")
             else:
-                console.print("\n[bold green]No security issues found[/bold green]")
+                console.logger.info("\n[bold green]No security issues found[/bold green]")
 
         # Apply custom template if provided
         if custom_template:
-            console.print("\n[bold blue]Applying custom template...[/bold blue]")
+            console.logger.info("\n[bold blue]Applying custom template...[/bold blue]")
             reorganizer._apply_template(custom_template)
 
         # Run migration script if provided
         if migration_script:
-            console.print("\n[bold blue]Running migration script...[/bold blue]")
+            console.logger.info("\n[bold blue]Running migration script...[/bold blue]")
             success = reorganizer._run_migration(migration_script)
             if not success:
                 if not args.no_input and not Confirm.ask("\nMigration had warnings. Continue?"):
-                    console.print("Aborted.")
+                    console.logger.info("Aborted.")
                     return
 
         # Analyze current structure
-        console.print("\n[bold blue]Analyzing repository structure...[/bold blue]")
+        console.logger.info("\n[bold blue]Analyzing repository structure...[/bold blue]")
         missing_dirs, missing_files, extra_files = reorganizer.analyze_structure()
 
         # Show analysis results
-        console.print("\n[bold green]Analysis Results:[/bold green]")
+        console.logger.info("\n[bold green]Analysis Results:[/bold green]")
         if missing_dirs:
-            console.print("\nMissing directories:")
+            console.logger.info("\nMissing directories:")
             for dir_path in sorted(missing_dirs):
                 desc = reorganizer.dir_configs[dir_path].description if dir_path in reorganizer.dir_configs else ""
                 console.print(f"  - {dir_path}" + (f" ({desc})" if desc else ""))
 
         if missing_files:
-            console.print("\nMissing files:")
+            console.logger.info("\nMissing files:")
             for file_path in sorted(missing_files):
                 desc = reorganizer.file_configs[file_path].description if file_path in reorganizer.file_configs else ""
                 console.print(f"  - {file_path}" + (f" ({desc})" if desc else ""))
 
         if extra_files:
-            console.print("\nFiles to reorganize:")
+            console.logger.info("\nFiles to reorganize:")
             for file_path in sorted(extra_files):
                 if not config.should_ignore(file_path):
                     dest = reorganizer._suggest_destination(file_path)
@@ -1666,7 +1688,7 @@ def main() -> None:
 
         # Create and show plan
         plan = reorganizer.create_plan(missing_dirs, missing_files, extra_files)
-        console.print("\n[bold green]Proposed Changes:[/bold green]")
+        console.logger.info("\n[bold green]Proposed Changes:[/bold green]")
         
         # Group changes by type
         changes_by_type = {}
@@ -1688,7 +1710,7 @@ def main() -> None:
         # Confirm execution
         if not args.dry_run and plan:
             if not args.no_input and not Confirm.ask("\nProceed with reorganization?"):
-                console.print("Aborted.")
+                console.logger.info("Aborted.")
                 return
 
         # Execute plan

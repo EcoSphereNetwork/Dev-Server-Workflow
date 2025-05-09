@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # MCP-Server-Manager
 # Dieses Skript ermöglicht die Verwaltung der MCP-Server im Ökosystem.
 
@@ -18,33 +28,33 @@ ARGS=""
 
 # Hilfe-Funktion
 function show_help {
-    echo -e "${BLUE}MCP-Server-Manager${NC}"
+    log_info "${BLUE}MCP-Server-Manager${NC}"
     echo ""
-    echo "Verwendung: $0 [Optionen]"
+    log_info "Verwendung: $0 [Optionen]"
     echo ""
-    echo "Aktionen:"
-    echo "  list-servers          Listet alle verfügbaren MCP-Server auf"
-    echo "  list-tools            Listet alle verfügbaren Tools eines MCP-Servers auf"
-    echo "  call-tool             Ruft ein Tool eines MCP-Servers auf"
-    echo "  list-resources        Listet alle verfügbaren Ressourcen eines MCP-Servers auf"
-    echo "  get-resource          Ruft eine Ressource eines MCP-Servers ab"
-    echo "  list-prompts          Listet alle verfügbaren Prompts eines MCP-Servers auf"
-    echo "  call-prompt           Ruft einen Prompt eines MCP-Servers auf"
-    echo "  help                  Zeigt diese Hilfe an"
+    log_info "Aktionen:"
+    log_info "  list-servers          Listet alle verfügbaren MCP-Server auf"
+    log_info "  list-tools            Listet alle verfügbaren Tools eines MCP-Servers auf"
+    log_info "  call-tool             Ruft ein Tool eines MCP-Servers auf"
+    log_info "  list-resources        Listet alle verfügbaren Ressourcen eines MCP-Servers auf"
+    log_info "  get-resource          Ruft eine Ressource eines MCP-Servers ab"
+    log_info "  list-prompts          Listet alle verfügbaren Prompts eines MCP-Servers auf"
+    log_info "  call-prompt           Ruft einen Prompt eines MCP-Servers auf"
+    log_info "  help                  Zeigt diese Hilfe an"
     echo ""
-    echo "Optionen:"
-    echo "  --server SERVER       Der MCP-Server, auf den die Aktion angewendet werden soll"
-    echo "  --tool TOOL           Das Tool, das aufgerufen werden soll"
-    echo "  --args ARGS           Die Argumente für das Tool (JSON-Format)"
-    echo "  --resource RESOURCE   Die Ressource, die abgerufen werden soll"
-    echo "  --prompt PROMPT       Der Prompt, der aufgerufen werden soll"
-    echo "  --prompt-args ARGS    Die Argumente für den Prompt (JSON-Format)"
+    log_info "Optionen:"
+    log_info "  --server SERVER       Der MCP-Server, auf den die Aktion angewendet werden soll"
+    log_info "  --tool TOOL           Das Tool, das aufgerufen werden soll"
+    log_info "  --args ARGS           Die Argumente für das Tool (JSON-Format)"
+    log_info "  --resource RESOURCE   Die Ressource, die abgerufen werden soll"
+    log_info "  --prompt PROMPT       Der Prompt, der aufgerufen werden soll"
+    log_info "  --prompt-args ARGS    Die Argumente für den Prompt (JSON-Format)"
     echo ""
-    echo "Beispiele:"
-    echo "  $0 list-servers                                # Listet alle verfügbaren MCP-Server auf"
-    echo "  $0 list-tools --server github-mcp              # Listet alle Tools des GitHub MCP-Servers auf"
-    echo "  $0 call-tool --server desktop-commander-mcp --tool read_file --args '{\"path\":\"/workspace/README.md\"}'"
-    echo "  $0 list-resources --server memory-mcp          # Listet alle Ressourcen des Memory MCP-Servers auf"
+    log_info "Beispiele:"
+    log_info "  $0 list-servers                                # Listet alle verfügbaren MCP-Server auf"
+    log_info "  $0 list-tools --server github-mcp              # Listet alle Tools des GitHub MCP-Servers auf"
+    log_info "  $0 call-tool --server desktop-commander-mcp --tool read_file --args '{\"path\":\"/workspace/README.md\"}'"
+    log_info "  $0 list-resources --server memory-mcp          # Listet alle Ressourcen des Memory MCP-Servers auf"
     echo ""
 }
 
@@ -80,7 +90,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         *)
-            echo -e "${RED}Unbekannte Option: $1${NC}"
+            log_info "${RED}Unbekannte Option: $1${NC}"
             show_help
             exit 1
             ;;
@@ -89,7 +99,7 @@ done
 
 # Überprüfen, ob eine Aktion angegeben wurde
 if [ -z "$ACTION" ]; then
-    echo -e "${RED}Fehler: Keine Aktion angegeben.${NC}"
+    log_info "${RED}Fehler: Keine Aktion angegeben.${NC}"
     show_help
     exit 1
 fi
@@ -107,34 +117,34 @@ cd /workspace/Dev-Server-Workflow/docker-mcp-ecosystem-improved
 get_server_url() {
     local server=$1
     local port=$(docker compose exec $server env | grep MCP_PORT | cut -d= -f2)
-    echo "http://$server:$port"
+    log_info "http://$server:$port"
 }
 
 # Aktionen ausführen
 case "$ACTION" in
     list-servers)
-        echo -e "${BLUE}Verfügbare MCP-Server:${NC}"
+        log_info "${BLUE}Verfügbare MCP-Server:${NC}"
         docker compose config --services | grep -E 'mcp$|mcp-bridge$'
         ;;
     list-tools)
         if [ -z "$SERVER" ]; then
-            echo -e "${RED}Fehler: Kein MCP-Server angegeben.${NC}"
+            log_info "${RED}Fehler: Kein MCP-Server angegeben.${NC}"
             exit 1
         else
-            echo -e "${BLUE}Verfügbare Tools des MCP-Servers $SERVER:${NC}"
+            log_info "${BLUE}Verfügbare Tools des MCP-Servers $SERVER:${NC}"
             SERVER_URL=$(get_server_url $SERVER)
             docker compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method tools/list
         fi
         ;;
     call-tool)
         if [ -z "$SERVER" ]; then
-            echo -e "${RED}Fehler: Kein MCP-Server angegeben.${NC}"
+            log_info "${RED}Fehler: Kein MCP-Server angegeben.${NC}"
             exit 1
         elif [ -z "$TOOL" ]; then
-            echo -e "${RED}Fehler: Kein Tool angegeben.${NC}"
+            log_info "${RED}Fehler: Kein Tool angegeben.${NC}"
             exit 1
         else
-            echo -e "${BLUE}Rufe Tool $TOOL des MCP-Servers $SERVER auf:${NC}"
+            log_info "${BLUE}Rufe Tool $TOOL des MCP-Servers $SERVER auf:${NC}"
             SERVER_URL=$(get_server_url $SERVER)
             if [ -z "$ARGS" ]; then
                 docker compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method tools/call --tool-name $TOOL
@@ -151,46 +161,46 @@ case "$ACTION" in
         ;;
     list-resources)
         if [ -z "$SERVER" ]; then
-            echo -e "${RED}Fehler: Kein MCP-Server angegeben.${NC}"
+            log_info "${RED}Fehler: Kein MCP-Server angegeben.${NC}"
             exit 1
         else
-            echo -e "${BLUE}Verfügbare Ressourcen des MCP-Servers $SERVER:${NC}"
+            log_info "${BLUE}Verfügbare Ressourcen des MCP-Servers $SERVER:${NC}"
             SERVER_URL=$(get_server_url $SERVER)
             docker compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method resources/list
         fi
         ;;
     get-resource)
         if [ -z "$SERVER" ]; then
-            echo -e "${RED}Fehler: Kein MCP-Server angegeben.${NC}"
+            log_info "${RED}Fehler: Kein MCP-Server angegeben.${NC}"
             exit 1
         elif [ -z "$RESOURCE" ]; then
-            echo -e "${RED}Fehler: Keine Ressource angegeben.${NC}"
+            log_info "${RED}Fehler: Keine Ressource angegeben.${NC}"
             exit 1
         else
-            echo -e "${BLUE}Rufe Ressource $RESOURCE des MCP-Servers $SERVER ab:${NC}"
+            log_info "${BLUE}Rufe Ressource $RESOURCE des MCP-Servers $SERVER ab:${NC}"
             SERVER_URL=$(get_server_url $SERVER)
             docker compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method resources/get --resource-id $RESOURCE
         fi
         ;;
     list-prompts)
         if [ -z "$SERVER" ]; then
-            echo -e "${RED}Fehler: Kein MCP-Server angegeben.${NC}"
+            log_info "${RED}Fehler: Kein MCP-Server angegeben.${NC}"
             exit 1
         else
-            echo -e "${BLUE}Verfügbare Prompts des MCP-Servers $SERVER:${NC}"
+            log_info "${BLUE}Verfügbare Prompts des MCP-Servers $SERVER:${NC}"
             SERVER_URL=$(get_server_url $SERVER)
             docker compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method prompts/list
         fi
         ;;
     call-prompt)
         if [ -z "$SERVER" ]; then
-            echo -e "${RED}Fehler: Kein MCP-Server angegeben.${NC}"
+            log_info "${RED}Fehler: Kein MCP-Server angegeben.${NC}"
             exit 1
         elif [ -z "$PROMPT" ]; then
-            echo -e "${RED}Fehler: Kein Prompt angegeben.${NC}"
+            log_info "${RED}Fehler: Kein Prompt angegeben.${NC}"
             exit 1
         else
-            echo -e "${BLUE}Rufe Prompt $PROMPT des MCP-Servers $SERVER auf:${NC}"
+            log_info "${BLUE}Rufe Prompt $PROMPT des MCP-Servers $SERVER auf:${NC}"
             SERVER_URL=$(get_server_url $SERVER)
             if [ -z "$PROMPT_ARGS" ]; then
                 docker compose exec mcp-inspector-ui npx @modelcontextprotocol/inspector --cli $SERVER_URL --method prompts/call --prompt-id $PROMPT
@@ -206,7 +216,7 @@ case "$ACTION" in
         fi
         ;;
     *)
-        echo -e "${RED}Unbekannte Aktion: $ACTION${NC}"
+        log_info "${RED}Unbekannte Aktion: $ACTION${NC}"
         show_help
         exit 1
         ;;

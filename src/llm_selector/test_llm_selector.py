@@ -1,4 +1,26 @@
 #!/usr/bin/env python3
+
+import os
+import sys
+from pathlib import Path
+
+# Füge das Verzeichnis der gemeinsamen Bibliothek zum Pfad hinzu
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR / "scripts" / "common" / "python"))
+
+# Importiere die gemeinsame Bibliothek
+from common import (
+    setup_logging, ConfigManager, DockerUtils, ProcessManager,
+    NetworkUtils, SystemUtils, parse_arguments
+)
+
+# Konfiguriere Logging
+logger = setup_logging("INFO")
+
+# Lade Konfiguration
+config_manager = ConfigManager()
+config = config_manager.load_env_file(".env")
+
 # -*- coding: utf-8 -*-
 
 """
@@ -58,7 +80,7 @@ def main():
         print(f"Task Complexity: {complexity}")
         
         # Test each strategy
-        print("\nModel Selection by Strategy:")
+        logger.info("\nModel Selection by Strategy:")
         for strategy in strategies:
             result = selector.select_model(
                 task_description=task["description"],
@@ -76,7 +98,7 @@ def main():
             task_description=task["description"],
             task_type=task["type"]
         )
-        print("\nAll Recommendations:")
+        logger.info("\nAll Recommendations:")
         for strategy_name, recommendation in result["all_recommendations"].items():
             print(f"  {strategy_name}: {recommendation['model']} (Cost: €{recommendation['cost']:.6f}, Latency: {recommendation['latency']:.2f}s, Quality: {recommendation['quality_score']}/10)")
 

@@ -1,4 +1,26 @@
 #!/usr/bin/env python3
+
+import os
+import sys
+from pathlib import Path
+
+# Füge das Verzeichnis der gemeinsamen Bibliothek zum Pfad hinzu
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR / "scripts" / "common" / "python"))
+
+# Importiere die gemeinsame Bibliothek
+from common import (
+    setup_logging, ConfigManager, DockerUtils, ProcessManager,
+    NetworkUtils, SystemUtils, parse_arguments
+)
+
+# Konfiguriere Logging
+logger = setup_logging("INFO")
+
+# Lade Konfiguration
+config_manager = ConfigManager()
+config = config_manager.load_env_file(".env")
+
 """
 Test-Skript für die n8n-Workflow-Integration
 
@@ -14,29 +36,29 @@ from pathlib import Path
 
 def main():
     """Hauptfunktion zum Testen der Workflows."""
-    print("=== Testing n8n Workflow Integration ===")
+    logger.info("=== Testing n8n Workflow Integration ===")
     
     # Überprüfe, ob die .env-Datei existiert
     env_file = Path('.env')
     if not env_file.exists():
-        print("Error: .env file not found. Please create it first.")
+        logger.info("Error: .env file not found. Please create it first.")
         return 1
     
     # Überprüfe, ob das Setup-Skript existiert
-    print("\n=== Checking setup script ===")
+    logger.info("\n=== Checking setup script ===")
     setup_script = Path('/workspace/Dev-Server-Workflow/src/n8n-setup-main.py')
     if setup_script.exists():
         print(f"Setup script found at {setup_script}")
         
         # Zeige die verfügbaren Workflows an
-        print("\nAvailable workflows:")
+        logger.info("\nAvailable workflows:")
         grep_cmd = ["grep", "-n", "args.workflows", str(setup_script)]
         subprocess.run(grep_cmd, check=False)
     else:
         print(f"Warning: Setup script not found at {setup_script}")
     
     # Teste den MCP-Server
-    print("\n=== Testing MCP server ===")
+    logger.info("\n=== Testing MCP server ===")
     try:
         # Stelle sicher, dass die MCP-Server-Datei existiert
         mcp_server_path = Path('src/n8n-mcp-server.py')
@@ -59,7 +81,7 @@ def main():
         print(f"Error testing MCP server: {str(e)}")
     
     # Überprüfe die Workflow-Definitionen
-    print("\n=== Checking workflow definitions ===")
+    logger.info("\n=== Checking workflow definitions ===")
     try:
         # Überprüfe, ob die Workflow-Dateien existieren
         workflow_files = [
@@ -85,8 +107,8 @@ def main():
     except Exception as e:
         print(f"Error checking workflow definitions: {str(e)}")
     
-    print("\n=== Test completed ===")
-    print("All workflows are implemented and ready to be used with a real n8n instance.")
+    logger.info("\n=== Test completed ===")
+    logger.info("All workflows are implemented and ready to be used with a real n8n instance.")
     return 0
 
 if __name__ == "__main__":

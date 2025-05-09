@@ -1,4 +1,26 @@
 #!/usr/bin/env python3
+
+import os
+import sys
+from pathlib import Path
+
+# Füge das Verzeichnis der gemeinsamen Bibliothek zum Pfad hinzu
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR / "scripts" / "common" / "python"))
+
+# Importiere die gemeinsame Bibliothek
+from common import (
+    setup_logging, ConfigManager, DockerUtils, ProcessManager,
+    NetworkUtils, SystemUtils, parse_arguments
+)
+
+# Konfiguriere Logging
+logger = setup_logging("INFO")
+
+# Lade Konfiguration
+config_manager = ConfigManager()
+config = config_manager.load_env_file(".env")
+
 """
 Test-Skript für die n8n-Workflow-Integration
 
@@ -12,12 +34,12 @@ from pathlib import Path
 
 def main():
     """Hauptfunktion zum Testen der Setup-Skripte."""
-    print("=== Testing n8n Workflow Integration Setup ===")
+    logger.info("=== Testing n8n Workflow Integration Setup ===")
     
     # Überprüfe, ob die .env-Datei existiert
     env_file = Path('.env')
     if not env_file.exists():
-        print("Error: .env file not found. Please create it first.")
+        logger.info("Error: .env file not found. Please create it first.")
         return 1
     
     # Überprüfe, ob die Workflow-Dateien existieren
@@ -43,7 +65,7 @@ def main():
             print(f"✗ {file} does not exist")
     
     # Überprüfe die Umgebungsvariablen in der .env-Datei
-    print("\n=== Checking environment variables ===")
+    logger.info("\n=== Checking environment variables ===")
     with open('.env', 'r') as f:
         env_content = f.read()
     
@@ -62,27 +84,27 @@ def main():
             print(f"✗ {var} is not set")
     
     # Überprüfe die Docker-Installation
-    print("\n=== Checking Docker installation ===")
+    logger.info("\n=== Checking Docker installation ===")
     try:
         result = subprocess.run(["docker", "--version"], capture_output=True, text=True)
         if result.returncode == 0:
             print(f"✓ Docker is installed: {result.stdout.strip()}")
         else:
-            print("✗ Docker is not installed or not working")
+            logger.info("✗ Docker is not installed or not working")
     except FileNotFoundError:
-        print("✗ Docker is not installed")
+        logger.info("✗ Docker is not installed")
     
     try:
         result = subprocess.run(["docker-compose", "--version"], capture_output=True, text=True)
         if result.returncode == 0:
             print(f"✓ Docker Compose is installed: {result.stdout.strip()}")
         else:
-            print("✗ Docker Compose is not installed or not working")
+            logger.info("✗ Docker Compose is not installed or not working")
     except FileNotFoundError:
-        print("✗ Docker Compose is not installed")
+        logger.info("✗ Docker Compose is not installed")
     
-    print("\n=== Test completed ===")
-    print("The setup files are present and ready to be used.")
+    logger.info("\n=== Test completed ===")
+    logger.info("The setup files are present and ready to be used.")
     return 0
 
 if __name__ == "__main__":

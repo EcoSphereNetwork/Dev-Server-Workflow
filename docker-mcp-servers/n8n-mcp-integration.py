@@ -1,5 +1,27 @@
 #!/usr/bin/env python3
 
+import os
+import sys
+from pathlib import Path
+
+# Füge das Verzeichnis der gemeinsamen Bibliothek zum Pfad hinzu
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR / "scripts" / "common" / "python"))
+
+# Importiere die gemeinsame Bibliothek
+from common import (
+    setup_logging, ConfigManager, DockerUtils, ProcessManager,
+    NetworkUtils, SystemUtils, parse_arguments
+)
+
+# Konfiguriere Logging
+logger = setup_logging("INFO")
+
+# Lade Konfiguration
+config_manager = ConfigManager()
+config = config_manager.load_env_file(".env")
+
+
 import requests
 import json
 import sys
@@ -8,7 +30,7 @@ import argparse
 
 def create_n8n_workflow(n8n_url, n8n_api_key, mcp_servers):
     """Create an n8n workflow that integrates with the MCP servers."""
-    print("Creating n8n workflow for MCP integration...")
+    logger.info("Creating n8n workflow for MCP integration...")
     
     # Prepare the workflow data
     workflow = {
@@ -463,7 +485,7 @@ def main():
     args = parser.parse_args()
     
     if not args.n8n_api_key:
-        print("Error: n8n API key is required. Set it with --n8n-api-key or the N8N_API_KEY environment variable.")
+        logger.info("Error: n8n API key is required. Set it with --n8n-api-key or the N8N_API_KEY environment variable.")
         sys.exit(1)
     
     # Load the MCP configuration
@@ -477,7 +499,7 @@ def main():
     # Get the MCP servers from the configuration
     servers = config.get("mcp", {}).get("servers", {})
     if not servers:
-        print("No MCP servers found in the configuration.")
+        logger.info("No MCP servers found in the configuration.")
         sys.exit(1)
     
     # Extract server URLs
@@ -485,10 +507,10 @@ def main():
     
     # Create the n8n workflow
     if create_n8n_workflow(args.n8n_url, args.n8n_api_key, mcp_servers):
-        print("n8n workflow created successfully! 🎉")
+        logger.info("n8n workflow created successfully! 🎉")
         sys.exit(0)
     else:
-        print("Failed to create n8n workflow.")
+        logger.info("Failed to create n8n workflow.")
         sys.exit(1)
 
 if __name__ == "__main__":

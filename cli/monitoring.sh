@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # Monitoring-Funktionen für die Dev-Server CLI
 
 # Lade Konfiguration
@@ -18,13 +28,13 @@ NC='\033[0m' # No Color
 check_service() {
     local service="$1"
     
-    echo -e "${BLUE}=== Überprüfe Dienst: $service ===${NC}"
+    log_info "${BLUE}=== Überprüfe Dienst: $service ===${NC}"
     
     if systemctl is-active --quiet "$service"; then
-        echo -e "${GREEN}✅ Dienst $service ist aktiv${NC}"
+        log_info "${GREEN}✅ Dienst $service ist aktiv${NC}"
         systemctl status "$service" | head -n 3
     else
-        echo -e "${RED}❌ Dienst $service ist nicht aktiv${NC}"
+        log_info "${RED}❌ Dienst $service ist nicht aktiv${NC}"
         systemctl status "$service" | head -n 3
     fi
 }
@@ -34,7 +44,7 @@ get_logs() {
     local service="$1"
     local lines="${2:-100}"
     
-    echo -e "${BLUE}=== Logs für Dienst: $service ===${NC}"
+    log_info "${BLUE}=== Logs für Dienst: $service ===${NC}"
     
     if [ -f "/var/log/$service.log" ]; then
         tail -n "$lines" "/var/log/$service.log"
@@ -43,7 +53,7 @@ get_logs() {
     elif systemctl is-active --quiet "$service"; then
         journalctl -u "$service" -n "$lines"
     else
-        echo -e "${RED}❌ Keine Logs für Dienst $service gefunden${NC}"
+        log_info "${RED}❌ Keine Logs für Dienst $service gefunden${NC}"
     fi
 }
 
@@ -51,21 +61,21 @@ get_logs() {
 check_disk() {
     local path="${1:-/}"
     
-    echo -e "${BLUE}=== Festplattennutzung für $path ===${NC}"
+    log_info "${BLUE}=== Festplattennutzung für $path ===${NC}"
     
     df -h "$path"
 }
 
 # Funktion zum Überprüfen der Speichernutzung
 check_memory() {
-    echo -e "${BLUE}=== Speichernutzung ===${NC}"
+    log_info "${BLUE}=== Speichernutzung ===${NC}"
     
     free -h
 }
 
 # Funktion zum Überprüfen der CPU-Auslastung
 check_cpu() {
-    echo -e "${BLUE}=== CPU-Auslastung ===${NC}"
+    log_info "${BLUE}=== CPU-Auslastung ===${NC}"
     
     top -bn1 | head -n 20
 }
@@ -74,24 +84,24 @@ check_cpu() {
 check_port() {
     local port="$1"
     
-    echo -e "${BLUE}=== Überprüfe Port: $port ===${NC}"
+    log_info "${BLUE}=== Überprüfe Port: $port ===${NC}"
     
     if command -v netstat > /dev/null; then
         if netstat -tuln | grep -q ":$port "; then
-            echo -e "${GREEN}✅ Port $port ist in Verwendung${NC}"
+            log_info "${GREEN}✅ Port $port ist in Verwendung${NC}"
             netstat -tuln | grep ":$port "
         else
-            echo -e "${RED}❌ Port $port ist nicht in Verwendung${NC}"
+            log_info "${RED}❌ Port $port ist nicht in Verwendung${NC}"
         fi
     elif command -v ss > /dev/null; then
         if ss -tuln | grep -q ":$port "; then
-            echo -e "${GREEN}✅ Port $port ist in Verwendung${NC}"
+            log_info "${GREEN}✅ Port $port ist in Verwendung${NC}"
             ss -tuln | grep ":$port "
         else
-            echo -e "${RED}❌ Port $port ist nicht in Verwendung${NC}"
+            log_info "${RED}❌ Port $port ist nicht in Verwendung${NC}"
         fi
     else
-        echo -e "${YELLOW}⚠️ Weder netstat noch ss ist verfügbar${NC}"
+        log_info "${YELLOW}⚠️ Weder netstat noch ss ist verfügbar${NC}"
     fi
 }
 
@@ -100,12 +110,12 @@ check_url() {
     local url="$1"
     local timeout="${2:-5}"
     
-    echo -e "${BLUE}=== Überprüfe URL: $url ===${NC}"
+    log_info "${BLUE}=== Überprüfe URL: $url ===${NC}"
     
     if curl -s --head --request GET --max-time "$timeout" "$url" | grep "200 OK" > /dev/null; then
-        echo -e "${GREEN}✅ URL $url ist erreichbar${NC}"
+        log_info "${GREEN}✅ URL $url ist erreichbar${NC}"
     else
-        echo -e "${RED}❌ URL $url ist nicht erreichbar${NC}"
+        log_info "${RED}❌ URL $url ist nicht erreichbar${NC}"
     fi
 }
 
@@ -113,19 +123,19 @@ check_url() {
 check_container() {
     local container="$1"
     
-    echo -e "${BLUE}=== Überprüfe Container: $container ===${NC}"
+    log_info "${BLUE}=== Überprüfe Container: $container ===${NC}"
     
     if docker ps --format '{{.Names}}' | grep -q "^$container$"; then
-        echo -e "${GREEN}✅ Container $container läuft${NC}"
+        log_info "${GREEN}✅ Container $container läuft${NC}"
         docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep "$container"
     else
-        echo -e "${RED}❌ Container $container läuft nicht${NC}"
+        log_info "${RED}❌ Container $container läuft nicht${NC}"
         
         if docker ps -a --format '{{.Names}}' | grep -q "^$container$"; then
-            echo -e "${YELLOW}⚠️ Container $container existiert, läuft aber nicht${NC}"
+            log_info "${YELLOW}⚠️ Container $container existiert, läuft aber nicht${NC}"
             docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep "$container"
         else
-            echo -e "${RED}❌ Container $container existiert nicht${NC}"
+            log_info "${RED}❌ Container $container existiert nicht${NC}"
         fi
     fi
 }
@@ -134,7 +144,7 @@ check_container() {
 container_stats() {
     local container="${1:-all}"
     
-    echo -e "${BLUE}=== Container-Statistiken für $container ===${NC}"
+    log_info "${BLUE}=== Container-Statistiken für $container ===${NC}"
     
     if [ "$container" = "all" ]; then
         docker stats --no-stream
@@ -148,10 +158,10 @@ check_prometheus() {
     local metric="$1"
     local prometheus_url="${2:-http://localhost:9090}"
     
-    echo -e "${BLUE}=== Prometheus-Metriken für $metric ===${NC}"
+    log_info "${BLUE}=== Prometheus-Metriken für $metric ===${NC}"
     
     if [ -z "$metric" ]; then
-        echo -e "${YELLOW}⚠️ Kein Metrik-Name angegeben${NC}"
+        log_info "${YELLOW}⚠️ Kein Metrik-Name angegeben${NC}"
         return 1
     fi
     
@@ -160,99 +170,99 @@ check_prometheus() {
     if curl -s "$query_url" | jq . > /dev/null; then
         curl -s "$query_url" | jq .
     else
-        echo -e "${RED}❌ Fehler beim Abrufen der Prometheus-Metriken${NC}"
+        log_info "${RED}❌ Fehler beim Abrufen der Prometheus-Metriken${NC}"
     fi
 }
 
 # Funktion zum Anzeigen der Systemübersicht
 system_overview() {
-    echo -e "${BLUE}=== Systemübersicht ===${NC}"
+    log_info "${BLUE}=== Systemübersicht ===${NC}"
     
-    echo -e "${CYAN}Hostname:${NC} $(hostname)"
-    echo -e "${CYAN}Kernel:${NC} $(uname -r)"
-    echo -e "${CYAN}Uptime:${NC} $(uptime -p)"
-    echo -e "${CYAN}CPU-Auslastung:${NC}"
+    log_info "${CYAN}Hostname:${NC} $(hostname)"
+    log_info "${CYAN}Kernel:${NC} $(uname -r)"
+    log_info "${CYAN}Uptime:${NC} $(uptime -p)"
+    log_info "${CYAN}CPU-Auslastung:${NC}"
     top -bn1 | head -n 3 | tail -n 2
-    echo -e "${CYAN}Speichernutzung:${NC}"
+    log_info "${CYAN}Speichernutzung:${NC}"
     free -h | head -n 2
-    echo -e "${CYAN}Festplattennutzung:${NC}"
+    log_info "${CYAN}Festplattennutzung:${NC}"
     df -h / | head -n 2
-    echo -e "${CYAN}Laufende Docker-Container:${NC}"
-    docker ps --format "table {{.Names}}\t{{.Status}}" 2>/dev/null || echo "Docker ist nicht installiert oder läuft nicht"
+    log_info "${CYAN}Laufende Docker-Container:${NC}"
+    docker ps --format "table {{.Names}}\t{{.Status}}" 2>/dev/null || log_info "Docker ist nicht installiert oder läuft nicht"
 }
 
 # Funktion zum Anzeigen der Dienste-Übersicht
 services_overview() {
-    echo -e "${BLUE}=== Dienste-Übersicht ===${NC}"
+    log_info "${BLUE}=== Dienste-Übersicht ===${NC}"
     
     # MCP-Server Status
     if docker ps | grep -q "mcp-"; then
-        echo -e "${GREEN}✅ MCP-Server (Docker):${NC} Läuft"
+        log_info "${GREEN}✅ MCP-Server (Docker):${NC} Läuft"
     else
-        echo -e "${RED}❌ MCP-Server (Docker):${NC} Gestoppt"
+        log_info "${RED}❌ MCP-Server (Docker):${NC} Gestoppt"
     fi
     
     # n8n Status
     if docker ps | grep -q "n8n"; then
-        echo -e "${GREEN}✅ n8n:${NC} Läuft"
+        log_info "${GREEN}✅ n8n:${NC} Läuft"
     else
-        echo -e "${RED}❌ n8n:${NC} Gestoppt"
+        log_info "${RED}❌ n8n:${NC} Gestoppt"
     fi
     
     # Ollama Status
     if docker ps | grep -q "ollama"; then
-        echo -e "${GREEN}✅ Ollama:${NC} Läuft"
+        log_info "${GREEN}✅ Ollama:${NC} Läuft"
     else
-        echo -e "${RED}❌ Ollama:${NC} Gestoppt"
+        log_info "${RED}❌ Ollama:${NC} Gestoppt"
     fi
     
     # OpenHands Status
     if docker ps | grep -q "openhands"; then
-        echo -e "${GREEN}✅ OpenHands:${NC} Läuft"
+        log_info "${GREEN}✅ OpenHands:${NC} Läuft"
     else
-        echo -e "${RED}❌ OpenHands:${NC} Gestoppt"
+        log_info "${RED}❌ OpenHands:${NC} Gestoppt"
     fi
     
     # AppFlowy Status
     if docker ps | grep -q "appflowy"; then
-        echo -e "${GREEN}✅ AppFlowy:${NC} Läuft"
+        log_info "${GREEN}✅ AppFlowy:${NC} Läuft"
     else
-        echo -e "${RED}❌ AppFlowy:${NC} Gestoppt"
+        log_info "${RED}❌ AppFlowy:${NC} Gestoppt"
     fi
     
     # Llamafile Status
     if pgrep -f "llamafile" > /dev/null; then
-        echo -e "${GREEN}✅ Llamafile:${NC} Läuft"
+        log_info "${GREEN}✅ Llamafile:${NC} Läuft"
     else
-        echo -e "${RED}❌ Llamafile:${NC} Gestoppt"
+        log_info "${RED}❌ Llamafile:${NC} Gestoppt"
     fi
     
     # Web-UI Status
     if pgrep -f "npm.*start" > /dev/null && [ -d "$WEB_UI_DIR" ]; then
-        echo -e "${GREEN}✅ Web-UI:${NC} Läuft"
+        log_info "${GREEN}✅ Web-UI:${NC} Läuft"
     else
-        echo -e "${RED}❌ Web-UI:${NC} Gestoppt"
+        log_info "${RED}❌ Web-UI:${NC} Gestoppt"
     fi
 }
 
 # Funktion zum Anzeigen der Netzwerkübersicht
 network_overview() {
-    echo -e "${BLUE}=== Netzwerkübersicht ===${NC}"
+    log_info "${BLUE}=== Netzwerkübersicht ===${NC}"
     
-    echo -e "${CYAN}Netzwerkschnittstellen:${NC}"
+    log_info "${CYAN}Netzwerkschnittstellen:${NC}"
     ip -br addr
     
-    echo -e "${CYAN}Offene Ports:${NC}"
+    log_info "${CYAN}Offene Ports:${NC}"
     if command -v netstat > /dev/null; then
         netstat -tuln | grep LISTEN
     elif command -v ss > /dev/null; then
         ss -tuln | grep LISTEN
     else
-        echo -e "${YELLOW}⚠️ Weder netstat noch ss ist verfügbar${NC}"
+        log_info "${YELLOW}⚠️ Weder netstat noch ss ist verfügbar${NC}"
     fi
     
-    echo -e "${CYAN}Docker-Netzwerke:${NC}"
-    docker network ls 2>/dev/null || echo "Docker ist nicht installiert oder läuft nicht"
+    log_info "${CYAN}Docker-Netzwerke:${NC}"
+    docker network ls 2>/dev/null || log_info "Docker ist nicht installiert oder läuft nicht"
 }
 
 # Hauptfunktion
@@ -302,8 +312,8 @@ main() {
             network_overview
             ;;
         *)
-            echo -e "${RED}Unbekannte Aktion: $action${NC}"
-            echo "Verfügbare Aktionen: check-service, get-logs, check-disk, check-memory, check-cpu, check-port, check-url, check-container, container-stats, check-prometheus, system-overview, services-overview, network-overview"
+            log_info "${RED}Unbekannte Aktion: $action${NC}"
+            log_info "Verfügbare Aktionen: check-service, get-logs, check-disk, check-memory, check-cpu, check-port, check-url, check-container, container-stats, check-prometheus, system-overview, services-overview, network-overview"
             return 1
             ;;
     esac
@@ -312,9 +322,9 @@ main() {
 # Führe die Hauptfunktion aus, wenn das Skript direkt ausgeführt wird
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     if [ $# -eq 0 ]; then
-        echo -e "${RED}Keine Aktion angegeben${NC}"
-        echo "Verwendung: $0 <Aktion> [Argumente...]"
-        echo "Verfügbare Aktionen: check-service, get-logs, check-disk, check-memory, check-cpu, check-port, check-url, check-container, container-stats, check-prometheus, system-overview, services-overview, network-overview"
+        log_info "${RED}Keine Aktion angegeben${NC}"
+        log_info "Verwendung: $0 <Aktion> [Argumente...]"
+        log_info "Verfügbare Aktionen: check-service, get-logs, check-disk, check-memory, check-cpu, check-port, check-url, check-container, container-stats, check-prometheus, system-overview, services-overview, network-overview"
         exit 1
     fi
     

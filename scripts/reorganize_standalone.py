@@ -1,4 +1,26 @@
 #!/usr/bin/env python3
+
+import os
+import sys
+from pathlib import Path
+
+# Füge das Verzeichnis der gemeinsamen Bibliothek zum Pfad hinzu
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR / "scripts" / "common" / "python"))
+
+# Importiere die gemeinsame Bibliothek
+from common import (
+    setup_logging, ConfigManager, DockerUtils, ProcessManager,
+    NetworkUtils, SystemUtils, parse_arguments
+)
+
+# Konfiguriere Logging
+logger = setup_logging("INFO")
+
+# Lade Konfiguration
+config_manager = ConfigManager()
+config = config_manager.load_env_file(".env")
+
 """
 Standalone repository reorganization script.
 This version can be run without Poetry and has minimal dependencies.
@@ -19,7 +41,7 @@ from typing import Dict, List, Optional, Set, Tuple
 try:
     import toml
 except ImportError:
-    print("Installing required packages...")
+    logger.info("Installing required packages...")
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "toml"])
     import toml
 
@@ -30,7 +52,7 @@ try:
     from rich.progress import Progress, SpinnerColumn, TextColumn
     from rich.prompt import Confirm
 except ImportError:
-    print("Installing required packages...")
+    logger.info("Installing required packages...")
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "rich"])
     import rich
     from rich.console import Console
@@ -41,7 +63,7 @@ except ImportError:
 try:
     import git
 except ImportError:
-    print("Installing required packages...")
+    logger.info("Installing required packages...")
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "gitpython"])
     import git
 
@@ -285,27 +307,27 @@ def main() -> None:
         reorganizer = RepoReorganizer(args.repo_path, args.template_path, args.branch_name)
 
         # Analyze current structure
-        console.print("\n[bold blue]Analyzing repository structure...[/bold blue]")
+        console.logger.info("\n[bold blue]Analyzing repository structure...[/bold blue]")
         missing_dirs, missing_files, extra_files = reorganizer.analyze_structure()
 
         # Show analysis results
-        console.print("\n[bold green]Analysis Results:[/bold green]")
+        console.logger.info("\n[bold green]Analysis Results:[/bold green]")
         if missing_dirs:
-            console.print("\nMissing directories:")
+            console.logger.info("\nMissing directories:")
             for dir_path in missing_dirs:
                 console.print(f"  - {dir_path}")
         if missing_files:
-            console.print("\nMissing files:")
+            console.logger.info("\nMissing files:")
             for file_path in missing_files:
                 console.print(f"  - {file_path}")
         if extra_files:
-            console.print("\nFiles to reorganize:")
+            console.logger.info("\nFiles to reorganize:")
             for file_path in extra_files:
                 console.print(f"  - {file_path}")
 
         # Create and show plan
         plan = reorganizer.create_plan(missing_dirs, missing_files, extra_files)
-        console.print("\n[bold green]Proposed Changes:[/bold green]")
+        console.logger.info("\n[bold green]Proposed Changes:[/bold green]")
         for change in plan:
             console.print(f"  - {change['action']}: {change['path']}")
             if "destination" in change:
@@ -314,7 +336,7 @@ def main() -> None:
         # Confirm execution
         if not args.dry_run and plan:
             if not args.no_input and not Confirm.ask("\nProceed with reorganization?"):
-                console.print("Aborted.")
+                console.logger.info("Aborted.")
                 return
 
         # Execute plan

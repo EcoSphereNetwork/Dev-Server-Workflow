@@ -1,18 +1,28 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # Installationsscript für MCP-Server und OpenHands
 
-echo "Starte Installation der MCP-Server für Claude Desktop und OpenHands..."
+log_info "Starte Installation der MCP-Server für Claude Desktop und OpenHands..."
 
 # Erstelle .env-Datei, falls nicht vorhanden
 ENV_FILE=".env"
 if [ -f "$ENV_FILE" ]; then
-    echo "Lade Umgebungsvariablen aus .env-Datei..."
+    log_info "Lade Umgebungsvariablen aus .env-Datei..."
     set -a
     source "$ENV_FILE"
     set +a
 else
-    echo "Keine .env-Datei gefunden, verwende Standardwerte."
+    log_info "Keine .env-Datei gefunden, verwende Standardwerte."
 fi
 
 # Hauptverzeichnis für MCP-Server
@@ -25,7 +35,7 @@ mkdir -p "$CONFIG_DIR"
 CONFIG_FILE="$CONFIG_DIR/claude_desktop_config.json"
 
 # Prüfe verfügbare MCP-Server (bekannt funktionierend)
-echo "Installiere bekannte funktionierende MCP-Server..."
+log_info "Installiere bekannte funktionierende MCP-Server..."
 
 # Array der bekannten funktionierenden Server
 WORKING_SERVERS=(
@@ -41,15 +51,15 @@ WORKING_SERVERS=(
 
 # Installiere jeden Server global
 for server in "${WORKING_SERVERS[@]}"; do
-    echo "Installiere $server..."
-    npm install -g "$server" || echo "Fehler beim Installieren von $server, wird übersprungen."
+    log_info "Installiere $server..."
+    npm install -g "$server" || log_info "Fehler beim Installieren von $server, wird übersprungen."
 done
 
 # Alternative Installation mit Docker für Server, die mit npm Probleme haben
-echo "Installiere Docker-basierte MCP-Server..."
+log_info "Installiere Docker-basierte MCP-Server..."
 
 # Erstelle die Claude Desktop Konfigurationsdatei
-echo "Erstelle Claude Desktop Konfigurationsdatei unter: $CONFIG_FILE"
+log_info "Erstelle Claude Desktop Konfigurationsdatei unter: $CONFIG_FILE"
 
 cat > "$CONFIG_FILE" <<EOL
 {
@@ -140,7 +150,7 @@ mkdir -p "${OPENHANDS_WORKSPACE_DIR}"
 mkdir -p "${OPENHANDS_CONFIG_DIR}"
 
 # Erstelle OpenHands Konfigurationsdatei
-echo "Erstelle OpenHands Konfigurationsdatei..."
+log_info "Erstelle OpenHands Konfigurationsdatei..."
 OPENHANDS_CONFIG_FILE="${OPENHANDS_CONFIG_DIR}/config.toml"
 
 cat > "$OPENHANDS_CONFIG_FILE" <<EOL
@@ -253,13 +263,13 @@ cat > "$OPENHANDS_SCRIPT" <<EOL
 
 # Starte OpenHands Container
 docker compose -f $DOCKER_COMPOSE_FILE up -d
-echo "OpenHands gestartet unter http://localhost:3000"
+log_info "OpenHands gestartet unter http://localhost:3000"
 EOL
 
 chmod +x "$OPENHANDS_SCRIPT"
 
-echo "Installation abgeschlossen!"
-echo "MCP-Server Konfiguration wurde in $CONFIG_FILE erstellt."
-echo "OpenHands kann mit '$OPENHANDS_SCRIPT' gestartet werden."
-echo "MCP-Inspektor kann mit '$MCP_INSPECTOR_SCRIPT' gestartet werden, um MCP-Server zu testen."
-echo "Starte Claude Desktop neu, um die Änderungen zu übernehmen."
+log_info "Installation abgeschlossen!"
+log_info "MCP-Server Konfiguration wurde in $CONFIG_FILE erstellt."
+log_info "OpenHands kann mit '$OPENHANDS_SCRIPT' gestartet werden."
+log_info "MCP-Inspektor kann mit '$MCP_INSPECTOR_SCRIPT' gestartet werden, um MCP-Server zu testen."
+log_info "Starte Claude Desktop neu, um die Änderungen zu übernehmen."

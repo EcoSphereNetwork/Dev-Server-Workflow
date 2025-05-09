@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # Docker-Start-Skript für n8n Workflow Integration
 
 # Farben für die Ausgabe
@@ -10,34 +20,34 @@ NC='\033[0m' # No Color
 
 # Funktion zum Anzeigen von Hilfe
 show_help() {
-  echo -e "${YELLOW}n8n Workflow Integration - Docker-Steuerung${NC}"
+  log_info "${YELLOW}n8n Workflow Integration - Docker-Steuerung${NC}"
   echo ""
-  echo "Verwendung:"
-  echo "  ./docker-start.sh [Befehl]"
+  log_info "Verwendung:"
+  log_info "  ./docker-start.sh [Befehl]"
   echo ""
-  echo "Befehle:"
-  echo "  start       Startet alle Container"
-  echo "  stop        Stoppt alle Container"
-  echo "  restart     Startet alle Container neu"
-  echo "  status      Zeigt den Status aller Container an"
-  echo "  logs        Zeigt die Logs aller Container an"
-  echo "  setup       Führt das Setup-Skript aus"
-  echo "  help        Zeigt diese Hilfe an"
+  log_info "Befehle:"
+  log_info "  start       Startet alle Container"
+  log_info "  stop        Stoppt alle Container"
+  log_info "  restart     Startet alle Container neu"
+  log_info "  status      Zeigt den Status aller Container an"
+  log_info "  logs        Zeigt die Logs aller Container an"
+  log_info "  setup       Führt das Setup-Skript aus"
+  log_info "  help        Zeigt diese Hilfe an"
   echo ""
-  echo "Beispiele:"
-  echo "  ./docker-start.sh start"
-  echo "  ./docker-start.sh logs mcp-server"
+  log_info "Beispiele:"
+  log_info "  ./docker-start.sh start"
+  log_info "  ./docker-start.sh logs mcp-server"
 }
 
 # Überprüfe, ob Docker installiert ist
 check_docker() {
   if ! command -v docker &> /dev/null; then
-    echo -e "${RED}Docker ist nicht installiert. Bitte installieren Sie Docker und versuchen Sie es erneut.${NC}"
+    log_info "${RED}Docker ist nicht installiert. Bitte installieren Sie Docker und versuchen Sie es erneut.${NC}"
     exit 1
   fi
 
   if ! command -v docker compose &> /dev/null; then
-    echo -e "${RED}Docker Compose ist nicht installiert. Bitte installieren Sie Docker Compose und versuchen Sie es erneut.${NC}"
+    log_info "${RED}Docker Compose ist nicht installiert. Bitte installieren Sie Docker Compose und versuchen Sie es erneut.${NC}"
     exit 1
   fi
 }
@@ -45,7 +55,7 @@ check_docker() {
 # Überprüfe, ob die .env-Datei existiert
 check_env_file() {
   if [ ! -f .env ]; then
-    echo -e "${YELLOW}Warnung: .env-Datei nicht gefunden. Erstelle eine Beispiel-Datei...${NC}"
+    log_info "${YELLOW}Warnung: .env-Datei nicht gefunden. Erstelle eine Beispiel-Datei...${NC}"
     cat > .env << 'ENVEOF'
 # n8n Konfiguration
 N8N_URL=http://localhost:5678
@@ -62,47 +72,47 @@ OPENPROJECT_TOKEN=
 
 # Weitere Konfigurationen...
 ENVEOF
-    echo -e "${GREEN}.env-Datei erstellt. Bitte passen Sie die Werte an Ihre Umgebung an.${NC}"
+    log_info "${GREEN}.env-Datei erstellt. Bitte passen Sie die Werte an Ihre Umgebung an.${NC}"
   fi
 }
 
 # Starte die Container
 start_containers() {
-  echo -e "${GREEN}Starte Container...${NC}"
+  log_info "${GREEN}Starte Container...${NC}"
   docker compose up -d
-  echo -e "${GREEN}Container gestartet. n8n ist unter http://localhost:5678 erreichbar.${NC}"
-  echo -e "${GREEN}MCP-Server ist unter http://localhost:3000 erreichbar.${NC}"
+  log_info "${GREEN}Container gestartet. n8n ist unter http://localhost:5678 erreichbar.${NC}"
+  log_info "${GREEN}MCP-Server ist unter http://localhost:3000 erreichbar.${NC}"
 }
 
 # Stoppe die Container
 stop_containers() {
-  echo -e "${YELLOW}Stoppe Container...${NC}"
+  log_info "${YELLOW}Stoppe Container...${NC}"
   docker compose down
-  echo -e "${GREEN}Container gestoppt.${NC}"
+  log_info "${GREEN}Container gestoppt.${NC}"
 }
 
 # Zeige den Status der Container an
 show_status() {
-  echo -e "${GREEN}Status der Container:${NC}"
+  log_info "${GREEN}Status der Container:${NC}"
   docker compose ps
 }
 
 # Zeige die Logs der Container an
 show_logs() {
   if [ -z "$1" ]; then
-    echo -e "${GREEN}Logs aller Container:${NC}"
+    log_info "${GREEN}Logs aller Container:${NC}"
     docker compose logs --tail=100
   else
-    echo -e "${GREEN}Logs des Containers $1:${NC}"
+    log_info "${GREEN}Logs des Containers $1:${NC}"
     docker compose logs --tail=100 "$1"
   fi
 }
 
 # Führe das Setup-Skript aus
 run_setup() {
-  echo -e "${GREEN}Führe Setup-Skript aus...${NC}"
+  log_info "${GREEN}Führe Setup-Skript aus...${NC}"
   docker compose run --rm setup
-  echo -e "${GREEN}Setup abgeschlossen.${NC}"
+  log_info "${GREEN}Setup abgeschlossen.${NC}"
 }
 
 # Hauptfunktion
@@ -134,7 +144,7 @@ main() {
       show_help
       ;;
     *)
-      echo -e "${RED}Unbekannter Befehl: $1${NC}"
+      log_info "${RED}Unbekannter Befehl: $1${NC}"
       show_help
       exit 1
       ;;

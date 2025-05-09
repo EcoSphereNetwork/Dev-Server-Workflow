@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # Common library for MCP scripts
 # This file contains shared functions and variables used across multiple MCP scripts
 
@@ -43,19 +53,19 @@ OPENHANDS_MAX_WORKERS=${OPENHANDS_MAX_WORKERS:-5}
 
 # Funktion zum Anzeigen von Nachrichten
 log() {
-    echo -e "${GREEN}[INFO]${NC} $1"
+    log_info "${GREEN}[INFO]${NC} $1"
 }
 
 warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
+    log_info "${YELLOW}[WARN]${NC} $1"
 }
 
 error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+    log_info "${RED}[ERROR]${NC} $1"
 }
 
 info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
+    log_info "${BLUE}[INFO]${NC} $1"
 }
 
 # Funktion zum Überprüfen einer Paketversion
@@ -72,7 +82,7 @@ check_version() {
     local version_output
     version_output=$($version_cmd)
     local current_version
-    current_version=$(echo "$version_output" | grep -oE "$version_regex" | head -1)
+    current_version=$(log_info "$version_output" | grep -oE "$version_regex" | head -1)
 
     if [ -z "$current_version" ]; then
         warn "Konnte die Version von $package nicht ermitteln."
@@ -283,26 +293,26 @@ start_mcp_server() {
     local args=$3
     local log_file="$LOG_DIR/$name.log"
     
-    echo "Starte MCP-Server: $name"
-    echo "Befehl: $command $args"
-    echo "Log-Datei: $log_file"
+    log_info "Starte MCP-Server: $name"
+    log_info "Befehl: $command $args"
+    log_info "Log-Datei: $log_file"
     
     # Starte den Server im Hintergrund
     eval "$command $args > $log_file 2>&1 &"
     local pid=$!
     
-    echo "PID: $pid"
-    echo "$pid" > "$LOG_DIR/$name.pid"
+    log_info "PID: $pid"
+    log_info "$pid" > "$LOG_DIR/$name.pid"
     
     # Warte kurz, um zu prüfen, ob der Server gestartet ist
     sleep 2
     if ! kill -0 $pid 2>/dev/null; then
-        echo "Fehler: Server $name konnte nicht gestartet werden"
+        log_info "Fehler: Server $name konnte nicht gestartet werden"
         cat "$log_file"
         return 1
     fi
     
-    echo "Server $name erfolgreich gestartet"
+    log_info "Server $name erfolgreich gestartet"
     return 0
 }
 
@@ -313,7 +323,7 @@ stop_mcp_server() {
     
     if [ -f "$pid_file" ]; then
         local pid=$(cat "$pid_file")
-        echo "Stoppe MCP-Server: $name (PID: $pid)"
+        log_info "Stoppe MCP-Server: $name (PID: $pid)"
         
         # Sende SIGTERM an den Prozess
         kill $pid 2>/dev/null || true
@@ -321,20 +331,20 @@ stop_mcp_server() {
         # Warte kurz und prüfe, ob der Prozess beendet ist
         sleep 2
         if kill -0 $pid 2>/dev/null; then
-            echo "Server reagiert nicht, sende SIGKILL"
+            log_info "Server reagiert nicht, sende SIGKILL"
             kill -9 $pid 2>/dev/null || true
         fi
         
         rm -f "$pid_file"
-        echo "Server $name gestoppt"
+        log_info "Server $name gestoppt"
     else
-        echo "Kein PID-File für Server $name gefunden"
+        log_info "Kein PID-File für Server $name gefunden"
     fi
 }
 
 # Funktion zum Stoppen aller MCP-Server
 stop_all_servers() {
-    echo "Stoppe alle MCP-Server..."
+    log_info "Stoppe alle MCP-Server..."
     
     for pid_file in "$LOG_DIR"/*.pid; do
         if [ -f "$pid_file" ]; then
@@ -343,7 +353,7 @@ stop_all_servers() {
         fi
     done
     
-    echo "Alle Server gestoppt"
+    log_info "Alle Server gestoppt"
 }
 
 # Funktion zum Starten der Docker-basierten MCP-Server
@@ -638,7 +648,7 @@ EOF
     cat > "$HOME/start-openhands.sh" << EOF
 #!/bin/bash
 docker compose -f $HOME/openhands-docker-compose.yml up -d
-echo "OpenHands gestartet unter http://localhost:${OPENHANDS_PORT}"
+log_info "OpenHands gestartet unter http://localhost:${OPENHANDS_PORT}"
 EOF
     chmod +x "$HOME/start-openhands.sh"
     
@@ -656,22 +666,22 @@ EOF
 #!/bin/bash
 
 # Starte alle MCP-Dienste
-echo "Starte alle MCP-Dienste..."
+log_info "Starte alle MCP-Dienste..."
 
 # Starte OpenHands
-echo "Starte OpenHands..."
+log_info "Starte OpenHands..."
 $HOME/start-openhands.sh
 
 # Starte Ollama-MCP-Bridge im Hintergrund
-echo "Starte Ollama-MCP-Bridge..."
+log_info "Starte Ollama-MCP-Bridge..."
 $HOME/start-ollama-bridge.sh &
 OLLAMA_BRIDGE_PID=\$!
 
-echo "Alle Dienste wurden gestartet!"
-echo "OpenHands ist unter http://localhost:${OPENHANDS_PORT} erreichbar."
-echo "OpenHands MCP ist unter http://localhost:${OPENHANDS_PORT}/mcp erreichbar."
-echo "Ollama-MCP-Bridge ist unter http://localhost:${OLLAMA_PORT}/mcp erreichbar."
-echo "Drücke STRG+C, um alle Dienste zu beenden."
+log_info "Alle Dienste wurden gestartet!"
+log_info "OpenHands ist unter http://localhost:${OPENHANDS_PORT} erreichbar."
+log_info "OpenHands MCP ist unter http://localhost:${OPENHANDS_PORT}/mcp erreichbar."
+log_info "Ollama-MCP-Bridge ist unter http://localhost:${OLLAMA_PORT}/mcp erreichbar."
+log_info "Drücke STRG+C, um alle Dienste zu beenden."
 
 # Warte auf Benutzerunterbrechung
 trap "echo 'Stoppe Dienste...'; kill \$OLLAMA_BRIDGE_PID; docker compose -f '$HOME/openhands-docker-compose.yml' down; echo 'Alle Dienste gestoppt.'" INT

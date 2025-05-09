@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # Script to start the MCP servers
 
 # Colors for output
@@ -10,15 +20,15 @@ NC='\033[0m' # No Color
 
 # Function to display messages
 log() {
-    echo -e "${GREEN}[INFO]${NC} $1"
+    log_info "${GREEN}[INFO]${NC} $1"
 }
 
 warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
+    log_info "${YELLOW}[WARN]${NC} $1"
 }
 
 error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+    log_info "${RED}[ERROR]${NC} $1"
 }
 
 # Check if Docker is running

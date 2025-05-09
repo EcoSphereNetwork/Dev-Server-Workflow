@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # Konfigurationsmanagement-Funktionen für die Dev-Server CLI
 
 # Lade Konfiguration
@@ -20,13 +30,13 @@ set_config() {
     local key="$2"
     local value="$3"
     
-    echo -e "${BLUE}=== Setze Konfigurationswert ===${NC}"
-    echo -e "${CYAN}Datei:${NC} $file"
-    echo -e "${CYAN}Schlüssel:${NC} $key"
-    echo -e "${CYAN}Wert:${NC} $value"
+    log_info "${BLUE}=== Setze Konfigurationswert ===${NC}"
+    log_info "${CYAN}Datei:${NC} $file"
+    log_info "${CYAN}Schlüssel:${NC} $key"
+    log_info "${CYAN}Wert:${NC} $value"
     
     if [ ! -f "$file" ]; then
-        echo -e "${RED}❌ Datei nicht gefunden: $file${NC}"
+        log_info "${RED}❌ Datei nicht gefunden: $file${NC}"
         return 1
     fi
     
@@ -35,10 +45,10 @@ set_config() {
         sed -i "s|^$key=.*|$key=$value|" "$file"
     else
         # Schlüssel existiert nicht, füge ihn hinzu
-        echo "$key=$value" >> "$file"
+        log_info "$key=$value" >> "$file"
     fi
     
-    echo -e "${GREEN}✅ Konfigurationswert erfolgreich gesetzt${NC}"
+    log_info "${GREEN}✅ Konfigurationswert erfolgreich gesetzt${NC}"
 }
 
 # Funktion zum Abrufen eines Konfigurationswerts
@@ -46,22 +56,22 @@ get_config() {
     local file="$1"
     local key="$2"
     
-    echo -e "${BLUE}=== Rufe Konfigurationswert ab ===${NC}"
-    echo -e "${CYAN}Datei:${NC} $file"
-    echo -e "${CYAN}Schlüssel:${NC} $key"
+    log_info "${BLUE}=== Rufe Konfigurationswert ab ===${NC}"
+    log_info "${CYAN}Datei:${NC} $file"
+    log_info "${CYAN}Schlüssel:${NC} $key"
     
     if [ ! -f "$file" ]; then
-        echo -e "${RED}❌ Datei nicht gefunden: $file${NC}"
+        log_info "${RED}❌ Datei nicht gefunden: $file${NC}"
         return 1
     fi
     
     local value=$(grep "^$key=" "$file" | cut -d= -f2-)
     
     if [ -z "$value" ]; then
-        echo -e "${YELLOW}⚠️ Schlüssel nicht gefunden: $key${NC}"
+        log_info "${YELLOW}⚠️ Schlüssel nicht gefunden: $key${NC}"
         return 1
     else
-        echo -e "${GREEN}✅ Wert:${NC} $value"
+        log_info "${GREEN}✅ Wert:${NC} $value"
     fi
 }
 
@@ -70,21 +80,21 @@ comment_config() {
     local file="$1"
     local key="$2"
     
-    echo -e "${BLUE}=== Kommentiere Konfigurationswert aus ===${NC}"
-    echo -e "${CYAN}Datei:${NC} $file"
-    echo -e "${CYAN}Schlüssel:${NC} $key"
+    log_info "${BLUE}=== Kommentiere Konfigurationswert aus ===${NC}"
+    log_info "${CYAN}Datei:${NC} $file"
+    log_info "${CYAN}Schlüssel:${NC} $key"
     
     if [ ! -f "$file" ]; then
-        echo -e "${RED}❌ Datei nicht gefunden: $file${NC}"
+        log_info "${RED}❌ Datei nicht gefunden: $file${NC}"
         return 1
     fi
     
     if grep -q "^$key=" "$file"; then
         # Schlüssel existiert, kommentiere ihn aus
         sed -i "s|^$key=|#$key=|" "$file"
-        echo -e "${GREEN}✅ Konfigurationswert erfolgreich auskommentiert${NC}"
+        log_info "${GREEN}✅ Konfigurationswert erfolgreich auskommentiert${NC}"
     else
-        echo -e "${YELLOW}⚠️ Schlüssel nicht gefunden: $key${NC}"
+        log_info "${YELLOW}⚠️ Schlüssel nicht gefunden: $key${NC}"
         return 1
     fi
 }
@@ -94,21 +104,21 @@ uncomment_config() {
     local file="$1"
     local key="$2"
     
-    echo -e "${BLUE}=== Kommentiere Konfigurationswert ein ===${NC}"
-    echo -e "${CYAN}Datei:${NC} $file"
-    echo -e "${CYAN}Schlüssel:${NC} $key"
+    log_info "${BLUE}=== Kommentiere Konfigurationswert ein ===${NC}"
+    log_info "${CYAN}Datei:${NC} $file"
+    log_info "${CYAN}Schlüssel:${NC} $key"
     
     if [ ! -f "$file" ]; then
-        echo -e "${RED}❌ Datei nicht gefunden: $file${NC}"
+        log_info "${RED}❌ Datei nicht gefunden: $file${NC}"
         return 1
     fi
     
     if grep -q "^#$key=" "$file"; then
         # Schlüssel ist auskommentiert, kommentiere ihn ein
         sed -i "s|^#$key=|$key=|" "$file"
-        echo -e "${GREEN}✅ Konfigurationswert erfolgreich einkommentiert${NC}"
+        log_info "${GREEN}✅ Konfigurationswert erfolgreich einkommentiert${NC}"
     else
-        echo -e "${YELLOW}⚠️ Auskommentierter Schlüssel nicht gefunden: $key${NC}"
+        log_info "${YELLOW}⚠️ Auskommentierter Schlüssel nicht gefunden: $key${NC}"
         return 1
     fi
 }
@@ -119,24 +129,24 @@ set_json_config() {
     local key="$2"
     local value="$3"
     
-    echo -e "${BLUE}=== Setze JSON-Konfigurationswert ===${NC}"
-    echo -e "${CYAN}Datei:${NC} $file"
-    echo -e "${CYAN}Schlüssel:${NC} $key"
-    echo -e "${CYAN}Wert:${NC} $value"
+    log_info "${BLUE}=== Setze JSON-Konfigurationswert ===${NC}"
+    log_info "${CYAN}Datei:${NC} $file"
+    log_info "${CYAN}Schlüssel:${NC} $key"
+    log_info "${CYAN}Wert:${NC} $value"
     
     if [ ! -f "$file" ]; then
-        echo -e "${RED}❌ Datei nicht gefunden: $file${NC}"
+        log_info "${RED}❌ Datei nicht gefunden: $file${NC}"
         return 1
     fi
     
     if ! command -v jq &> /dev/null; then
-        echo -e "${RED}❌ jq ist nicht installiert. Bitte installieren Sie jq.${NC}"
+        log_info "${RED}❌ jq ist nicht installiert. Bitte installieren Sie jq.${NC}"
         return 1
     fi
     
     # Überprüfe, ob die Datei gültiges JSON enthält
     if ! jq . "$file" &> /dev/null; then
-        echo -e "${RED}❌ Datei enthält kein gültiges JSON: $file${NC}"
+        log_info "${RED}❌ Datei enthält kein gültiges JSON: $file${NC}"
         return 1
     fi
     
@@ -145,7 +155,7 @@ set_json_config() {
     jq ".$key = $value" "$file" > "$temp_file"
     mv "$temp_file" "$file"
     
-    echo -e "${GREEN}✅ JSON-Konfigurationswert erfolgreich gesetzt${NC}"
+    log_info "${GREEN}✅ JSON-Konfigurationswert erfolgreich gesetzt${NC}"
 }
 
 # Funktion zum Abrufen eines JSON-Konfigurationswerts
@@ -153,23 +163,23 @@ get_json_config() {
     local file="$1"
     local key="$2"
     
-    echo -e "${BLUE}=== Rufe JSON-Konfigurationswert ab ===${NC}"
-    echo -e "${CYAN}Datei:${NC} $file"
-    echo -e "${CYAN}Schlüssel:${NC} $key"
+    log_info "${BLUE}=== Rufe JSON-Konfigurationswert ab ===${NC}"
+    log_info "${CYAN}Datei:${NC} $file"
+    log_info "${CYAN}Schlüssel:${NC} $key"
     
     if [ ! -f "$file" ]; then
-        echo -e "${RED}❌ Datei nicht gefunden: $file${NC}"
+        log_info "${RED}❌ Datei nicht gefunden: $file${NC}"
         return 1
     fi
     
     if ! command -v jq &> /dev/null; then
-        echo -e "${RED}❌ jq ist nicht installiert. Bitte installieren Sie jq.${NC}"
+        log_info "${RED}❌ jq ist nicht installiert. Bitte installieren Sie jq.${NC}"
         return 1
     fi
     
     # Überprüfe, ob die Datei gültiges JSON enthält
     if ! jq . "$file" &> /dev/null; then
-        echo -e "${RED}❌ Datei enthält kein gültiges JSON: $file${NC}"
+        log_info "${RED}❌ Datei enthält kein gültiges JSON: $file${NC}"
         return 1
     fi
     
@@ -177,10 +187,10 @@ get_json_config() {
     local value=$(jq ".$key" "$file")
     
     if [ "$value" = "null" ]; then
-        echo -e "${YELLOW}⚠️ Schlüssel nicht gefunden: $key${NC}"
+        log_info "${YELLOW}⚠️ Schlüssel nicht gefunden: $key${NC}"
         return 1
     else
-        echo -e "${GREEN}✅ Wert:${NC} $value"
+        log_info "${GREEN}✅ Wert:${NC} $value"
     fi
 }
 
@@ -190,18 +200,18 @@ set_yaml_config() {
     local key="$2"
     local value="$3"
     
-    echo -e "${BLUE}=== Setze YAML-Konfigurationswert ===${NC}"
-    echo -e "${CYAN}Datei:${NC} $file"
-    echo -e "${CYAN}Schlüssel:${NC} $key"
-    echo -e "${CYAN}Wert:${NC} $value"
+    log_info "${BLUE}=== Setze YAML-Konfigurationswert ===${NC}"
+    log_info "${CYAN}Datei:${NC} $file"
+    log_info "${CYAN}Schlüssel:${NC} $key"
+    log_info "${CYAN}Wert:${NC} $value"
     
     if [ ! -f "$file" ]; then
-        echo -e "${RED}❌ Datei nicht gefunden: $file${NC}"
+        log_info "${RED}❌ Datei nicht gefunden: $file${NC}"
         return 1
     fi
     
     if ! command -v yq &> /dev/null; then
-        echo -e "${RED}❌ yq ist nicht installiert. Bitte installieren Sie yq.${NC}"
+        log_info "${RED}❌ yq ist nicht installiert. Bitte installieren Sie yq.${NC}"
         return 1
     fi
     
@@ -210,7 +220,7 @@ set_yaml_config() {
     yq eval ".$key = $value" "$file" > "$temp_file"
     mv "$temp_file" "$file"
     
-    echo -e "${GREEN}✅ YAML-Konfigurationswert erfolgreich gesetzt${NC}"
+    log_info "${GREEN}✅ YAML-Konfigurationswert erfolgreich gesetzt${NC}"
 }
 
 # Funktion zum Abrufen eines YAML-Konfigurationswerts
@@ -218,17 +228,17 @@ get_yaml_config() {
     local file="$1"
     local key="$2"
     
-    echo -e "${BLUE}=== Rufe YAML-Konfigurationswert ab ===${NC}"
-    echo -e "${CYAN}Datei:${NC} $file"
-    echo -e "${CYAN}Schlüssel:${NC} $key"
+    log_info "${BLUE}=== Rufe YAML-Konfigurationswert ab ===${NC}"
+    log_info "${CYAN}Datei:${NC} $file"
+    log_info "${CYAN}Schlüssel:${NC} $key"
     
     if [ ! -f "$file" ]; then
-        echo -e "${RED}❌ Datei nicht gefunden: $file${NC}"
+        log_info "${RED}❌ Datei nicht gefunden: $file${NC}"
         return 1
     fi
     
     if ! command -v yq &> /dev/null; then
-        echo -e "${RED}❌ yq ist nicht installiert. Bitte installieren Sie yq.${NC}"
+        log_info "${RED}❌ yq ist nicht installiert. Bitte installieren Sie yq.${NC}"
         return 1
     fi
     
@@ -236,10 +246,10 @@ get_yaml_config() {
     local value=$(yq eval ".$key" "$file")
     
     if [ "$value" = "null" ]; then
-        echo -e "${YELLOW}⚠️ Schlüssel nicht gefunden: $key${NC}"
+        log_info "${YELLOW}⚠️ Schlüssel nicht gefunden: $key${NC}"
         return 1
     else
-        echo -e "${GREEN}✅ Wert:${NC} $value"
+        log_info "${GREEN}✅ Wert:${NC} $value"
     fi
 }
 
@@ -249,18 +259,18 @@ set_xml_config() {
     local xpath="$2"
     local value="$3"
     
-    echo -e "${BLUE}=== Setze XML-Konfigurationswert ===${NC}"
-    echo -e "${CYAN}Datei:${NC} $file"
-    echo -e "${CYAN}XPath:${NC} $xpath"
-    echo -e "${CYAN}Wert:${NC} $value"
+    log_info "${BLUE}=== Setze XML-Konfigurationswert ===${NC}"
+    log_info "${CYAN}Datei:${NC} $file"
+    log_info "${CYAN}XPath:${NC} $xpath"
+    log_info "${CYAN}Wert:${NC} $value"
     
     if [ ! -f "$file" ]; then
-        echo -e "${RED}❌ Datei nicht gefunden: $file${NC}"
+        log_info "${RED}❌ Datei nicht gefunden: $file${NC}"
         return 1
     fi
     
     if ! command -v xmlstarlet &> /dev/null; then
-        echo -e "${RED}❌ xmlstarlet ist nicht installiert. Bitte installieren Sie xmlstarlet.${NC}"
+        log_info "${RED}❌ xmlstarlet ist nicht installiert. Bitte installieren Sie xmlstarlet.${NC}"
         return 1
     fi
     
@@ -269,7 +279,7 @@ set_xml_config() {
     xmlstarlet ed -L -u "$xpath" -v "$value" "$file" > "$temp_file"
     mv "$temp_file" "$file"
     
-    echo -e "${GREEN}✅ XML-Konfigurationswert erfolgreich gesetzt${NC}"
+    log_info "${GREEN}✅ XML-Konfigurationswert erfolgreich gesetzt${NC}"
 }
 
 # Funktion zum Abrufen eines XML-Konfigurationswerts
@@ -277,17 +287,17 @@ get_xml_config() {
     local file="$1"
     local xpath="$2"
     
-    echo -e "${BLUE}=== Rufe XML-Konfigurationswert ab ===${NC}"
-    echo -e "${CYAN}Datei:${NC} $file"
-    echo -e "${CYAN}XPath:${NC} $xpath"
+    log_info "${BLUE}=== Rufe XML-Konfigurationswert ab ===${NC}"
+    log_info "${CYAN}Datei:${NC} $file"
+    log_info "${CYAN}XPath:${NC} $xpath"
     
     if [ ! -f "$file" ]; then
-        echo -e "${RED}❌ Datei nicht gefunden: $file${NC}"
+        log_info "${RED}❌ Datei nicht gefunden: $file${NC}"
         return 1
     fi
     
     if ! command -v xmlstarlet &> /dev/null; then
-        echo -e "${RED}❌ xmlstarlet ist nicht installiert. Bitte installieren Sie xmlstarlet.${NC}"
+        log_info "${RED}❌ xmlstarlet ist nicht installiert. Bitte installieren Sie xmlstarlet.${NC}"
         return 1
     fi
     
@@ -295,10 +305,10 @@ get_xml_config() {
     local value=$(xmlstarlet sel -t -v "$xpath" "$file")
     
     if [ -z "$value" ]; then
-        echo -e "${YELLOW}⚠️ XPath nicht gefunden: $xpath${NC}"
+        log_info "${YELLOW}⚠️ XPath nicht gefunden: $xpath${NC}"
         return 1
     else
-        echo -e "${GREEN}✅ Wert:${NC} $value"
+        log_info "${GREEN}✅ Wert:${NC} $value"
     fi
 }
 
@@ -308,10 +318,10 @@ set_env_config() {
     local key="$2"
     local value="$3"
     
-    echo -e "${BLUE}=== Setze Umgebungsvariable ===${NC}"
-    echo -e "${CYAN}Datei:${NC} $file"
-    echo -e "${CYAN}Schlüssel:${NC} $key"
-    echo -e "${CYAN}Wert:${NC} $value"
+    log_info "${BLUE}=== Setze Umgebungsvariable ===${NC}"
+    log_info "${CYAN}Datei:${NC} $file"
+    log_info "${CYAN}Schlüssel:${NC} $key"
+    log_info "${CYAN}Wert:${NC} $value"
     
     if [ ! -f "$file" ]; then
         # Datei existiert nicht, erstelle sie
@@ -323,10 +333,10 @@ set_env_config() {
         sed -i "s|^$key=.*|$key=$value|" "$file"
     else
         # Schlüssel existiert nicht, füge ihn hinzu
-        echo "$key=$value" >> "$file"
+        log_info "$key=$value" >> "$file"
     fi
     
-    echo -e "${GREEN}✅ Umgebungsvariable erfolgreich gesetzt${NC}"
+    log_info "${GREEN}✅ Umgebungsvariable erfolgreich gesetzt${NC}"
 }
 
 # Funktion zum Abrufen einer Umgebungsvariablen aus einer .env-Datei
@@ -334,22 +344,22 @@ get_env_config() {
     local file="$1"
     local key="$2"
     
-    echo -e "${BLUE}=== Rufe Umgebungsvariable ab ===${NC}"
-    echo -e "${CYAN}Datei:${NC} $file"
-    echo -e "${CYAN}Schlüssel:${NC} $key"
+    log_info "${BLUE}=== Rufe Umgebungsvariable ab ===${NC}"
+    log_info "${CYAN}Datei:${NC} $file"
+    log_info "${CYAN}Schlüssel:${NC} $key"
     
     if [ ! -f "$file" ]; then
-        echo -e "${RED}❌ Datei nicht gefunden: $file${NC}"
+        log_info "${RED}❌ Datei nicht gefunden: $file${NC}"
         return 1
     fi
     
     local value=$(grep "^$key=" "$file" | cut -d= -f2-)
     
     if [ -z "$value" ]; then
-        echo -e "${YELLOW}⚠️ Schlüssel nicht gefunden: $key${NC}"
+        log_info "${YELLOW}⚠️ Schlüssel nicht gefunden: $key${NC}"
         return 1
     else
-        echo -e "${GREEN}✅ Wert:${NC} $value"
+        log_info "${GREEN}✅ Wert:${NC} $value"
     fi
 }
 
@@ -399,8 +409,8 @@ main() {
             get_env_config "$file" "$key"
             ;;
         *)
-            echo -e "${RED}Unbekannte Aktion: $action${NC}"
-            echo "Verfügbare Aktionen: set, get, comment, uncomment, set-json, get-json, set-yaml, get-yaml, set-xml, get-xml, set-env, get-env"
+            log_info "${RED}Unbekannte Aktion: $action${NC}"
+            log_info "Verfügbare Aktionen: set, get, comment, uncomment, set-json, get-json, set-yaml, get-yaml, set-xml, get-xml, set-env, get-env"
             return 1
             ;;
     esac
@@ -409,9 +419,9 @@ main() {
 # Führe die Hauptfunktion aus, wenn das Skript direkt ausgeführt wird
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     if [ $# -lt 3 ]; then
-        echo -e "${RED}Unvollständige Parameter${NC}"
-        echo "Verwendung: $0 <Aktion> <Datei> <Schlüssel> [Wert] [Extra]"
-        echo "Verfügbare Aktionen: set, get, comment, uncomment, set-json, get-json, set-yaml, get-yaml, set-xml, get-xml, set-env, get-env"
+        log_info "${RED}Unvollständige Parameter${NC}"
+        log_info "Verwendung: $0 <Aktion> <Datei> <Schlüssel> [Wert] [Extra]"
+        log_info "Verfügbare Aktionen: set, get, comment, uncomment, set-json, get-json, set-yaml, get-yaml, set-xml, get-xml, set-env, get-env"
         exit 1
     fi
     

@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # Dev-Server CLI
 # Eine umfassende CLI zur Verwaltung des Dev-Server-Workflows
 
@@ -62,150 +72,150 @@ log() {
     
     case "$level" in
         "INFO")
-            echo -e "${BLUE}[INFO]${NC} $message"
+            log_info "${BLUE}[INFO]${NC} $message"
             ;;
         "SUCCESS")
-            echo -e "${GREEN}[SUCCESS]${NC} $message"
+            log_info "${GREEN}[SUCCESS]${NC} $message"
             ;;
         "WARNING")
-            echo -e "${YELLOW}[WARNING]${NC} $message"
+            log_info "${YELLOW}[WARNING]${NC} $message"
             ;;
         "ERROR")
-            echo -e "${RED}[ERROR]${NC} $message"
+            log_info "${RED}[ERROR]${NC} $message"
             ;;
         *)
-            echo -e "[LOG] $message"
+            log_info "[LOG] $message"
             ;;
     esac
     
-    echo "[$timestamp] [$level] $message" >> "$LOGS_DIR/dev-server.log"
+    log_info "[$timestamp] [$level] $message" >> "$LOGS_DIR/dev-server.log"
 }
 
 # Hilfefunktion
 show_help() {
-    echo -e "${BLUE}Dev-Server CLI${NC} - Eine umfassende CLI zur Verwaltung des Dev-Server-Workflows"
+    log_info "${BLUE}Dev-Server CLI${NC} - Eine umfassende CLI zur Verwaltung des Dev-Server-Workflows"
     echo
-    echo -e "Verwendung: ${YELLOW}dev-server${NC} ${GREEN}[Befehl]${NC} ${CYAN}[Optionen]${NC}"
+    log_info "Verwendung: ${YELLOW}dev-server${NC} ${GREEN}[Befehl]${NC} ${CYAN}[Optionen]${NC}"
     echo
-    echo -e "${GREEN}Verfügbare Befehle:${NC}"
-    echo -e "  ${YELLOW}help${NC}                     Zeigt diese Hilfe an"
-    echo -e "  ${YELLOW}status${NC}                   Zeigt den Status aller Komponenten an"
-    echo -e "  ${YELLOW}start${NC} ${CYAN}[Komponente]${NC}        Startet eine Komponente"
-    echo -e "  ${YELLOW}stop${NC} ${CYAN}[Komponente]${NC}         Stoppt eine Komponente"
-    echo -e "  ${YELLOW}restart${NC} ${CYAN}[Komponente]${NC}      Startet eine Komponente neu"
-    echo -e "  ${YELLOW}logs${NC} ${CYAN}[Komponente]${NC}         Zeigt die Logs einer Komponente an"
-    echo -e "  ${YELLOW}config${NC} ${CYAN}[Option] [Wert]${NC}    Konfiguriert eine Option
+    log_info "${GREEN}Verfügbare Befehle:${NC}"
+    log_info "  ${YELLOW}help${NC}                     Zeigt diese Hilfe an"
+    log_info "  ${YELLOW}status${NC}                   Zeigt den Status aller Komponenten an"
+    log_info "  ${YELLOW}start${NC} ${CYAN}[Komponente]${NC}        Startet eine Komponente"
+    log_info "  ${YELLOW}stop${NC} ${CYAN}[Komponente]${NC}         Stoppt eine Komponente"
+    log_info "  ${YELLOW}restart${NC} ${CYAN}[Komponente]${NC}      Startet eine Komponente neu"
+    log_info "  ${YELLOW}logs${NC} ${CYAN}[Komponente]${NC}         Zeigt die Logs einer Komponente an"
+    log_info "  ${YELLOW}config${NC} ${CYAN}[Option] [Wert]${NC}    Konfiguriert eine Option
                                 Optionen: llm-api-key, github-token, openproject-token,
                                 n8n-api-key, workspace-path, openhands-docker-mcp"
-    echo -e "  ${YELLOW}web-ui${NC} ${CYAN}[Aktion]${NC}         Verwaltet die Web-UI
+    log_info "  ${YELLOW}web-ui${NC} ${CYAN}[Aktion]${NC}         Verwaltet die Web-UI
                                 Aktionen: start, stop, logs, open"
-    echo -e "  ${YELLOW}list${NC} ${CYAN}[Ressourcentyp]${NC}      Listet verfügbare Ressourcen auf"
-    echo -e "  ${YELLOW}install${NC} ${CYAN}[Komponente]${NC}      Installiert eine Komponente"
-    echo -e "  ${YELLOW}switch-llm${NC} ${CYAN}[LLM]${NC}          Wechselt zwischen LLMs (llamafile, claude)"
-    echo -e "  ${YELLOW}update${NC} ${CYAN}[Komponente]${NC}       Aktualisiert eine Komponente"
-    echo -e "  ${YELLOW}backup${NC} ${CYAN}[Komponente]${NC}       Erstellt ein Backup einer Komponente"
-    echo -e "  ${YELLOW}restore${NC} ${CYAN}[Backup]${NC}          Stellt ein Backup wieder her"
+    log_info "  ${YELLOW}list${NC} ${CYAN}[Ressourcentyp]${NC}      Listet verfügbare Ressourcen auf"
+    log_info "  ${YELLOW}install${NC} ${CYAN}[Komponente]${NC}      Installiert eine Komponente"
+    log_info "  ${YELLOW}switch-llm${NC} ${CYAN}[LLM]${NC}          Wechselt zwischen LLMs (llamafile, claude)"
+    log_info "  ${YELLOW}update${NC} ${CYAN}[Komponente]${NC}       Aktualisiert eine Komponente"
+    log_info "  ${YELLOW}backup${NC} ${CYAN}[Komponente]${NC}       Erstellt ein Backup einer Komponente"
+    log_info "  ${YELLOW}restore${NC} ${CYAN}[Backup]${NC}          Stellt ein Backup wieder her"
     echo
-    echo -e "${GREEN}Erweiterte Befehle:${NC}"
-    echo -e "  ${YELLOW}package${NC} ${CYAN}[Aktion] [Paket] [Manager] [Optionen]${NC}    Paketmanagement"
-    echo -e "                                Aktionen: install, uninstall, update, upgrade, check"
-    echo -e "                                Manager: apt, pip, pip3, npm, npx, dpkg"
-    echo -e "  ${YELLOW}configure${NC} ${CYAN}[Aktion] [Datei] [Schlüssel] [Wert] [Extra]${NC}    Konfigurationsmanagement"
-    echo -e "                                Aktionen: set, get, comment, uncomment, set-json, get-json,"
-    echo -e "                                          set-yaml, get-yaml, set-xml, get-xml, set-env, get-env"
-    echo -e "  ${YELLOW}monitor${NC} ${CYAN}[Aktion] [Argumente...]${NC}    Monitoring-Funktionen"
-    echo -e "                                Aktionen: check-service, get-logs, check-disk, check-memory,"
-    echo -e "                                          check-cpu, check-port, check-url, check-container,"
-    echo -e "                                          container-stats, check-prometheus"
-    echo -e "  ${YELLOW}ai${NC} ${CYAN}[Prompt]${NC}               Führt einen KI-Befehl aus"
-    echo -e "  ${YELLOW}menu${NC}                     Öffnet das interaktive Menü"
+    log_info "${GREEN}Erweiterte Befehle:${NC}"
+    log_info "  ${YELLOW}package${NC} ${CYAN}[Aktion] [Paket] [Manager] [Optionen]${NC}    Paketmanagement"
+    log_info "                                Aktionen: install, uninstall, update, upgrade, check"
+    log_info "                                Manager: apt, pip, pip3, npm, npx, dpkg"
+    log_info "  ${YELLOW}configure${NC} ${CYAN}[Aktion] [Datei] [Schlüssel] [Wert] [Extra]${NC}    Konfigurationsmanagement"
+    log_info "                                Aktionen: set, get, comment, uncomment, set-json, get-json,"
+    log_info "                                          set-yaml, get-yaml, set-xml, get-xml, set-env, get-env"
+    log_info "  ${YELLOW}monitor${NC} ${CYAN}[Aktion] [Argumente...]${NC}    Monitoring-Funktionen"
+    log_info "                                Aktionen: check-service, get-logs, check-disk, check-memory,"
+    log_info "                                          check-cpu, check-port, check-url, check-container,"
+    log_info "                                          container-stats, check-prometheus"
+    log_info "  ${YELLOW}ai${NC} ${CYAN}[Prompt]${NC}               Führt einen KI-Befehl aus"
+    log_info "  ${YELLOW}menu${NC}                     Öffnet das interaktive Menü"
     echo
-    echo -e "${GREEN}Komponenten:${NC}"
-    echo -e "  ${CYAN}all${NC}                        Alle Komponenten"
-    echo -e "  ${CYAN}mcp${NC}                        MCP-Server (Docker Container)
+    log_info "${GREEN}Komponenten:${NC}"
+    log_info "  ${CYAN}all${NC}                        Alle Komponenten"
+    log_info "  ${CYAN}mcp${NC}                        MCP-Server (Docker Container)
   ${CYAN}n8n-mcp${NC}                    n8n MCP-Server
   ${CYAN}docker-mcp${NC}                 Docker MCP-Server
   ${CYAN}monitoring${NC}                 Monitoring Stack (Prometheus, Grafana, Alertmanager)"
-    echo -e "  ${CYAN}n8n${NC}                        n8n-Workflow-Engine"
-    echo -e "  ${CYAN}ollama${NC}                     Ollama LLM-Server"
-    echo -e "  ${CYAN}openhands${NC}                  OpenHands KI-Agent"
-    echo -e "  ${CYAN}llamafile${NC}                  Llamafile LLM"
-    echo -e "  ${CYAN}shellgpt${NC}                   ShellGPT CLI"
+    log_info "  ${CYAN}n8n${NC}                        n8n-Workflow-Engine"
+    log_info "  ${CYAN}ollama${NC}                     Ollama LLM-Server"
+    log_info "  ${CYAN}openhands${NC}                  OpenHands KI-Agent"
+    log_info "  ${CYAN}llamafile${NC}                  Llamafile LLM"
+    log_info "  ${CYAN}shellgpt${NC}                   ShellGPT CLI"
     echo
-    echo -e "${GREEN}Beispiele:${NC}"
-    echo -e "  ${YELLOW}dev-server status${NC}"
-    echo -e "  ${YELLOW}dev-server start${NC} ${CYAN}mcp${NC}"
-    echo -e "  ${YELLOW}dev-server logs${NC} ${CYAN}n8n${NC}"
-    echo -e "  ${YELLOW}dev-server ai${NC} ${CYAN}\"Wie starte ich den MCP-Server?\"${NC}"
-    echo -e "  ${YELLOW}dev-server menu${NC}"
+    log_info "${GREEN}Beispiele:${NC}"
+    log_info "  ${YELLOW}dev-server status${NC}"
+    log_info "  ${YELLOW}dev-server start${NC} ${CYAN}mcp${NC}"
+    log_info "  ${YELLOW}dev-server logs${NC} ${CYAN}n8n${NC}"
+    log_info "  ${YELLOW}dev-server ai${NC} ${CYAN}\"Wie starte ich den MCP-Server?\"${NC}"
+    log_info "  ${YELLOW}dev-server menu${NC}"
 }
 
 # Statusfunktion
 show_status() {
-    echo -e "${BLUE}=== Dev-Server Status ===${NC}"
+    log_info "${BLUE}=== Dev-Server Status ===${NC}"
     
     # MCP-Server Status
     if docker ps | grep -q "mcp-"; then
-        echo -e "${GREEN}✅ MCP-Server (Docker):${NC} Läuft"
+        log_info "${GREEN}✅ MCP-Server (Docker):${NC} Läuft"
         docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep "mcp-"
     else
-        echo -e "${RED}❌ MCP-Server (Docker):${NC} Gestoppt"
+        log_info "${RED}❌ MCP-Server (Docker):${NC} Gestoppt"
     fi
     
     # n8n MCP Server Status
     if pgrep -f "n8n_mcp_server.py" > /dev/null; then
-        echo -e "${GREEN}✅ n8n MCP-Server:${NC} Läuft"
+        log_info "${GREEN}✅ n8n MCP-Server:${NC} Läuft"
         ps aux | grep "[n]8n_mcp_server.py" | awk '{print $2, $11, $12, $13}'
     else
-        echo -e "${RED}❌ n8n MCP-Server:${NC} Gestoppt"
+        log_info "${RED}❌ n8n MCP-Server:${NC} Gestoppt"
     fi
     
     # Docker MCP Server Status
     if pgrep -f "docker_mcp_server.py" > /dev/null; then
-        echo -e "${GREEN}✅ Docker MCP-Server:${NC} Läuft"
+        log_info "${GREEN}✅ Docker MCP-Server:${NC} Läuft"
         ps aux | grep "[d]ocker_mcp_server.py" | awk '{print $2, $11, $12, $13}'
     else
-        echo -e "${RED}❌ Docker MCP-Server:${NC} Gestoppt"
+        log_info "${RED}❌ Docker MCP-Server:${NC} Gestoppt"
     fi
     
     # n8n Status
     if docker ps | grep -q "n8n"; then
-        echo -e "${GREEN}✅ n8n:${NC} Läuft"
+        log_info "${GREEN}✅ n8n:${NC} Läuft"
         docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep "n8n"
     else
-        echo -e "${RED}❌ n8n:${NC} Gestoppt"
+        log_info "${RED}❌ n8n:${NC} Gestoppt"
     fi
     
     # Ollama Status
     if docker ps | grep -q "ollama"; then
-        echo -e "${GREEN}✅ Ollama:${NC} Läuft"
+        log_info "${GREEN}✅ Ollama:${NC} Läuft"
         docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep "ollama"
     else
-        echo -e "${RED}❌ Ollama:${NC} Gestoppt"
+        log_info "${RED}❌ Ollama:${NC} Gestoppt"
     fi
     
     # OpenHands Status
     if docker ps | grep -q "openhands"; then
-        echo -e "${GREEN}✅ OpenHands:${NC} Läuft"
+        log_info "${GREEN}✅ OpenHands:${NC} Läuft"
         docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep "openhands"
     else
-        echo -e "${RED}❌ OpenHands:${NC} Gestoppt"
+        log_info "${RED}❌ OpenHands:${NC} Gestoppt"
     fi
     
     # Llamafile Status
     if pgrep -f "llamafile" > /dev/null; then
-        echo -e "${GREEN}✅ Llamafile:${NC} Läuft"
+        log_info "${GREEN}✅ Llamafile:${NC} Läuft"
         ps aux | grep "[l]lamafile" | awk '{print $2, $11, $12, $13}'
     else
-        echo -e "${RED}❌ Llamafile:${NC} Gestoppt"
+        log_info "${RED}❌ Llamafile:${NC} Gestoppt"
     fi
     
     # ShellGPT Status
     if [ "$SHELLGPT_INSTALLED" = true ] && command -v sgpt > /dev/null; then
-        echo -e "${GREEN}✅ ShellGPT:${NC} Installiert"
-        sgpt --version 2>/dev/null || echo "Version nicht verfügbar"
+        log_info "${GREEN}✅ ShellGPT:${NC} Installiert"
+        sgpt --version 2>/dev/null || log_info "Version nicht verfügbar"
     else
-        echo -e "${RED}❌ ShellGPT:${NC} Nicht installiert"
+        log_info "${RED}❌ ShellGPT:${NC} Nicht installiert"
     fi
 }
 
@@ -321,7 +331,7 @@ start_component() {
             ;;
         *)
             log "ERROR" "Unbekannte Komponente: $component"
-            echo "Verfügbare Komponenten: all, mcp, n8n, ollama, openhands, llamafile"
+            log_info "Verfügbare Komponenten: all, mcp, n8n, ollama, openhands, llamafile"
             ;;
     esac
 }
@@ -433,7 +443,7 @@ stop_component() {
             ;;
         *)
             log "ERROR" "Unbekannte Komponente: $component"
-            echo "Verfügbare Komponenten: all, mcp, n8n, ollama, openhands, llamafile"
+            log_info "Verfügbare Komponenten: all, mcp, n8n, ollama, openhands, llamafile"
             ;;
     esac
 }
@@ -479,7 +489,7 @@ show_logs() {
             ;;
         *)
             log "ERROR" "Unbekannte Komponente: $component"
-            echo "Verfügbare Komponenten: mcp, n8n, ollama, openhands, llamafile, cli"
+            log_info "Verfügbare Komponenten: mcp, n8n, ollama, openhands, llamafile, cli"
             ;;
     esac
 }
@@ -572,7 +582,7 @@ switch_llm() {
             ;;
         *)
             log "ERROR" "Unbekanntes LLM: $llm"
-            echo "Verfügbare LLMs: llamafile, claude"
+            log_info "Verfügbare LLMs: llamafile, claude"
             return 1
             ;;
     esac
@@ -619,7 +629,7 @@ install_component() {
             ;;
         *)
             log "ERROR" "Unbekannte Komponente: $component"
-            echo "Verfügbare Komponenten: llamafile, shellgpt"
+            log_info "Verfügbare Komponenten: llamafile, shellgpt"
             ;;
     esac
 }
@@ -630,50 +640,50 @@ list_resources() {
     
     case "$resource_type" in
         "components")
-            echo -e "${BLUE}=== Verfügbare Komponenten ===${NC}"
-            echo -e "${CYAN}all${NC}         - Alle Komponenten"
-            echo -e "${CYAN}mcp${NC}         - MCP-Server"
-            echo -e "${CYAN}n8n${NC}         - n8n-Workflow-Engine"
-            echo -e "${CYAN}ollama${NC}      - Ollama LLM-Server"
-            echo -e "${CYAN}openhands${NC}   - OpenHands KI-Agent"
-            echo -e "${CYAN}llamafile${NC}   - Llamafile LLM"
-            echo -e "${CYAN}shellgpt${NC}    - ShellGPT CLI"
+            log_info "${BLUE}=== Verfügbare Komponenten ===${NC}"
+            log_info "${CYAN}all${NC}         - Alle Komponenten"
+            log_info "${CYAN}mcp${NC}         - MCP-Server"
+            log_info "${CYAN}n8n${NC}         - n8n-Workflow-Engine"
+            log_info "${CYAN}ollama${NC}      - Ollama LLM-Server"
+            log_info "${CYAN}openhands${NC}   - OpenHands KI-Agent"
+            log_info "${CYAN}llamafile${NC}   - Llamafile LLM"
+            log_info "${CYAN}shellgpt${NC}    - ShellGPT CLI"
             ;;
         "mcp-servers")
-            echo -e "${BLUE}=== Verfügbare MCP-Server ===${NC}"
-            docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep "mcp-" || echo "Keine MCP-Server gefunden"
+            log_info "${BLUE}=== Verfügbare MCP-Server ===${NC}"
+            docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep "mcp-" || log_info "Keine MCP-Server gefunden"
             ;;
         "workflows")
-            echo -e "${BLUE}=== Verfügbare n8n-Workflows ===${NC}"
+            log_info "${BLUE}=== Verfügbare n8n-Workflows ===${NC}"
             if docker ps | grep -q "n8n"; then
-                curl -s http://localhost:5678/rest/workflows | jq -r '.data[] | "ID: \(.id) | Name: \(.name) | Active: \(.active)"' || echo "Fehler beim Abrufen der Workflows"
+                curl -s http://localhost:5678/rest/workflows | jq -r '.data[] | "ID: \(.id) | Name: \(.name) | Active: \(.active)"' || log_info "Fehler beim Abrufen der Workflows"
             else
-                echo "n8n ist nicht gestartet. Starten Sie n8n mit 'dev-server start n8n'"
+                log_info "n8n ist nicht gestartet. Starten Sie n8n mit 'dev-server start n8n'"
             fi
             ;;
         "models")
-            echo -e "${BLUE}=== Verfügbare Modelle ===${NC}"
+            log_info "${BLUE}=== Verfügbare Modelle ===${NC}"
             if docker ps | grep -q "ollama"; then
-                echo -e "${YELLOW}Ollama-Modelle:${NC}"
+                log_info "${YELLOW}Ollama-Modelle:${NC}"
                 docker exec ollama ollama list
             else
-                echo "Ollama ist nicht gestartet. Starten Sie Ollama mit 'dev-server start ollama'"
+                log_info "Ollama ist nicht gestartet. Starten Sie Ollama mit 'dev-server start ollama'"
             fi
             
             if [ -f "$LLAMAFILE_PATH" ]; then
-                echo -e "${YELLOW}Llamafile-Modell:${NC}"
-                echo "$(basename "$LLAMAFILE_PATH")"
+                log_info "${YELLOW}Llamafile-Modell:${NC}"
+                log_info "$(basename "$LLAMAFILE_PATH")"
             else
-                echo "Llamafile ist nicht installiert. Installieren Sie es mit 'dev-server install llamafile'"
+                log_info "Llamafile ist nicht installiert. Installieren Sie es mit 'dev-server install llamafile'"
             fi
             ;;
         "containers")
-            echo -e "${BLUE}=== Laufende Container ===${NC}"
+            log_info "${BLUE}=== Laufende Container ===${NC}"
             docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
             ;;
         *)
             log "ERROR" "Unbekannter Ressourcentyp: $resource_type"
-            echo "Verfügbare Ressourcentypen: components, mcp-servers, workflows, models, containers"
+            log_info "Verfügbare Ressourcentypen: components, mcp-servers, workflows, models, containers"
             ;;
     esac
 }
@@ -715,20 +725,20 @@ ai_command() {
 show_menu() {
     while true; do
         clear
-        echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
-        echo -e "${BLUE}║                ${YELLOW}Dev-Server Workflow CLI${BLUE}                  ║${NC}"
-        echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
+        log_info "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
+        log_info "${BLUE}║                ${YELLOW}Dev-Server Workflow CLI${BLUE}                  ║${NC}"
+        log_info "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
         echo
-        echo -e "${GREEN}=== Hauptmenü ===${NC}"
-        echo -e "${CYAN}1)${NC} Status anzeigen"
-        echo -e "${CYAN}2)${NC} Komponenten verwalten"
-        echo -e "${CYAN}3)${NC} Logs anzeigen"
-        echo -e "${CYAN}4)${NC} Ressourcen auflisten"
-        echo -e "${CYAN}5)${NC} Komponenten installieren"
-        echo -e "${CYAN}6)${NC} KI-Assistent"
-        echo -e "${CYAN}7)${NC} Konfiguration"
-        echo -e "${CYAN}8)${NC} Web-UI verwalten"
-        echo -e "${CYAN}0)${NC} Beenden"
+        log_info "${GREEN}=== Hauptmenü ===${NC}"
+        log_info "${CYAN}1)${NC} Status anzeigen"
+        log_info "${CYAN}2)${NC} Komponenten verwalten"
+        log_info "${CYAN}3)${NC} Logs anzeigen"
+        log_info "${CYAN}4)${NC} Ressourcen auflisten"
+        log_info "${CYAN}5)${NC} Komponenten installieren"
+        log_info "${CYAN}6)${NC} KI-Assistent"
+        log_info "${CYAN}7)${NC} Konfiguration"
+        log_info "${CYAN}8)${NC} Web-UI verwalten"
+        log_info "${CYAN}0)${NC} Beenden"
         echo
         read -p "Wählen Sie eine Option: " main_option
         
@@ -742,20 +752,20 @@ show_menu() {
             2)
                 while true; do
                     clear
-                    echo -e "${GREEN}=== Komponenten verwalten ===${NC}"
-                    echo -e "${CYAN}1)${NC} Alle Komponenten starten"
-                    echo -e "${CYAN}2)${NC} Alle Komponenten stoppen"
-                    echo -e "${CYAN}3)${NC} MCP-Server starten"
-                    echo -e "${CYAN}4)${NC} MCP-Server stoppen"
-                    echo -e "${CYAN}5)${NC} n8n starten"
-                    echo -e "${CYAN}6)${NC} n8n stoppen"
-                    echo -e "${CYAN}7)${NC} Ollama starten"
-                    echo -e "${CYAN}8)${NC} Ollama stoppen"
-                    echo -e "${CYAN}9)${NC} OpenHands starten"
-                    echo -e "${CYAN}10)${NC} OpenHands stoppen"
-                    echo -e "${CYAN}11)${NC} Llamafile starten"
-                    echo -e "${CYAN}12)${NC} Llamafile stoppen"
-                    echo -e "${CYAN}0)${NC} Zurück zum Hauptmenü"
+                    log_info "${GREEN}=== Komponenten verwalten ===${NC}"
+                    log_info "${CYAN}1)${NC} Alle Komponenten starten"
+                    log_info "${CYAN}2)${NC} Alle Komponenten stoppen"
+                    log_info "${CYAN}3)${NC} MCP-Server starten"
+                    log_info "${CYAN}4)${NC} MCP-Server stoppen"
+                    log_info "${CYAN}5)${NC} n8n starten"
+                    log_info "${CYAN}6)${NC} n8n stoppen"
+                    log_info "${CYAN}7)${NC} Ollama starten"
+                    log_info "${CYAN}8)${NC} Ollama stoppen"
+                    log_info "${CYAN}9)${NC} OpenHands starten"
+                    log_info "${CYAN}10)${NC} OpenHands stoppen"
+                    log_info "${CYAN}11)${NC} Llamafile starten"
+                    log_info "${CYAN}12)${NC} Llamafile stoppen"
+                    log_info "${CYAN}0)${NC} Zurück zum Hauptmenü"
                     echo
                     read -p "Wählen Sie eine Option: " component_option
                     
@@ -773,21 +783,21 @@ show_menu() {
                         11) start_component "llamafile"; read -p "Drücken Sie eine Taste, um fortzufahren..." -n 1 ;;
                         12) stop_component "llamafile"; read -p "Drücken Sie eine Taste, um fortzufahren..." -n 1 ;;
                         0) break ;;
-                        *) echo -e "${RED}Ungültige Option${NC}"; sleep 1 ;;
+                        *) log_info "${RED}Ungültige Option${NC}"; sleep 1 ;;
                     esac
                 done
                 ;;
             3)
                 while true; do
                     clear
-                    echo -e "${GREEN}=== Logs anzeigen ===${NC}"
-                    echo -e "${CYAN}1)${NC} MCP-Server-Logs"
-                    echo -e "${CYAN}2)${NC} n8n-Logs"
-                    echo -e "${CYAN}3)${NC} Ollama-Logs"
-                    echo -e "${CYAN}4)${NC} OpenHands-Logs"
-                    echo -e "${CYAN}5)${NC} Llamafile-Logs"
-                    echo -e "${CYAN}6)${NC} CLI-Logs"
-                    echo -e "${CYAN}0)${NC} Zurück zum Hauptmenü"
+                    log_info "${GREEN}=== Logs anzeigen ===${NC}"
+                    log_info "${CYAN}1)${NC} MCP-Server-Logs"
+                    log_info "${CYAN}2)${NC} n8n-Logs"
+                    log_info "${CYAN}3)${NC} Ollama-Logs"
+                    log_info "${CYAN}4)${NC} OpenHands-Logs"
+                    log_info "${CYAN}5)${NC} Llamafile-Logs"
+                    log_info "${CYAN}6)${NC} CLI-Logs"
+                    log_info "${CYAN}0)${NC} Zurück zum Hauptmenü"
                     echo
                     read -p "Wählen Sie eine Option: " logs_option
                     
@@ -799,20 +809,20 @@ show_menu() {
                         5) clear; show_logs "llamafile"; read -p "Drücken Sie eine Taste, um fortzufahren..." -n 1 ;;
                         6) clear; show_logs "cli"; read -p "Drücken Sie eine Taste, um fortzufahren..." -n 1 ;;
                         0) break ;;
-                        *) echo -e "${RED}Ungültige Option${NC}"; sleep 1 ;;
+                        *) log_info "${RED}Ungültige Option${NC}"; sleep 1 ;;
                     esac
                 done
                 ;;
             4)
                 while true; do
                     clear
-                    echo -e "${GREEN}=== Ressourcen auflisten ===${NC}"
-                    echo -e "${CYAN}1)${NC} Komponenten"
-                    echo -e "${CYAN}2)${NC} MCP-Server"
-                    echo -e "${CYAN}3)${NC} Workflows"
-                    echo -e "${CYAN}4)${NC} Modelle"
-                    echo -e "${CYAN}5)${NC} Container"
-                    echo -e "${CYAN}0)${NC} Zurück zum Hauptmenü"
+                    log_info "${GREEN}=== Ressourcen auflisten ===${NC}"
+                    log_info "${CYAN}1)${NC} Komponenten"
+                    log_info "${CYAN}2)${NC} MCP-Server"
+                    log_info "${CYAN}3)${NC} Workflows"
+                    log_info "${CYAN}4)${NC} Modelle"
+                    log_info "${CYAN}5)${NC} Container"
+                    log_info "${CYAN}0)${NC} Zurück zum Hauptmenü"
                     echo
                     read -p "Wählen Sie eine Option: " list_option
                     
@@ -823,17 +833,17 @@ show_menu() {
                         4) clear; list_resources "models"; read -p "Drücken Sie eine Taste, um fortzufahren..." -n 1 ;;
                         5) clear; list_resources "containers"; read -p "Drücken Sie eine Taste, um fortzufahren..." -n 1 ;;
                         0) break ;;
-                        *) echo -e "${RED}Ungültige Option${NC}"; sleep 1 ;;
+                        *) log_info "${RED}Ungültige Option${NC}"; sleep 1 ;;
                     esac
                 done
                 ;;
             5)
                 while true; do
                     clear
-                    echo -e "${GREEN}=== Komponenten installieren ===${NC}"
-                    echo -e "${CYAN}1)${NC} Llamafile installieren"
-                    echo -e "${CYAN}2)${NC} ShellGPT installieren"
-                    echo -e "${CYAN}0)${NC} Zurück zum Hauptmenü"
+                    log_info "${GREEN}=== Komponenten installieren ===${NC}"
+                    log_info "${CYAN}1)${NC} Llamafile installieren"
+                    log_info "${CYAN}2)${NC} ShellGPT installieren"
+                    log_info "${CYAN}0)${NC} Zurück zum Hauptmenü"
                     echo
                     read -p "Wählen Sie eine Option: " install_option
                     
@@ -841,16 +851,16 @@ show_menu() {
                         1) install_component "llamafile"; read -p "Drücken Sie eine Taste, um fortzufahren..." -n 1 ;;
                         2) install_component "shellgpt"; read -p "Drücken Sie eine Taste, um fortzufahren..." -n 1 ;;
                         0) break ;;
-                        *) echo -e "${RED}Ungültige Option${NC}"; sleep 1 ;;
+                        *) log_info "${RED}Ungültige Option${NC}"; sleep 1 ;;
                     esac
                 done
                 ;;
             6)
                 clear
-                echo -e "${GREEN}=== KI-Assistent ===${NC}"
-                echo -e "Geben Sie Ihre Frage ein (oder 'q' zum Beenden):"
+                log_info "${GREEN}=== KI-Assistent ===${NC}"
+                log_info "Geben Sie Ihre Frage ein (oder 'q' zum Beenden):"
                 while true; do
-                    echo -e "${YELLOW}> ${NC}"
+                    log_info "${YELLOW}> ${NC}"
                     read -e prompt
                     
                     if [ "$prompt" = "q" ]; then
@@ -864,22 +874,22 @@ show_menu() {
             7)
                 while true; do
                     clear
-                    echo -e "${GREEN}=== Konfiguration ===${NC}"
-                    echo -e "${CYAN}1)${NC} Konfiguration anzeigen"
-                    echo -e "${CYAN}2)${NC} Llamafile-Pfad ändern"
-                    echo -e "${CYAN}3)${NC} Llamafile-Port ändern"
-                    echo -e "${CYAN}4)${NC} Verbose-Modus umschalten"
-                    echo -e "${CYAN}5)${NC} Anthropic API-Schlüssel konfigurieren"
-                    echo -e "${CYAN}6)${NC} Claude-Modell ändern"
-                    echo -e "${CYAN}7)${NC} Aktives LLM wechseln"
-                    echo -e "${CYAN}0)${NC} Zurück zum Hauptmenü"
+                    log_info "${GREEN}=== Konfiguration ===${NC}"
+                    log_info "${CYAN}1)${NC} Konfiguration anzeigen"
+                    log_info "${CYAN}2)${NC} Llamafile-Pfad ändern"
+                    log_info "${CYAN}3)${NC} Llamafile-Port ändern"
+                    log_info "${CYAN}4)${NC} Verbose-Modus umschalten"
+                    log_info "${CYAN}5)${NC} Anthropic API-Schlüssel konfigurieren"
+                    log_info "${CYAN}6)${NC} Claude-Modell ändern"
+                    log_info "${CYAN}7)${NC} Aktives LLM wechseln"
+                    log_info "${CYAN}0)${NC} Zurück zum Hauptmenü"
                     echo
                     read -p "Wählen Sie eine Option: " config_option
                     
                     case $config_option in
                         1)
                             clear
-                            echo -e "${GREEN}=== Aktuelle Konfiguration ===${NC}"
+                            log_info "${GREEN}=== Aktuelle Konfiguration ===${NC}"
                             cat "$CONFIG_FILE"
                             echo
                             read -p "Drücken Sie eine Taste, um fortzufahren..." -n 1
@@ -888,25 +898,25 @@ show_menu() {
                             read -p "Neuer Llamafile-Pfad: " new_path
                             sed -i "s|LLAMAFILE_PATH=.*|LLAMAFILE_PATH=\"$new_path\"|" "$CONFIG_FILE"
                             source "$CONFIG_FILE"
-                            echo -e "${GREEN}Llamafile-Pfad aktualisiert${NC}"
+                            log_info "${GREEN}Llamafile-Pfad aktualisiert${NC}"
                             sleep 1
                             ;;
                         3)
                             read -p "Neuer Llamafile-Port: " new_port
                             sed -i "s|LLAMAFILE_PORT=.*|LLAMAFILE_PORT=$new_port|" "$CONFIG_FILE"
                             source "$CONFIG_FILE"
-                            echo -e "${GREEN}Llamafile-Port aktualisiert${NC}"
+                            log_info "${GREEN}Llamafile-Port aktualisiert${NC}"
                             sleep 1
                             ;;
                         4)
                             if [ "$VERBOSE_MODE" = true ]; then
                                 sed -i "s|VERBOSE_MODE=true|VERBOSE_MODE=false|" "$CONFIG_FILE"
                                 VERBOSE_MODE=false
-                                echo -e "${GREEN}Verbose-Modus deaktiviert${NC}"
+                                log_info "${GREEN}Verbose-Modus deaktiviert${NC}"
                             else
                                 sed -i "s|VERBOSE_MODE=false|VERBOSE_MODE=true|" "$CONFIG_FILE"
                                 VERBOSE_MODE=true
-                                echo -e "${GREEN}Verbose-Modus aktiviert${NC}"
+                                log_info "${GREEN}Verbose-Modus aktiviert${NC}"
                             fi
                             sleep 1
                             ;;
@@ -914,7 +924,7 @@ show_menu() {
                             read -p "Anthropic API-Schlüssel: " api_key
                             sed -i "s|ANTHROPIC_API_KEY=.*|ANTHROPIC_API_KEY=\"$api_key\"|" "$CONFIG_FILE"
                             ANTHROPIC_API_KEY="$api_key"
-                            echo -e "${GREEN}Anthropic API-Schlüssel aktualisiert${NC}"
+                            log_info "${GREEN}Anthropic API-Schlüssel aktualisiert${NC}"
                             
                             # Konfiguriere ShellGPT neu, wenn es installiert ist und Claude aktiv ist
                             if [ "$SHELLGPT_INSTALLED" = true ] && [ "$ACTIVE_LLM" = "claude" ]; then
@@ -924,10 +934,10 @@ show_menu() {
                             sleep 1
                             ;;
                         6)
-                            echo -e "${YELLOW}Verfügbare Claude-Modelle:${NC}"
-                            echo -e "1) claude-3-5-sonnet-20240620 (Standard)"
-                            echo -e "2) claude-3-opus-20240229"
-                            echo -e "3) claude-3-haiku-20240307"
+                            log_info "${YELLOW}Verfügbare Claude-Modelle:${NC}"
+                            log_info "1) claude-3-5-sonnet-20240620 (Standard)"
+                            log_info "2) claude-3-opus-20240229"
+                            log_info "3) claude-3-haiku-20240307"
                             echo
                             read -p "Wählen Sie ein Modell (1-3): " model_option
                             
@@ -945,13 +955,13 @@ show_menu() {
                                     CLAUDE_MODEL="claude-3-haiku-20240307"
                                     ;;
                                 *) 
-                                    echo -e "${RED}Ungültige Option${NC}"
+                                    log_info "${RED}Ungültige Option${NC}"
                                     sleep 1
                                     continue
                                     ;;
                             esac
                             
-                            echo -e "${GREEN}Claude-Modell aktualisiert auf $CLAUDE_MODEL${NC}"
+                            log_info "${GREEN}Claude-Modell aktualisiert auf $CLAUDE_MODEL${NC}"
                             
                             # Konfiguriere ShellGPT neu, wenn es installiert ist und Claude aktiv ist
                             if [ "$SHELLGPT_INSTALLED" = true ] && [ "$ACTIVE_LLM" = "claude" ]; then
@@ -961,83 +971,83 @@ show_menu() {
                             sleep 1
                             ;;
                         7)
-                            echo -e "${YELLOW}Verfügbare LLMs:${NC}"
-                            echo -e "1) Llamafile (lokal)"
-                            echo -e "2) Claude (Anthropic API)"
+                            log_info "${YELLOW}Verfügbare LLMs:${NC}"
+                            log_info "1) Llamafile (lokal)"
+                            log_info "2) Claude (Anthropic API)"
                             echo
                             read -p "Wählen Sie ein LLM (1-2): " llm_option
                             
                             case $llm_option in
                                 1) switch_llm "llamafile" ;;
                                 2) switch_llm "claude" ;;
-                                *) echo -e "${RED}Ungültige Option${NC}"; sleep 1 ;;
+                                *) log_info "${RED}Ungültige Option${NC}"; sleep 1 ;;
                             esac
                             ;;
                         0) break ;;
-                        *) echo -e "${RED}Ungültige Option${NC}"; sleep 1 ;;
+                        *) log_info "${RED}Ungültige Option${NC}"; sleep 1 ;;
                     esac
                 done
                 ;;
             8)
                 while true; do
                     clear
-                    echo -e "${GREEN}=== Web-UI verwalten ===${NC}"
-                    echo -e "${CYAN}1)${NC} Web-UI starten"
-                    echo -e "${CYAN}2)${NC} Web-UI stoppen"
-                    echo -e "${CYAN}3)${NC} Web-UI-Logs anzeigen"
-                    echo -e "${CYAN}4)${NC} Web-UI im Browser öffnen"
-                    echo -e "${CYAN}0)${NC} Zurück zum Hauptmenü"
+                    log_info "${GREEN}=== Web-UI verwalten ===${NC}"
+                    log_info "${CYAN}1)${NC} Web-UI starten"
+                    log_info "${CYAN}2)${NC} Web-UI stoppen"
+                    log_info "${CYAN}3)${NC} Web-UI-Logs anzeigen"
+                    log_info "${CYAN}4)${NC} Web-UI im Browser öffnen"
+                    log_info "${CYAN}0)${NC} Zurück zum Hauptmenü"
                     echo
                     read -p "Wählen Sie eine Option: " webui_option
                     
                     case $webui_option in
                         1)
                             clear
-                            echo -e "${BLUE}Starte Web-UI...${NC}"
+                            log_info "${BLUE}Starte Web-UI...${NC}"
                             "$WORKSPACE_DIR/cli/start-web-ui.sh"
                             read -p "Drücken Sie eine Taste, um fortzufahren..." -n 1
                             ;;
                         2)
                             clear
-                            echo -e "${BLUE}Stoppe Web-UI...${NC}"
+                            log_info "${BLUE}Stoppe Web-UI...${NC}"
                             "$WORKSPACE_DIR/cli/stop-web-ui.sh"
                             read -p "Drücken Sie eine Taste, um fortzufahren..." -n 1
                             ;;
                         3)
                             clear
-                            echo -e "${BLUE}Web-UI-Logs:${NC}"
+                            log_info "${BLUE}Web-UI-Logs:${NC}"
                             if [ -f "$LOGS_DIR/web-ui.log" ]; then
                                 tail -n 50 "$LOGS_DIR/web-ui.log"
                             else
-                                echo -e "${YELLOW}Keine Logs gefunden${NC}"
+                                log_info "${YELLOW}Keine Logs gefunden${NC}"
                             fi
                             echo
                             read -p "Drücken Sie eine Taste, um fortzufahren..." -n 1
                             ;;
                         4)
                             clear
-                            echo -e "${BLUE}Öffne Web-UI im Browser...${NC}"
+                            log_info "${BLUE}Öffne Web-UI im Browser...${NC}"
                             if command -v xdg-open > /dev/null; then
                                 xdg-open "http://localhost:8080" &
                             elif command -v open > /dev/null; then
                                 open "http://localhost:8080" &
                             else
-                                echo -e "${YELLOW}Kann Browser nicht automatisch öffnen.${NC}"
-                                echo -e "${YELLOW}Bitte öffnen Sie http://localhost:8080 manuell in Ihrem Browser.${NC}"
+                                log_info "${YELLOW}Kann Browser nicht automatisch öffnen.${NC}"
+                                log_info "${YELLOW}Bitte öffnen Sie http://localhost:8080 manuell in Ihrem Browser.${NC}"
                             fi
                             read -p "Drücken Sie eine Taste, um fortzufahren..." -n 1
                             ;;
                         0) break ;;
-                        *) echo -e "${RED}Ungültige Option${NC}"; sleep 1 ;;
+                        *) log_info "${RED}Ungültige Option${NC}"; sleep 1 ;;
                     esac
                 done
                 ;;
             0)
-                echo -e "${GREEN}Auf Wiedersehen!${NC}"
+                log_info "${GREEN}Auf Wiedersehen!${NC}"
                 exit 0
                 ;;
             *)
-                echo -e "${RED}Ungültige Option${NC}"
+                log_info "${RED}Ungültige Option${NC}"
                 sleep 1
                 ;;
         esac
@@ -1051,13 +1061,13 @@ config_command() {
     
     case "$option" in
         "show")
-            echo -e "${GREEN}=== Aktuelle Konfiguration ===${NC}"
+            log_info "${GREEN}=== Aktuelle Konfiguration ===${NC}"
             cat "$CONFIG_FILE"
             ;;
         "llamafile-path")
             if [ -z "$value" ]; then
                 log "ERROR" "Kein Pfad angegeben"
-                echo "Verwendung: dev-server config llamafile-path [Pfad]"
+                log_info "Verwendung: dev-server config llamafile-path [Pfad]"
                 return 1
             fi
             sed -i "s|LLAMAFILE_PATH=.*|LLAMAFILE_PATH=\"$value\"|" "$CONFIG_FILE"
@@ -1067,7 +1077,7 @@ config_command() {
         "llamafile-port")
             if [ -z "$value" ]; then
                 log "ERROR" "Kein Port angegeben"
-                echo "Verwendung: dev-server config llamafile-port [Port]"
+                log_info "Verwendung: dev-server config llamafile-port [Port]"
                 return 1
             fi
             sed -i "s|LLAMAFILE_PORT=.*|LLAMAFILE_PORT=$value|" "$CONFIG_FILE"
@@ -1077,7 +1087,7 @@ config_command() {
         "anthropic-key")
             if [ -z "$value" ]; then
                 log "ERROR" "Kein API-Schlüssel angegeben"
-                echo "Verwendung: dev-server config anthropic-key [API-Schlüssel]"
+                log_info "Verwendung: dev-server config anthropic-key [API-Schlüssel]"
                 return 1
             fi
             sed -i "s|ANTHROPIC_API_KEY=.*|ANTHROPIC_API_KEY=\"$value\"|" "$CONFIG_FILE"
@@ -1092,8 +1102,8 @@ config_command() {
         "claude-model")
             if [ -z "$value" ]; then
                 log "ERROR" "Kein Modell angegeben"
-                echo "Verwendung: dev-server config claude-model [Modell]"
-                echo "Verfügbare Modelle: claude-3-5-sonnet-20240620, claude-3-opus-20240229, claude-3-haiku-20240307"
+                log_info "Verwendung: dev-server config claude-model [Modell]"
+                log_info "Verfügbare Modelle: claude-3-5-sonnet-20240620, claude-3-opus-20240229, claude-3-haiku-20240307"
                 return 1
             fi
             
@@ -1111,7 +1121,7 @@ config_command() {
                     ;;
                 *)
                     log "ERROR" "Ungültiges Modell: $value"
-                    echo "Verfügbare Modelle: claude-3-5-sonnet-20240620, claude-3-opus-20240229, claude-3-haiku-20240307"
+                    log_info "Verfügbare Modelle: claude-3-5-sonnet-20240620, claude-3-opus-20240229, claude-3-haiku-20240307"
                     return 1
                     ;;
             esac
@@ -1130,7 +1140,7 @@ config_command() {
         "openhands-docker-mcp")
             if [ -z "$value" ]; then
                 log "ERROR" "Kein Ausgabepfad angegeben"
-                echo "Verwendung: dev-server config openhands-docker-mcp [Ausgabepfad]"
+                log_info "Verwendung: dev-server config openhands-docker-mcp [Ausgabepfad]"
                 return 1
             fi
             python3 "$WORKSPACE_DIR/src/generate_docker_mcp_config.py" -o "$value"
@@ -1143,7 +1153,7 @@ config_command() {
             ;;
         *)
             log "ERROR" "Unbekannte Konfigurationsoption: $option"
-            echo "Verfügbare Optionen: show, llamafile-path, llamafile-port, anthropic-key, claude-model, verbose, openhands-docker-mcp"
+            log_info "Verfügbare Optionen: show, llamafile-path, llamafile-port, anthropic-key, claude-model, verbose, openhands-docker-mcp"
             return 1
             ;;
     esac
@@ -1176,8 +1186,8 @@ main() {
         "start")
             if [ $# -eq 0 ]; then
                 log "ERROR" "Keine Komponente angegeben"
-                echo "Verwendung: dev-server start [Komponente]"
-                echo "Verfügbare Komponenten: all, mcp, n8n, ollama, openhands, llamafile"
+                log_info "Verwendung: dev-server start [Komponente]"
+                log_info "Verfügbare Komponenten: all, mcp, n8n, ollama, openhands, llamafile"
                 exit 1
             fi
             start_component "$1"
@@ -1185,8 +1195,8 @@ main() {
         "stop")
             if [ $# -eq 0 ]; then
                 log "ERROR" "Keine Komponente angegeben"
-                echo "Verwendung: dev-server stop [Komponente]"
-                echo "Verfügbare Komponenten: all, mcp, n8n, ollama, openhands, llamafile"
+                log_info "Verwendung: dev-server stop [Komponente]"
+                log_info "Verfügbare Komponenten: all, mcp, n8n, ollama, openhands, llamafile"
                 exit 1
             fi
             stop_component "$1"
@@ -1194,8 +1204,8 @@ main() {
         "restart")
             if [ $# -eq 0 ]; then
                 log "ERROR" "Keine Komponente angegeben"
-                echo "Verwendung: dev-server restart [Komponente]"
-                echo "Verfügbare Komponenten: all, mcp, n8n, ollama, openhands, llamafile"
+                log_info "Verwendung: dev-server restart [Komponente]"
+                log_info "Verfügbare Komponenten: all, mcp, n8n, ollama, openhands, llamafile"
                 exit 1
             fi
             restart_component "$1"
@@ -1203,8 +1213,8 @@ main() {
         "logs")
             if [ $# -eq 0 ]; then
                 log "ERROR" "Keine Komponente angegeben"
-                echo "Verwendung: dev-server logs [Komponente] [Anzahl der Zeilen]"
-                echo "Verfügbare Komponenten: mcp, n8n, ollama, openhands, llamafile, cli"
+                log_info "Verwendung: dev-server logs [Komponente] [Anzahl der Zeilen]"
+                log_info "Verfügbare Komponenten: mcp, n8n, ollama, openhands, llamafile, cli"
                 exit 1
             fi
             show_logs "$1" "${2:-100}"
@@ -1212,8 +1222,8 @@ main() {
         "list")
             if [ $# -eq 0 ]; then
                 log "ERROR" "Kein Ressourcentyp angegeben"
-                echo "Verwendung: dev-server list [Ressourcentyp]"
-                echo "Verfügbare Ressourcentypen: components, mcp-servers, workflows, models, containers"
+                log_info "Verwendung: dev-server list [Ressourcentyp]"
+                log_info "Verfügbare Ressourcentypen: components, mcp-servers, workflows, models, containers"
                 exit 1
             fi
             list_resources "$1"
@@ -1221,8 +1231,8 @@ main() {
         "install")
             if [ $# -eq 0 ]; then
                 log "ERROR" "Keine Komponente angegeben"
-                echo "Verwendung: dev-server install [Komponente]"
-                echo "Verfügbare Komponenten: llamafile, shellgpt"
+                log_info "Verwendung: dev-server install [Komponente]"
+                log_info "Verfügbare Komponenten: llamafile, shellgpt"
                 exit 1
             fi
             install_component "$1"
@@ -1230,8 +1240,8 @@ main() {
         "config")
             if [ $# -eq 0 ]; then
                 log "ERROR" "Keine Konfigurationsoption angegeben"
-                echo "Verwendung: dev-server config [Option] [Wert]"
-                echo "Verfügbare Optionen: show, llamafile-path, llamafile-port, anthropic-key, claude-model, verbose"
+                log_info "Verwendung: dev-server config [Option] [Wert]"
+                log_info "Verfügbare Optionen: show, llamafile-path, llamafile-port, anthropic-key, claude-model, verbose"
                 exit 1
             fi
             config_command "$1" "$2"
@@ -1239,8 +1249,8 @@ main() {
         "switch-llm")
             if [ $# -eq 0 ]; then
                 log "ERROR" "Kein LLM angegeben"
-                echo "Verwendung: dev-server switch-llm [LLM]"
-                echo "Verfügbare LLMs: llamafile, claude"
+                log_info "Verwendung: dev-server switch-llm [LLM]"
+                log_info "Verfügbare LLMs: llamafile, claude"
                 exit 1
             fi
             switch_llm "$1"
@@ -1248,7 +1258,7 @@ main() {
         "ai")
             if [ $# -eq 0 ]; then
                 log "ERROR" "Kein Prompt angegeben"
-                echo "Verwendung: dev-server ai [Prompt]"
+                log_info "Verwendung: dev-server ai [Prompt]"
                 exit 1
             fi
             ai_command "$*"
@@ -1259,7 +1269,7 @@ main() {
         "package")
             if [ $# -lt 3 ]; then
                 log "ERROR" "Unvollständige Parameter"
-                echo "Verwendung: dev-server package [Aktion] [Paket] [Manager] [Optionen]"
+                log_info "Verwendung: dev-server package [Aktion] [Paket] [Manager] [Optionen]"
                 exit 1
             fi
             source "$SCRIPT_DIR/package_management.sh"
@@ -1268,7 +1278,7 @@ main() {
         "configure")
             if [ $# -lt 3 ]; then
                 log "ERROR" "Unvollständige Parameter"
-                echo "Verwendung: dev-server configure [Aktion] [Datei] [Schlüssel] [Wert] [Extra]"
+                log_info "Verwendung: dev-server configure [Aktion] [Datei] [Schlüssel] [Wert] [Extra]"
                 exit 1
             fi
             source "$SCRIPT_DIR/config_management.sh"
@@ -1277,7 +1287,7 @@ main() {
         "monitor")
             if [ $# -lt 1 ]; then
                 log "ERROR" "Keine Aktion angegeben"
-                echo "Verwendung: dev-server monitor [Aktion] [Argumente...]"
+                log_info "Verwendung: dev-server monitor [Aktion] [Argumente...]"
                 exit 1
             fi
             source "$SCRIPT_DIR/monitoring_management.sh"

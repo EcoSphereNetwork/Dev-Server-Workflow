@@ -10,7 +10,7 @@ set -euo pipefail
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Lade die gemeinsame Bibliothek
-source "$BASE_DIR/scripts/common/mcp_common.sh"
+source "$BASE_DIR/scripts/common/shell/common.sh"
 
 # Aktuelle Operation für Fehlerbehandlung
 CURRENT_OPERATION=""
@@ -18,23 +18,23 @@ CURRENT_CONTAINER=""
 
 # Funktion zum Anzeigen von Hilfe
 show_help() {
-    echo -e "${BLUE}MCP-Server Stopper${NC}"
-    echo "Dieses Skript stoppt die MCP-Server für das Dev-Server-Workflow-Projekt."
+    log_info "${BLUE}MCP-Server Stopper${NC}"
+    log_info "Dieses Skript stoppt die MCP-Server für das Dev-Server-Workflow-Projekt."
     echo ""
-    echo "Verwendung:"
-    echo "  $0 [Optionen]"
+    log_info "Verwendung:"
+    log_info "  $0 [Optionen]"
     echo ""
-    echo "Optionen:"
-    echo "  -h, --help                Zeigt diese Hilfe an"
-    echo "  -a, --all                 Alle MCP-Server stoppen"
-    echo "  --docker                  Nur Docker-basierte MCP-Server stoppen"
-    echo "  --n8n                     n8n MCP-Server stoppen"
-    echo "  --openhands               OpenHands MCP-Server stoppen"
-    echo "  --generator               MCP-Server-Generator stoppen"
+    log_info "Optionen:"
+    log_info "  -h, --help                Zeigt diese Hilfe an"
+    log_info "  -a, --all                 Alle MCP-Server stoppen"
+    log_info "  --docker                  Nur Docker-basierte MCP-Server stoppen"
+    log_info "  --n8n                     n8n MCP-Server stoppen"
+    log_info "  --openhands               OpenHands MCP-Server stoppen"
+    log_info "  --generator               MCP-Server-Generator stoppen"
     echo ""
-    echo "Beispiel:"
-    echo "  $0 --all"
-    echo "  $0 --n8n --openhands"
+    log_info "Beispiel:"
+    log_info "  $0 --all"
+    log_info "  $0 --n8n --openhands"
 }
 
 # Funktion zum Stoppen der Docker Compose MCP-Server

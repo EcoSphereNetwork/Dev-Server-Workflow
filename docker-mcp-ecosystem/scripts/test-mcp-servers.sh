@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # MCP-Server-Testskript
 # Dieses Skript testet die Funktionalität der MCP-Server.
 
@@ -17,20 +27,20 @@ ARGS="{}"
 
 # Hilfe-Funktion
 function show_help {
-    echo -e "${BLUE}MCP-Server-Testskript${NC}"
+    log_info "${BLUE}MCP-Server-Testskript${NC}"
     echo ""
-    echo "Verwendung: $0 [Optionen]"
+    log_info "Verwendung: $0 [Optionen]"
     echo ""
-    echo "Optionen:"
-    echo "  --server SERVER       Der zu testende MCP-Server (erforderlich)"
-    echo "  --tool TOOL           Das zu testende Tool (optional)"
-    echo "  --args ARGS           Die Argumente für das Tool im JSON-Format (optional)"
-    echo "  --help                Zeigt diese Hilfe an"
+    log_info "Optionen:"
+    log_info "  --server SERVER       Der zu testende MCP-Server (erforderlich)"
+    log_info "  --tool TOOL           Das zu testende Tool (optional)"
+    log_info "  --args ARGS           Die Argumente für das Tool im JSON-Format (optional)"
+    log_info "  --help                Zeigt diese Hilfe an"
     echo ""
-    echo "Beispiele:"
-    echo "  $0 --server github-mcp                                # Testet den GitHub MCP-Server"
-    echo "  $0 --server github-mcp --tool list_repos              # Testet das Tool list_repos des GitHub MCP-Servers"
-    echo "  $0 --server github-mcp --tool create_issue --args '{\"owner\":\"user\",\"repo\":\"repo\",\"title\":\"Test\",\"body\":\"Test\"}'"
+    log_info "Beispiele:"
+    log_info "  $0 --server github-mcp                                # Testet den GitHub MCP-Server"
+    log_info "  $0 --server github-mcp --tool list_repos              # Testet das Tool list_repos des GitHub MCP-Servers"
+    log_info "  $0 --server github-mcp --tool create_issue --args '{\"owner\":\"user\",\"repo\":\"repo\",\"title\":\"Test\",\"body\":\"Test\"}'"
     echo ""
 }
 
@@ -54,7 +64,7 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         *)
-            echo -e "${RED}Unbekannte Option: $1${NC}"
+            log_info "${RED}Unbekannte Option: $1${NC}"
             show_help
             exit 1
             ;;
@@ -63,7 +73,7 @@ done
 
 # Überprüfen, ob ein Server angegeben wurde
 if [ -z "$SERVER" ]; then
-    echo -e "${RED}Fehler: Kein MCP-Server angegeben.${NC}"
+    log_info "${RED}Fehler: Kein MCP-Server angegeben.${NC}"
     show_help
     exit 1
 fi
@@ -78,16 +88,16 @@ if [ -z "$PORT" ]; then
 fi
 
 # Teste die Verbindung zum MCP-Server
-echo -e "${BLUE}Teste Verbindung zum MCP-Server $SERVER...${NC}"
+log_info "${BLUE}Teste Verbindung zum MCP-Server $SERVER...${NC}"
 if ! curl -s "http://$SERVER:$PORT/health" > /dev/null; then
-    echo -e "${RED}Verbindung zum MCP-Server $SERVER fehlgeschlagen.${NC}"
+    log_info "${RED}Verbindung zum MCP-Server $SERVER fehlgeschlagen.${NC}"
     exit 1
 fi
-echo -e "${GREEN}Verbindung zum MCP-Server $SERVER erfolgreich.${NC}"
+log_info "${GREEN}Verbindung zum MCP-Server $SERVER erfolgreich.${NC}"
 
 # Wenn kein Tool angegeben wurde, liste alle verfügbaren Tools auf
 if [ -z "$TOOL" ]; then
-    echo -e "${BLUE}Liste verfügbare Tools des MCP-Servers $SERVER auf...${NC}"
+    log_info "${BLUE}Liste verfügbare Tools des MCP-Servers $SERVER auf...${NC}"
     curl -s -X POST -H "Content-Type: application/json" -d '{
         "jsonrpc": "2.0",
         "id": 1,
@@ -95,7 +105,7 @@ if [ -z "$TOOL" ]; then
     }' "http://$SERVER:$PORT/mcp" | jq .
 else
     # Teste das angegebene Tool
-    echo -e "${BLUE}Teste Tool $TOOL des MCP-Servers $SERVER...${NC}"
+    log_info "${BLUE}Teste Tool $TOOL des MCP-Servers $SERVER...${NC}"
     curl -s -X POST -H "Content-Type: application/json" -d '{
         "jsonrpc": "2.0",
         "id": 1,

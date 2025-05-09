@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # Lade die gemeinsame Bibliothek
-source "$SCRIPT_DIR/../common/mcp_common.sh"
+source "$BASE_DIR/scripts/common/shell/common.sh"
 
 info "=== Behebe Probleme mit dem MCP-Setup ==="
 
@@ -18,7 +18,7 @@ if [ -f "${BASE_DIR}/.env" ]; then
     
     # Prüfe, ob OPENHANDS_PORT bereits in der .env-Datei existiert
     if ! grep -q "^OPENHANDS_PORT=" "${BASE_DIR}/.env"; then
-        echo "OPENHANDS_PORT=3333" >> "${BASE_DIR}/.env"
+        log_info "OPENHANDS_PORT=3333" >> "${BASE_DIR}/.env"
     else
         # Aktualisiere den Wert
         sed -i 's/^OPENHANDS_PORT=.*/OPENHANDS_PORT=3333/' "${BASE_DIR}/.env"

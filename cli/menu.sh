@@ -1,4 +1,14 @@
 #!/bin/bash
+
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
 # Interactive menu for the Dev-Server CLI
 
 # Load configuration and functions
@@ -8,18 +18,18 @@ source "$(dirname "$0")/functions.sh"
 # Function to display the main menu
 show_main_menu() {
     clear
-    echo -e "${BLUE}=== Dev-Server CLI - Interaktives Menü ===${NC}"
+    log_info "${BLUE}=== Dev-Server CLI - Interaktives Menü ===${NC}"
     echo ""
-    echo -e "${CYAN}1)${NC} Status anzeigen"
-    echo -e "${CYAN}2)${NC} Komponenten starten"
-    echo -e "${CYAN}3)${NC} Komponenten stoppen"
-    echo -e "${CYAN}4)${NC} Logs anzeigen"
-    echo -e "${CYAN}5)${NC} Konfiguration"
-    echo -e "${CYAN}6)${NC} Ressourcen auflisten"
-    echo -e "${CYAN}7)${NC} Backup & Wiederherstellung"
-    echo -e "${CYAN}8)${NC} KI-Befehle"
-    echo -e "${CYAN}9)${NC} Hilfe"
-    echo -e "${CYAN}0)${NC} Beenden"
+    log_info "${CYAN}1)${NC} Status anzeigen"
+    log_info "${CYAN}2)${NC} Komponenten starten"
+    log_info "${CYAN}3)${NC} Komponenten stoppen"
+    log_info "${CYAN}4)${NC} Logs anzeigen"
+    log_info "${CYAN}5)${NC} Konfiguration"
+    log_info "${CYAN}6)${NC} Ressourcen auflisten"
+    log_info "${CYAN}7)${NC} Backup & Wiederherstellung"
+    log_info "${CYAN}8)${NC} KI-Befehle"
+    log_info "${CYAN}9)${NC} Hilfe"
+    log_info "${CYAN}0)${NC} Beenden"
     echo ""
     echo -n "Bitte wählen Sie eine Option: "
     read -r option
@@ -36,7 +46,7 @@ show_main_menu() {
         9) show_help_menu ;;
         0) exit 0 ;;
         *) 
-            echo "Ungültige Option. Bitte erneut versuchen."
+            log_info "Ungültige Option. Bitte erneut versuchen."
             sleep 2
             show_main_menu
             ;;
@@ -46,12 +56,12 @@ show_main_menu() {
 # Function to display the status menu
 show_status_menu() {
     clear
-    echo -e "${BLUE}=== Status anzeigen ===${NC}"
+    log_info "${BLUE}=== Status anzeigen ===${NC}"
     echo ""
     check_status
     echo ""
-    echo -e "${CYAN}1)${NC} Zurück zum Hauptmenü"
-    echo -e "${CYAN}0)${NC} Beenden"
+    log_info "${CYAN}1)${NC} Zurück zum Hauptmenü"
+    log_info "${CYAN}0)${NC} Beenden"
     echo ""
     echo -n "Bitte wählen Sie eine Option: "
     read -r option
@@ -60,7 +70,7 @@ show_status_menu() {
         1) show_main_menu ;;
         0) exit 0 ;;
         *) 
-            echo "Ungültige Option. Bitte erneut versuchen."
+            log_info "Ungültige Option. Bitte erneut versuchen."
             sleep 2
             show_status_menu
             ;;
@@ -70,16 +80,16 @@ show_status_menu() {
 # Function to display the start menu
 show_start_menu() {
     clear
-    echo -e "${BLUE}=== Komponenten starten ===${NC}"
+    log_info "${BLUE}=== Komponenten starten ===${NC}"
     echo ""
-    echo -e "${CYAN}1)${NC} Alle Komponenten starten"
-    echo -e "${CYAN}2)${NC} n8n starten"
-    echo -e "${CYAN}3)${NC} MCP-Server starten"
-    echo -e "${CYAN}4)${NC} Ollama starten"
-    echo -e "${CYAN}5)${NC} OpenHands starten"
-    echo -e "${CYAN}6)${NC} Llamafile starten"
-    echo -e "${CYAN}7)${NC} Zurück zum Hauptmenü"
-    echo -e "${CYAN}0)${NC} Beenden"
+    log_info "${CYAN}1)${NC} Alle Komponenten starten"
+    log_info "${CYAN}2)${NC} n8n starten"
+    log_info "${CYAN}3)${NC} MCP-Server starten"
+    log_info "${CYAN}4)${NC} Ollama starten"
+    log_info "${CYAN}5)${NC} OpenHands starten"
+    log_info "${CYAN}6)${NC} Llamafile starten"
+    log_info "${CYAN}7)${NC} Zurück zum Hauptmenü"
+    log_info "${CYAN}0)${NC} Beenden"
     echo ""
     echo -n "Bitte wählen Sie eine Option: "
     read -r option
@@ -130,7 +140,7 @@ show_start_menu() {
         7) show_main_menu ;;
         0) exit 0 ;;
         *) 
-            echo "Ungültige Option. Bitte erneut versuchen."
+            log_info "Ungültige Option. Bitte erneut versuchen."
             sleep 2
             show_start_menu
             ;;
@@ -140,16 +150,16 @@ show_start_menu() {
 # Function to display the stop menu
 show_stop_menu() {
     clear
-    echo -e "${BLUE}=== Komponenten stoppen ===${NC}"
+    log_info "${BLUE}=== Komponenten stoppen ===${NC}"
     echo ""
-    echo -e "${CYAN}1)${NC} Alle Komponenten stoppen"
-    echo -e "${CYAN}2)${NC} n8n stoppen"
-    echo -e "${CYAN}3)${NC} MCP-Server stoppen"
-    echo -e "${CYAN}4)${NC} Ollama stoppen"
-    echo -e "${CYAN}5)${NC} OpenHands stoppen"
-    echo -e "${CYAN}6)${NC} Llamafile stoppen"
-    echo -e "${CYAN}7)${NC} Zurück zum Hauptmenü"
-    echo -e "${CYAN}0)${NC} Beenden"
+    log_info "${CYAN}1)${NC} Alle Komponenten stoppen"
+    log_info "${CYAN}2)${NC} n8n stoppen"
+    log_info "${CYAN}3)${NC} MCP-Server stoppen"
+    log_info "${CYAN}4)${NC} Ollama stoppen"
+    log_info "${CYAN}5)${NC} OpenHands stoppen"
+    log_info "${CYAN}6)${NC} Llamafile stoppen"
+    log_info "${CYAN}7)${NC} Zurück zum Hauptmenü"
+    log_info "${CYAN}0)${NC} Beenden"
     echo ""
     echo -n "Bitte wählen Sie eine Option: "
     read -r option
@@ -200,7 +210,7 @@ show_stop_menu() {
         7) show_main_menu ;;
         0) exit 0 ;;
         *) 
-            echo "Ungültige Option. Bitte erneut versuchen."
+            log_info "Ungültige Option. Bitte erneut versuchen."
             sleep 2
             show_stop_menu
             ;;
@@ -210,16 +220,16 @@ show_stop_menu() {
 # Function to display the logs menu
 show_logs_menu() {
     clear
-    echo -e "${BLUE}=== Logs anzeigen ===${NC}"
+    log_info "${BLUE}=== Logs anzeigen ===${NC}"
     echo ""
-    echo -e "${CYAN}1)${NC} n8n Logs"
-    echo -e "${CYAN}2)${NC} MCP-Server Logs"
-    echo -e "${CYAN}3)${NC} Ollama Logs"
-    echo -e "${CYAN}4)${NC} OpenHands Logs"
-    echo -e "${CYAN}5)${NC} Llamafile Logs"
-    echo -e "${CYAN}6)${NC} Alle Logs"
-    echo -e "${CYAN}7)${NC} Zurück zum Hauptmenü"
-    echo -e "${CYAN}0)${NC} Beenden"
+    log_info "${CYAN}1)${NC} n8n Logs"
+    log_info "${CYAN}2)${NC} MCP-Server Logs"
+    log_info "${CYAN}3)${NC} Ollama Logs"
+    log_info "${CYAN}4)${NC} OpenHands Logs"
+    log_info "${CYAN}5)${NC} Llamafile Logs"
+    log_info "${CYAN}6)${NC} Alle Logs"
+    log_info "${CYAN}7)${NC} Zurück zum Hauptmenü"
+    log_info "${CYAN}0)${NC} Beenden"
     echo ""
     echo -n "Bitte wählen Sie eine Option: "
     read -r option
@@ -227,7 +237,7 @@ show_logs_menu() {
     case "${option}" in
         1) 
             clear
-            echo -e "${BLUE}=== n8n Logs ===${NC}"
+            log_info "${BLUE}=== n8n Logs ===${NC}"
             echo ""
             show_logs "n8n" "false"
             echo ""
@@ -237,7 +247,7 @@ show_logs_menu() {
             ;;
         2) 
             clear
-            echo -e "${BLUE}=== MCP-Server Logs ===${NC}"
+            log_info "${BLUE}=== MCP-Server Logs ===${NC}"
             echo ""
             show_logs "mcp" "false"
             echo ""
@@ -247,7 +257,7 @@ show_logs_menu() {
             ;;
         3) 
             clear
-            echo -e "${BLUE}=== Ollama Logs ===${NC}"
+            log_info "${BLUE}=== Ollama Logs ===${NC}"
             echo ""
             show_logs "ollama" "false"
             echo ""
@@ -257,7 +267,7 @@ show_logs_menu() {
             ;;
         4) 
             clear
-            echo -e "${BLUE}=== OpenHands Logs ===${NC}"
+            log_info "${BLUE}=== OpenHands Logs ===${NC}"
             echo ""
             show_logs "openhands" "false"
             echo ""
@@ -267,7 +277,7 @@ show_logs_menu() {
             ;;
         5) 
             clear
-            echo -e "${BLUE}=== Llamafile Logs ===${NC}"
+            log_info "${BLUE}=== Llamafile Logs ===${NC}"
             echo ""
             show_logs "llamafile" "false"
             echo ""
@@ -277,7 +287,7 @@ show_logs_menu() {
             ;;
         6) 
             clear
-            echo -e "${BLUE}=== Alle Logs ===${NC}"
+            log_info "${BLUE}=== Alle Logs ===${NC}"
             echo ""
             show_logs "all" "false"
             echo ""
@@ -288,7 +298,7 @@ show_logs_menu() {
         7) show_main_menu ;;
         0) exit 0 ;;
         *) 
-            echo "Ungültige Option. Bitte erneut versuchen."
+            log_info "Ungültige Option. Bitte erneut versuchen."
             sleep 2
             show_logs_menu
             ;;
@@ -298,16 +308,16 @@ show_logs_menu() {
 # Function to display the configuration menu
 show_config_menu() {
     clear
-    echo -e "${BLUE}=== Konfiguration ===${NC}"
+    log_info "${BLUE}=== Konfiguration ===${NC}"
     echo ""
-    echo -e "${CYAN}1)${NC} LLM API-Key konfigurieren"
-    echo -e "${CYAN}2)${NC} GitHub Token konfigurieren"
-    echo -e "${CYAN}3)${NC} OpenProject Token konfigurieren"
-    echo -e "${CYAN}4)${NC} n8n API-Key konfigurieren"
-    echo -e "${CYAN}5)${NC} Workspace-Pfad konfigurieren"
-    echo -e "${CYAN}6)${NC} LLM wechseln"
-    echo -e "${CYAN}7)${NC} Zurück zum Hauptmenü"
-    echo -e "${CYAN}0)${NC} Beenden"
+    log_info "${CYAN}1)${NC} LLM API-Key konfigurieren"
+    log_info "${CYAN}2)${NC} GitHub Token konfigurieren"
+    log_info "${CYAN}3)${NC} OpenProject Token konfigurieren"
+    log_info "${CYAN}4)${NC} n8n API-Key konfigurieren"
+    log_info "${CYAN}5)${NC} Workspace-Pfad konfigurieren"
+    log_info "${CYAN}6)${NC} LLM wechseln"
+    log_info "${CYAN}7)${NC} Zurück zum Hauptmenü"
+    log_info "${CYAN}0)${NC} Beenden"
     echo ""
     echo -n "Bitte wählen Sie eine Option: "
     read -r option
@@ -362,7 +372,7 @@ show_config_menu() {
         7) show_main_menu ;;
         0) exit 0 ;;
         *) 
-            echo "Ungültige Option. Bitte erneut versuchen."
+            log_info "Ungültige Option. Bitte erneut versuchen."
             sleep 2
             show_config_menu
             ;;
@@ -372,14 +382,14 @@ show_config_menu() {
 # Function to display the switch LLM menu
 show_switch_llm_menu() {
     clear
-    echo -e "${BLUE}=== LLM wechseln ===${NC}"
+    log_info "${BLUE}=== LLM wechseln ===${NC}"
     echo ""
-    echo -e "${CYAN}1)${NC} Llamafile (lokal)"
-    echo -e "${CYAN}2)${NC} Claude (Anthropic)"
-    echo -e "${CYAN}3)${NC} GPT-4o (OpenAI)"
-    echo -e "${CYAN}4)${NC} Zurück zum Konfigurationsmenü"
-    echo -e "${CYAN}5)${NC} Zurück zum Hauptmenü"
-    echo -e "${CYAN}0)${NC} Beenden"
+    log_info "${CYAN}1)${NC} Llamafile (lokal)"
+    log_info "${CYAN}2)${NC} Claude (Anthropic)"
+    log_info "${CYAN}3)${NC} GPT-4o (OpenAI)"
+    log_info "${CYAN}4)${NC} Zurück zum Konfigurationsmenü"
+    log_info "${CYAN}5)${NC} Zurück zum Hauptmenü"
+    log_info "${CYAN}0)${NC} Beenden"
     echo ""
     echo -n "Bitte wählen Sie eine Option: "
     read -r option
@@ -410,7 +420,7 @@ show_switch_llm_menu() {
         5) show_main_menu ;;
         0) exit 0 ;;
         *) 
-            echo "Ungültige Option. Bitte erneut versuchen."
+            log_info "Ungültige Option. Bitte erneut versuchen."
             sleep 2
             show_switch_llm_menu
             ;;
@@ -420,13 +430,13 @@ show_switch_llm_menu() {
 # Function to display the list menu
 show_list_menu() {
     clear
-    echo -e "${BLUE}=== Ressourcen auflisten ===${NC}"
+    log_info "${BLUE}=== Ressourcen auflisten ===${NC}"
     echo ""
-    echo -e "${CYAN}1)${NC} Workflows auflisten"
-    echo -e "${CYAN}2)${NC} Modelle auflisten"
-    echo -e "${CYAN}3)${NC} Container auflisten"
-    echo -e "${CYAN}4)${NC} Zurück zum Hauptmenü"
-    echo -e "${CYAN}0)${NC} Beenden"
+    log_info "${CYAN}1)${NC} Workflows auflisten"
+    log_info "${CYAN}2)${NC} Modelle auflisten"
+    log_info "${CYAN}3)${NC} Container auflisten"
+    log_info "${CYAN}4)${NC} Zurück zum Hauptmenü"
+    log_info "${CYAN}0)${NC} Beenden"
     echo ""
     echo -n "Bitte wählen Sie eine Option: "
     read -r option
@@ -434,7 +444,7 @@ show_list_menu() {
     case "${option}" in
         1) 
             clear
-            echo -e "${BLUE}=== Workflows ===${NC}"
+            log_info "${BLUE}=== Workflows ===${NC}"
             echo ""
             list_resources "workflows"
             echo ""
@@ -444,7 +454,7 @@ show_list_menu() {
             ;;
         2) 
             clear
-            echo -e "${BLUE}=== Modelle ===${NC}"
+            log_info "${BLUE}=== Modelle ===${NC}"
             echo ""
             list_resources "models"
             echo ""
@@ -454,7 +464,7 @@ show_list_menu() {
             ;;
         3) 
             clear
-            echo -e "${BLUE}=== Container ===${NC}"
+            log_info "${BLUE}=== Container ===${NC}"
             echo ""
             list_resources "containers"
             echo ""
@@ -465,7 +475,7 @@ show_list_menu() {
         4) show_main_menu ;;
         0) exit 0 ;;
         *) 
-            echo "Ungültige Option. Bitte erneut versuchen."
+            log_info "Ungültige Option. Bitte erneut versuchen."
             sleep 2
             show_list_menu
             ;;
@@ -475,14 +485,14 @@ show_list_menu() {
 # Function to display the backup menu
 show_backup_menu() {
     clear
-    echo -e "${BLUE}=== Backup & Wiederherstellung ===${NC}"
+    log_info "${BLUE}=== Backup & Wiederherstellung ===${NC}"
     echo ""
-    echo -e "${CYAN}1)${NC} n8n Backup erstellen"
-    echo -e "${CYAN}2)${NC} OpenHands Backup erstellen"
-    echo -e "${CYAN}3)${NC} Alle Komponenten sichern"
-    echo -e "${CYAN}4)${NC} Backup wiederherstellen"
-    echo -e "${CYAN}5)${NC} Zurück zum Hauptmenü"
-    echo -e "${CYAN}0)${NC} Beenden"
+    log_info "${CYAN}1)${NC} n8n Backup erstellen"
+    log_info "${CYAN}2)${NC} OpenHands Backup erstellen"
+    log_info "${CYAN}3)${NC} Alle Komponenten sichern"
+    log_info "${CYAN}4)${NC} Backup wiederherstellen"
+    log_info "${CYAN}5)${NC} Zurück zum Hauptmenü"
+    log_info "${CYAN}0)${NC} Beenden"
     echo ""
     echo -n "Bitte wählen Sie eine Option: "
     read -r option
@@ -513,7 +523,7 @@ show_backup_menu() {
         5) show_main_menu ;;
         0) exit 0 ;;
         *) 
-            echo "Ungültige Option. Bitte erneut versuchen."
+            log_info "Ungültige Option. Bitte erneut versuchen."
             sleep 2
             show_backup_menu
             ;;
@@ -523,16 +533,16 @@ show_backup_menu() {
 # Function to display the restore menu
 show_restore_menu() {
     clear
-    echo -e "${BLUE}=== Backup wiederherstellen ===${NC}"
+    log_info "${BLUE}=== Backup wiederherstellen ===${NC}"
     echo ""
     
     # List available backups
-    echo -e "${CYAN}Verfügbare Backups:${NC}"
+    log_info "${CYAN}Verfügbare Backups:${NC}"
     echo ""
     
     # Check if backup directory exists
     if [[ ! -d "${BACKUP_DIR}" ]]; then
-        echo "Keine Backups gefunden."
+        log_info "Keine Backups gefunden."
         echo ""
         echo -n "Drücken Sie eine Taste, um fortzufahren..."
         read -r
@@ -548,7 +558,7 @@ show_restore_menu() {
     
     # Check if any backup files were found
     if [[ ${#backup_files[@]} -eq 0 ]]; then
-        echo "Keine Backups gefunden."
+        log_info "Keine Backups gefunden."
         echo ""
         echo -n "Drücken Sie eine Taste, um fortzufahren..."
         read -r
@@ -558,12 +568,12 @@ show_restore_menu() {
     
     # Display backup files
     for i in "${!backup_files[@]}"; do
-        echo -e "${CYAN}$((i+1)))${NC} ${backup_files[i]}"
+        log_info "${CYAN}$((i+1)))${NC} ${backup_files[i]}"
     done
     
     echo ""
-    echo -e "${CYAN}$((${#backup_files[@]}+1)))${NC} Zurück zum Backup-Menü"
-    echo -e "${CYAN}0)${NC} Beenden"
+    log_info "${CYAN}$((${#backup_files[@]}+1)))${NC} Zurück zum Backup-Menü"
+    log_info "${CYAN}0)${NC} Beenden"
     echo ""
     echo -n "Bitte wählen Sie eine Option: "
     read -r option
@@ -579,7 +589,7 @@ show_restore_menu() {
         read -r
         show_backup_menu
     else
-        echo "Ungültige Option. Bitte erneut versuchen."
+        log_info "Ungültige Option. Bitte erneut versuchen."
         sleep 2
         show_restore_menu
     fi
@@ -588,9 +598,9 @@ show_restore_menu() {
 # Function to display the AI menu
 show_ai_menu() {
     clear
-    echo -e "${BLUE}=== KI-Befehle ===${NC}"
+    log_info "${BLUE}=== KI-Befehle ===${NC}"
     echo ""
-    echo -e "${CYAN}Bitte geben Sie einen Prompt ein (oder 'q' zum Zurückkehren):${NC}"
+    log_info "${CYAN}Bitte geben Sie einen Prompt ein (oder 'q' zum Zurückkehren):${NC}"
     echo ""
     read -r prompt
     
@@ -598,7 +608,7 @@ show_ai_menu() {
         show_main_menu
     else
         clear
-        echo -e "${BLUE}=== KI-Antwort ===${NC}"
+        log_info "${BLUE}=== KI-Antwort ===${NC}"
         echo ""
         execute_ai_command "${prompt}"
         echo ""
@@ -611,44 +621,44 @@ show_ai_menu() {
 # Function to display the help menu
 show_help_menu() {
     clear
-    echo -e "${BLUE}=== Hilfe ===${NC}"
+    log_info "${BLUE}=== Hilfe ===${NC}"
     echo ""
-    echo -e "${CYAN}Dev-Server CLI - Eine umfassende CLI zur Verwaltung des Dev-Server-Workflows${NC}"
+    log_info "${CYAN}Dev-Server CLI - Eine umfassende CLI zur Verwaltung des Dev-Server-Workflows${NC}"
     echo ""
-    echo -e "Verwendung: dev-server [Befehl] [Optionen]"
+    log_info "Verwendung: dev-server [Befehl] [Optionen]"
     echo ""
-    echo -e "${CYAN}Verfügbare Befehle:${NC}"
-    echo -e "  help                     Zeigt diese Hilfe an"
-    echo -e "  status                   Zeigt den Status aller Komponenten an"
-    echo -e "  start [Komponente]        Startet eine Komponente"
-    echo -e "  stop [Komponente]         Stoppt eine Komponente"
-    echo -e "  restart [Komponente]      Startet eine Komponente neu"
-    echo -e "  logs [Komponente]         Zeigt die Logs einer Komponente an"
-    echo -e "  config [Option] [Wert]    Konfiguriert eine Option"
-    echo -e "  list [Ressourcentyp]      Listet verfügbare Ressourcen auf"
-    echo -e "  install [Komponente]      Installiert eine Komponente"
-    echo -e "  switch-llm [LLM]          Wechselt zwischen LLMs (llamafile, claude)"
-    echo -e "  update [Komponente]       Aktualisiert eine Komponente"
-    echo -e "  backup [Komponente]       Erstellt ein Backup einer Komponente"
-    echo -e "  restore [Backup]          Stellt ein Backup wieder her"
-    echo -e "  ai [Prompt]               Führt einen KI-Befehl aus"
-    echo -e "  menu                     Öffnet das interaktive Menü"
+    log_info "${CYAN}Verfügbare Befehle:${NC}"
+    log_info "  help                     Zeigt diese Hilfe an"
+    log_info "  status                   Zeigt den Status aller Komponenten an"
+    log_info "  start [Komponente]        Startet eine Komponente"
+    log_info "  stop [Komponente]         Stoppt eine Komponente"
+    log_info "  restart [Komponente]      Startet eine Komponente neu"
+    log_info "  logs [Komponente]         Zeigt die Logs einer Komponente an"
+    log_info "  config [Option] [Wert]    Konfiguriert eine Option"
+    log_info "  list [Ressourcentyp]      Listet verfügbare Ressourcen auf"
+    log_info "  install [Komponente]      Installiert eine Komponente"
+    log_info "  switch-llm [LLM]          Wechselt zwischen LLMs (llamafile, claude)"
+    log_info "  update [Komponente]       Aktualisiert eine Komponente"
+    log_info "  backup [Komponente]       Erstellt ein Backup einer Komponente"
+    log_info "  restore [Backup]          Stellt ein Backup wieder her"
+    log_info "  ai [Prompt]               Führt einen KI-Befehl aus"
+    log_info "  menu                     Öffnet das interaktive Menü"
     echo ""
-    echo -e "${CYAN}Komponenten:${NC}"
-    echo -e "  all                        Alle Komponenten"
-    echo -e "  mcp                        MCP-Server"
-    echo -e "  n8n                        n8n-Workflow-Engine"
-    echo -e "  ollama                     Ollama LLM-Server"
-    echo -e "  openhands                  OpenHands KI-Agent"
-    echo -e "  llamafile                  Llamafile LLM"
-    echo -e "  shellgpt                   ShellGPT CLI"
+    log_info "${CYAN}Komponenten:${NC}"
+    log_info "  all                        Alle Komponenten"
+    log_info "  mcp                        MCP-Server"
+    log_info "  n8n                        n8n-Workflow-Engine"
+    log_info "  ollama                     Ollama LLM-Server"
+    log_info "  openhands                  OpenHands KI-Agent"
+    log_info "  llamafile                  Llamafile LLM"
+    log_info "  shellgpt                   ShellGPT CLI"
     echo ""
-    echo -e "${CYAN}Beispiele:${NC}"
-    echo -e "  dev-server status"
-    echo -e "  dev-server start mcp"
-    echo -e "  dev-server logs n8n"
-    echo -e "  dev-server ai \"Wie starte ich den MCP-Server?\""
-    echo -e "  dev-server menu"
+    log_info "${CYAN}Beispiele:${NC}"
+    log_info "  dev-server status"
+    log_info "  dev-server start mcp"
+    log_info "  dev-server logs n8n"
+    log_info "  dev-server ai \"Wie starte ich den MCP-Server?\""
+    log_info "  dev-server menu"
     echo ""
     echo -n "Drücken Sie eine Taste, um fortzufahren..."
     read -r

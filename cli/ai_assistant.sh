@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # Source common functions
 source "$(dirname "$0")/functions.sh"
 
@@ -60,7 +70,7 @@ Respond with ONLY the exact CLI command to execute, nothing else."
     log_info "Translated command: $response"
     
     # Extract the command
-    local cli_command=$(echo "$response" | tr -d '\r\n')
+    local cli_command=$(log_info "$response" | tr -d '\r\n')
     
     # Check if the command starts with "dev-server"
     if [[ "$cli_command" == dev-server* ]]; then
@@ -121,8 +131,8 @@ Provide a concise and helpful answer."
     fi
     
     # Print the response
-    echo -e "${GREEN}AI Assistant:${NC}"
-    echo -e "$response"
+    log_info "${GREEN}AI Assistant:${NC}"
+    log_info "$response"
     
     return 0
 }

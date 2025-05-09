@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # Skript zum Sammeln von Systeminformationen
 # Erstellt von Claude am $(date)
 
@@ -7,23 +17,23 @@
 OUTPUT_DIR="system_info_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$OUTPUT_DIR"
 
-echo "Sammle Systeminformationen. Bitte warten..."
-echo "Ergebnisse werden im Ordner $OUTPUT_DIR gespeichert."
+log_info "Sammle Systeminformationen. Bitte warten..."
+log_info "Ergebnisse werden im Ordner $OUTPUT_DIR gespeichert."
 
 # Funktion zum Ausführen eines Befehls und Speichern der Ausgabe
 run_command() {
     local cmd="$1"
     local output_file="$2"
     
-    echo "Führe aus: $cmd"
-    echo "# Befehl: $cmd" > "$OUTPUT_DIR/$output_file"
-    echo "# Ausgeführt am: $(date)" >> "$OUTPUT_DIR/$output_file"
-    echo "# ------------------------------" >> "$OUTPUT_DIR/$output_file"
+    log_info "Führe aus: $cmd"
+    log_info "# Befehl: $cmd" > "$OUTPUT_DIR/$output_file"
+    log_info "# Ausgeführt am: $(date)" >> "$OUTPUT_DIR/$output_file"
+    log_info "# ------------------------------" >> "$OUTPUT_DIR/$output_file"
     
     # Führe den Befehl aus und leite die Ausgabe in die Datei um, auch wenn Fehler auftreten
-    bash -c "$cmd" >> "$OUTPUT_DIR/$output_file" 2>&1 || echo "Fehler beim Ausführen von: $cmd" >> "$OUTPUT_DIR/$output_file"
+    bash -c "$cmd" >> "$OUTPUT_DIR/$output_file" 2>&1 || log_info "Fehler beim Ausführen von: $cmd" >> "$OUTPUT_DIR/$output_file"
     
-    echo "Fertig: $output_file"
+    log_info "Fertig: $output_file"
 }
 
 # Systeminformationen
@@ -110,46 +120,46 @@ run_command "top -n 1 -b" "52_top_processes.txt"
 run_command "curl -I http://localhost:8080 2>/dev/null || echo 'curl nicht installiert oder Port nicht erreichbar'" "53_curl_localhost_8080.txt"
 
 # Erstelle eine Zusammenfassung
-echo "# Zusammenfassung der gesammelten Informationen" > "$OUTPUT_DIR/00_zusammenfassung.txt"
-echo "# Erstellt am: $(date)" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
-echo "# ------------------------------" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
+log_info "# Zusammenfassung der gesammelten Informationen" > "$OUTPUT_DIR/00_zusammenfassung.txt"
+log_info "# Erstellt am: $(date)" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
+log_info "# ------------------------------" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 echo "" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 
-echo "## Betriebssystem" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
+log_info "## Betriebssystem" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 grep -e "^PRETTY_NAME=" "$OUTPUT_DIR/01_os_release.txt" | cut -d'"' -f2 >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 echo "" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 
-echo "## Kernel" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
+log_info "## Kernel" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 cat "$OUTPUT_DIR/02_uname.txt" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 echo "" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 
-echo "## Docker-Version" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
+log_info "## Docker-Version" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 cat "$OUTPUT_DIR/05_docker_version.txt" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 echo "" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 
-echo "## Laufende Docker-Container" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
+log_info "## Laufende Docker-Container" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 grep -v "CONTAINER ID" "$OUTPUT_DIR/08_docker_containers.txt" | wc -l >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 echo "" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 
-echo "## Offene Ports (Top 10)" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
+log_info "## Offene Ports (Top 10)" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 grep -v "^#" "$OUTPUT_DIR/17_open_ports.txt" | head -10 >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 echo "" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 
-echo "## Speichernutzung" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
+log_info "## Speichernutzung" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 grep "Mem:" "$OUTPUT_DIR/50_memory_usage.txt" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 echo "" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 
-echo "## Festplattennutzung" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
+log_info "## Festplattennutzung" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 grep -v "^Filesystem" "$OUTPUT_DIR/51_disk_usage.txt" | grep -v "^tmpfs" | grep -v "^udev" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 echo "" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 
-echo "## Probleme mit Port 8080" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
+log_info "## Probleme mit Port 8080" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 cat "$OUTPUT_DIR/20_port_8080_usage.txt" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 echo "" >> "$OUTPUT_DIR/00_zusammenfassung.txt"
 
 # Finales Ergebnis
 echo ""
-echo "Alle Informationen wurden erfolgreich gesammelt und im Ordner $OUTPUT_DIR gespeichert."
-echo "Du kannst die Zusammenfassung mit folgendem Befehl anzeigen:"
-echo "  cat $OUTPUT_DIR/00_zusammenfassung.txt"
+log_info "Alle Informationen wurden erfolgreich gesammelt und im Ordner $OUTPUT_DIR gespeichert."
+log_info "Du kannst die Zusammenfassung mit folgendem Befehl anzeigen:"
+log_info "  cat $OUTPUT_DIR/00_zusammenfassung.txt"
 echo ""

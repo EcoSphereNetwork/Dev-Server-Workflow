@@ -1,4 +1,26 @@
 #!/usr/bin/env python3
+
+import os
+import sys
+from pathlib import Path
+
+# Füge das Verzeichnis der gemeinsamen Bibliothek zum Pfad hinzu
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR / "scripts" / "common" / "python"))
+
+# Importiere die gemeinsame Bibliothek
+from common import (
+    setup_logging, ConfigManager, DockerUtils, ProcessManager,
+    NetworkUtils, SystemUtils, parse_arguments
+)
+
+# Konfiguriere Logging
+logger = setup_logging("INFO")
+
+# Lade Konfiguration
+config_manager = ConfigManager()
+config = config_manager.load_env_file(".env")
+
 """
 Kommandozeilentool für den OpenHands-Agenten.
 
@@ -233,7 +255,7 @@ def main():
             # Aktualisiere Konfiguration
             try:
                 agent.update_config(updates)
-                print("Konfiguration erfolgreich aktualisiert")
+                logger.info("Konfiguration erfolgreich aktualisiert")
             except Exception as e:
                 logger.error(f"Fehler bei der Aktualisierung der Konfiguration: {e}")
                 sys.exit(1)
@@ -242,7 +264,7 @@ def main():
             # Speichere Konfiguration
             try:
                 agent.save_config()
-                print("Konfiguration erfolgreich gespeichert")
+                logger.info("Konfiguration erfolgreich gespeichert")
             except Exception as e:
                 logger.error(f"Fehler beim Speichern der Konfiguration: {e}")
                 sys.exit(1)

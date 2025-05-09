@@ -1,9 +1,19 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # MCP-Server und OpenHands Setup Script
 # Dieses Script installiert und konfiguriert MCP-Server für Claude Desktop und OpenHands
 
-echo "=== MCP-Server und OpenHands Setup ==="
+log_info "=== MCP-Server und OpenHands Setup ==="
 
 # Verzeichnisse erstellen
 MCP_DIR="$HOME/mcp-servers"
@@ -21,13 +31,13 @@ mkdir -p "$OPENHANDS_CONFIG_DIR"
 # Lade Umgebungsvariablen aus .env-Datei, falls vorhanden
 ENV_FILE=".env"
 if [ -f "$ENV_FILE" ]; then
-    echo "Lade Umgebungsvariablen aus .env-Datei..."
+    log_info "Lade Umgebungsvariablen aus .env-Datei..."
     set -a
     source "$ENV_FILE"
     set +a
 else
     # Erstelle .env-Datei mit Standardwerten
-    echo "Erstelle .env-Datei mit Standardwerten..."
+    log_info "Erstelle .env-Datei mit Standardwerten..."
     cat > "$ENV_FILE" << ENVEOF
 # API-Keys
 BRAVE_API_KEY=""
@@ -53,17 +63,17 @@ OPENHANDS_WORKSPACE_DIR="/home/sam/openhands-workspace"
 OPENHANDS_CONFIG_DIR="/home/sam/.config/openhands"
 ENVEOF
 
-    echo "Bitte fülle die API-Keys in der .env-Datei aus und starte das Script erneut."
-    echo "Datei erstellt: $ENV_FILE"
+    log_info "Bitte fülle die API-Keys in der .env-Datei aus und starte das Script erneut."
+    log_info "Datei erstellt: $ENV_FILE"
     exit 1
 fi
 
 # Installiere MCP-Inspector für Debugging
-echo "Installiere MCP-Inspector..."
+log_info "Installiere MCP-Inspector..."
 npm install -g @modelcontextprotocol/inspector
 
 # Installiere bekannte funktionierende MCP-Server
-echo "Installiere bekannte funktionierende MCP-Server..."
+log_info "Installiere bekannte funktionierende MCP-Server..."
 npm install -g @modelcontextprotocol/server-filesystem
 npm install -g @modelcontextprotocol/server-brave-search
 npm install -g @modelcontextprotocol/server-github
@@ -72,19 +82,19 @@ npm install -g @modelcontextprotocol/server-everything
 
 # Installiere Ollama, falls nicht vorhanden
 if ! command -v ollama &> /dev/null; then
-    echo "Installiere Ollama..."
+    log_info "Installiere Ollama..."
     curl -fsSL https://ollama.com/install.sh | sh
-    echo "Ollama wurde installiert."
+    log_info "Ollama wurde installiert."
 else
-    echo "Ollama ist bereits installiert."
+    log_info "Ollama ist bereits installiert."
 fi
 
 # Ziehe das Ollama-Modell
-echo "Ziehe Ollama-Modell: ${OLLAMA_MODEL:-qwen2.5-coder:7b-instruct}..."
+log_info "Ziehe Ollama-Modell: ${OLLAMA_MODEL:-qwen2.5-coder:7b-instruct}..."
 ollama pull "${OLLAMA_MODEL:-qwen2.5-coder:7b-instruct}"
 
 # Installiere Ollama-MCP-Bridge
-echo "Installiere Ollama-MCP-Bridge..."
+log_info "Installiere Ollama-MCP-Bridge..."
 if [ ! -d "ollama-mcp-bridge" ]; then
     git clone https://github.com/patruff/ollama-mcp-bridge.git
     cd ollama-mcp-bridge
@@ -92,7 +102,7 @@ if [ ! -d "ollama-mcp-bridge" ]; then
     npm run build
     cd ..
 else
-    echo "Ollama-MCP-Bridge ist bereits installiert."
+    log_info "Ollama-MCP-Bridge ist bereits installiert."
 fi
 
 # Erstelle Konfigurationsdateien
@@ -101,18 +111,18 @@ fi
 # Erstelle Start-Skripte
 ./create-scripts.sh
 
-echo "=== Installation abgeschlossen ==="
+log_info "=== Installation abgeschlossen ==="
 echo ""
-echo "Verfügbare Befehle:"
-echo "  $HOME/start-mcp-inspector.sh - Starte den MCP-Inspektor zum Testen der Server"
-echo "  $HOME/start-ollama-bridge.sh - Starte die Ollama-MCP-Bridge"
-echo "  $HOME/start-openhands.sh - Starte OpenHands"
-echo "  $HOME/start-all-mcp.sh - Starte alle Dienste"
+log_info "Verfügbare Befehle:"
+log_info "  $HOME/start-mcp-inspector.sh - Starte den MCP-Inspektor zum Testen der Server"
+log_info "  $HOME/start-ollama-bridge.sh - Starte die Ollama-MCP-Bridge"
+log_info "  $HOME/start-openhands.sh - Starte OpenHands"
+log_info "  $HOME/start-all-mcp.sh - Starte alle Dienste"
 echo ""
-echo "Wichtige URLs:"
-echo "  OpenHands: http://localhost:3000"
-echo "  OpenHands MCP: http://localhost:3000/mcp"
-echo "  Ollama-MCP-Bridge: http://localhost:8000/mcp"
-echo "  MCP-Inspektor: http://localhost:6274"
+log_info "Wichtige URLs:"
+log_info "  OpenHands: http://localhost:3000"
+log_info "  OpenHands MCP: http://localhost:3000/mcp"
+log_info "  Ollama-MCP-Bridge: http://localhost:8000/mcp"
+log_info "  MCP-Inspektor: http://localhost:6274"
 echo ""
-echo "Starte Claude Desktop neu, um die MCP-Server zu aktivieren."
+log_info "Starte Claude Desktop neu, um die MCP-Server zu aktivieren."

@@ -1,4 +1,26 @@
 #!/usr/bin/env python3
+
+import os
+import sys
+from pathlib import Path
+
+# Füge das Verzeichnis der gemeinsamen Bibliothek zum Pfad hinzu
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR / "scripts" / "common" / "python"))
+
+# Importiere die gemeinsame Bibliothek
+from common import (
+    setup_logging, ConfigManager, DockerUtils, ProcessManager,
+    NetworkUtils, SystemUtils, parse_arguments
+)
+
+# Konfiguriere Logging
+logger = setup_logging("INFO")
+
+# Lade Konfiguration
+config_manager = ConfigManager()
+config = config_manager.load_env_file(".env")
+
 """
 n8n Setup - Hilfsfunktionen
 
@@ -155,7 +177,7 @@ def activate_workflow(n8n_url, api_key, workflow_id, active=True):
     """
     try:
         if not workflow_id:
-            print("Error: Workflow ID is required to activate/deactivate a workflow")
+            logger.info("Error: Workflow ID is required to activate/deactivate a workflow")
             return False
             
         headers = {

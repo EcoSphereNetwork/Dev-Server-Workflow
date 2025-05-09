@@ -1,4 +1,14 @@
 #!/bin/bash
+
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
 # Dependency Manager for Dev-Server-Workflow
 # This script manages dependencies between components and ensures they are started/stopped in the correct order
 
@@ -104,31 +114,31 @@ get_component_status() {
     
     # Check if component exists
     if [[ -z "${START_COMMANDS[$component]}" ]]; then
-        echo "unknown"
+        log_info "unknown"
         return 1
     fi
     
     # Check if component is running
     if [[ -n "${HEALTH_CHECK_COMMANDS[$component]}" ]]; then
         if eval "${HEALTH_CHECK_COMMANDS[$component]}" &> /dev/null; then
-            echo "running"
+            log_info "running"
             return 0
         fi
     fi
     
     # Check if container is running
     if docker ps --format "{{.Names}}" | grep -q "$component"; then
-        echo "running"
+        log_info "running"
         return 0
     fi
     
     # Check if container exists but is stopped
     if docker ps -a --format "{{.Names}}" | grep -q "$component"; then
-        echo "stopped"
+        log_info "stopped"
         return 0
     fi
     
-    echo "unknown"
+    log_info "unknown"
     return 0
 }
 
@@ -149,7 +159,7 @@ get_dependencies() {
         return 1
     fi
     
-    echo "${DEPENDENCY_GRAPH[$component]}"
+    log_info "${DEPENDENCY_GRAPH[$component]}"
     return 0
 }
 
@@ -190,7 +200,7 @@ get_dependents() {
         fi
     done
     
-    echo "$dependents"
+    log_info "$dependents"
     return 0
 }
 
@@ -222,20 +232,20 @@ start_component() {
     
     # Check if component exists
     if [[ -z "${START_COMMANDS[$component]}" ]]; then
-        echo -e "${RED}Component $component does not exist${NC}"
+        log_info "${RED}Component $component does not exist${NC}"
         return 1
     fi
     
     # Check if component is already running
     if [[ "${COMPONENT_STATUS[$component]}" == "running" && "$force" != "true" ]]; then
-        echo -e "${GREEN}Component $component is already running${NC}"
+        log_info "${GREEN}Component $component is already running${NC}"
         return 0
     fi
     
     # Start dependencies first
     local dependencies=$(get_dependencies "$component")
     if [[ -n "$dependencies" ]]; then
-        echo -e "${BLUE}Starting dependencies for $component: $dependencies${NC}"
+        log_info "${BLUE}Starting dependencies for $component: $dependencies${NC}"
         
         IFS=',' read -ra DEPS <<< "$dependencies"
         for dep in "${DEPS[@]}"; do
@@ -244,7 +254,7 @@ start_component() {
     fi
     
     # Start the component
-    echo -e "${BLUE}Starting component $component...${NC}"
+    log_info "${BLUE}Starting component $component...${NC}"
     eval "${START_COMMANDS[$component]}"
     
     # Update component status
@@ -252,9 +262,9 @@ start_component() {
     
     # Check if component started successfully
     if [[ "${COMPONENT_STATUS[$component]}" == "running" ]]; then
-        echo -e "${GREEN}Component $component started successfully${NC}"
+        log_info "${GREEN}Component $component started successfully${NC}"
     else
-        echo -e "${RED}Failed to start component $component${NC}"
+        log_info "${RED}Failed to start component $component${NC}"
         return 1
     fi
     
@@ -268,27 +278,27 @@ stop_component() {
     
     # Check if component exists
     if [[ -z "${STOP_COMMANDS[$component]}" ]]; then
-        echo -e "${RED}Component $component does not exist${NC}"
+        log_info "${RED}Component $component does not exist${NC}"
         return 1
     fi
     
     # Check if component is already stopped
     if [[ "${COMPONENT_STATUS[$component]}" == "stopped" && "$force" != "true" ]]; then
-        echo -e "${GREEN}Component $component is already stopped${NC}"
+        log_info "${GREEN}Component $component is already stopped${NC}"
         return 0
     fi
     
     # Check if any dependents are running
     local dependents=$(get_dependents "$component")
     if [[ -n "$dependents" && "$force" != "true" ]]; then
-        echo -e "${YELLOW}Components depend on $component: $dependents${NC}"
+        log_info "${YELLOW}Components depend on $component: $dependents${NC}"
         
         # Ask for confirmation
         read -p "Do you want to stop these components as well? (y/n) " -n 1 -r
         echo
         
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            echo -e "${RED}Aborting${NC}"
+            log_info "${RED}Aborting${NC}"
             return 1
         fi
         
@@ -300,7 +310,7 @@ stop_component() {
     fi
     
     # Stop the component
-    echo -e "${BLUE}Stopping component $component...${NC}"
+    log_info "${BLUE}Stopping component $component...${NC}"
     eval "${STOP_COMMANDS[$component]}"
     
     # Update component status
@@ -308,9 +318,9 @@ stop_component() {
     
     # Check if component stopped successfully
     if [[ "${COMPONENT_STATUS[$component]}" != "running" ]]; then
-        echo -e "${GREEN}Component $component stopped successfully${NC}"
+        log_info "${GREEN}Component $component stopped successfully${NC}"
     else
-        echo -e "${RED}Failed to stop component $component${NC}"
+        log_info "${RED}Failed to stop component $component${NC}"
         return 1
     fi
     
@@ -324,7 +334,7 @@ restart_component() {
     
     # Check if component exists
     if [[ -z "${START_COMMANDS[$component]}" || -z "${STOP_COMMANDS[$component]}" ]]; then
-        echo -e "${RED}Component $component does not exist${NC}"
+        log_info "${RED}Component $component does not exist${NC}"
         return 1
     fi
     
@@ -339,8 +349,8 @@ restart_component() {
 
 # Function to list all components and their status
 list_components() {
-    echo -e "${BLUE}Components and their status:${NC}"
-    echo "-----------------------------"
+    log_info "${BLUE}Components and their status:${NC}"
+    log_info "-----------------------------"
     
     # Update component statuses
     update_component_statuses
@@ -352,23 +362,23 @@ list_components() {
         
         case "$status" in
             "running")
-                echo -e "${GREEN}$component${NC}: $status"
+                log_info "${GREEN}$component${NC}: $status"
                 ;;
             "stopped")
-                echo -e "${YELLOW}$component${NC}: $status"
+                log_info "${YELLOW}$component${NC}: $status"
                 ;;
             *)
-                echo -e "${RED}$component${NC}: $status"
+                log_info "${RED}$component${NC}: $status"
                 ;;
         esac
         
         if [[ -n "$dependencies" ]]; then
-            echo "  Dependencies: $dependencies"
+            log_info "  Dependencies: $dependencies"
         fi
         
         local dependents=$(get_dependents "$component")
         if [[ -n "$dependents" ]]; then
-            echo "  Dependents: $dependents"
+            log_info "  Dependents: $dependents"
         fi
         
         echo
@@ -379,7 +389,7 @@ list_components() {
 start_all_components() {
     local force="${1:-false}"
     
-    echo -e "${BLUE}Starting all components...${NC}"
+    log_info "${BLUE}Starting all components...${NC}"
     
     # Start components without dependencies first
     for component in "${!DEPENDENCY_GRAPH[@]}"; do
@@ -395,17 +405,17 @@ start_all_components() {
         fi
     done
     
-    echo -e "${GREEN}All components started${NC}"
+    log_info "${GREEN}All components started${NC}"
 }
 
 # Function to stop all components
 stop_all_components() {
     local force="${1:-false}"
     
-    echo -e "${BLUE}Stopping all components...${NC}"
+    log_info "${BLUE}Stopping all components...${NC}"
     
     # Stop components with dependents first (in reverse order)
-    for component in $(echo "${!DEPENDENCY_GRAPH[@]}" | tr ' ' '\n' | sort -r); do
+    for component in $(log_info "${!DEPENDENCY_GRAPH[@]}" | tr ' ' '\n' | sort -r); do
         local dependents=$(get_dependents "$component")
         if [[ -n "$dependents" ]]; then
             stop_component "$component" "$force"
@@ -413,14 +423,14 @@ stop_all_components() {
     done
     
     # Stop components without dependents
-    for component in $(echo "${!DEPENDENCY_GRAPH[@]}" | tr ' ' '\n' | sort -r); do
+    for component in $(log_info "${!DEPENDENCY_GRAPH[@]}" | tr ' ' '\n' | sort -r); do
         local dependents=$(get_dependents "$component")
         if [[ -z "$dependents" ]]; then
             stop_component "$component" "$force"
         fi
     done
     
-    echo -e "${GREEN}All components stopped${NC}"
+    log_info "${GREEN}All components stopped${NC}"
 }
 
 # Function to show component details
@@ -429,7 +439,7 @@ show_component_details() {
     
     # Check if component exists
     if [[ -z "${START_COMMANDS[$component]}" ]]; then
-        echo -e "${RED}Component $component does not exist${NC}"
+        log_info "${RED}Component $component does not exist${NC}"
         return 1
     fi
     
@@ -437,16 +447,16 @@ show_component_details() {
     COMPONENT_STATUS[$component]=$(get_component_status "$component")
     
     # Print component details
-    echo -e "${BLUE}Component: $component${NC}"
-    echo "Status: ${COMPONENT_STATUS[$component]}"
-    echo "Dependencies: ${DEPENDENCY_GRAPH[$component]}"
+    log_info "${BLUE}Component: $component${NC}"
+    log_info "Status: ${COMPONENT_STATUS[$component]}"
+    log_info "Dependencies: ${DEPENDENCY_GRAPH[$component]}"
     
     local dependents=$(get_dependents "$component")
-    echo "Dependents: $dependents"
+    log_info "Dependents: $dependents"
     
-    echo "Start command: ${START_COMMANDS[$component]}"
-    echo "Stop command: ${STOP_COMMANDS[$component]}"
-    echo "Health check command: ${HEALTH_CHECK_COMMANDS[$component]}"
+    log_info "Start command: ${START_COMMANDS[$component]}"
+    log_info "Stop command: ${STOP_COMMANDS[$component]}"
+    log_info "Health check command: ${HEALTH_CHECK_COMMANDS[$component]}"
     
     return 0
 }
@@ -466,8 +476,8 @@ main() {
             ;;
         "start")
             if [[ $# -lt 1 ]]; then
-                echo -e "${RED}No component specified${NC}"
-                echo "Usage: $0 start <component> [force]"
+                log_info "${RED}No component specified${NC}"
+                log_info "Usage: $0 start <component> [force]"
                 return 1
             fi
             
@@ -475,8 +485,8 @@ main() {
             ;;
         "stop")
             if [[ $# -lt 1 ]]; then
-                echo -e "${RED}No component specified${NC}"
-                echo "Usage: $0 stop <component> [force]"
+                log_info "${RED}No component specified${NC}"
+                log_info "Usage: $0 stop <component> [force]"
                 return 1
             fi
             
@@ -484,8 +494,8 @@ main() {
             ;;
         "restart")
             if [[ $# -lt 1 ]]; then
-                echo -e "${RED}No component specified${NC}"
-                echo "Usage: $0 restart <component> [force]"
+                log_info "${RED}No component specified${NC}"
+                log_info "Usage: $0 restart <component> [force]"
                 return 1
             fi
             
@@ -506,35 +516,35 @@ main() {
             ;;
         "dependencies")
             if [[ $# -lt 1 ]]; then
-                echo -e "${RED}No component specified${NC}"
-                echo "Usage: $0 dependencies <component>"
+                log_info "${RED}No component specified${NC}"
+                log_info "Usage: $0 dependencies <component>"
                 return 1
             fi
             
-            echo "Dependencies for $1: $(get_dependencies "$1")"
+            log_info "Dependencies for $1: $(get_dependencies "$1")"
             ;;
         "dependents")
             if [[ $# -lt 1 ]]; then
-                echo -e "${RED}No component specified${NC}"
-                echo "Usage: $0 dependents <component>"
+                log_info "${RED}No component specified${NC}"
+                log_info "Usage: $0 dependents <component>"
                 return 1
             fi
             
-            echo "Dependents for $1: $(get_dependents "$1")"
+            log_info "Dependents for $1: $(get_dependents "$1")"
             ;;
         *)
-            echo -e "${RED}Unknown command: $command${NC}"
-            echo "Usage: $0 <command> [arguments]"
-            echo "Commands:"
-            echo "  list                  List all components and their status"
-            echo "  start <component>     Start a component and its dependencies"
-            echo "  stop <component>      Stop a component and its dependents"
-            echo "  restart <component>   Restart a component"
-            echo "  start-all             Start all components"
-            echo "  stop-all              Stop all components"
-            echo "  status [component]    Show status of all components or a specific component"
-            echo "  dependencies <comp>   Show dependencies for a component"
-            echo "  dependents <comp>     Show dependents for a component"
+            log_info "${RED}Unknown command: $command${NC}"
+            log_info "Usage: $0 <command> [arguments]"
+            log_info "Commands:"
+            log_info "  list                  List all components and their status"
+            log_info "  start <component>     Start a component and its dependencies"
+            log_info "  stop <component>      Stop a component and its dependents"
+            log_info "  restart <component>   Restart a component"
+            log_info "  start-all             Start all components"
+            log_info "  stop-all              Stop all components"
+            log_info "  status [component]    Show status of all components or a specific component"
+            log_info "  dependencies <comp>   Show dependencies for a component"
+            log_info "  dependents <comp>     Show dependents for a component"
             return 1
             ;;
     esac
@@ -545,8 +555,8 @@ main() {
 # If script is executed directly (not sourced), run main function
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     if [[ $# -lt 1 ]]; then
-        echo "Usage: $0 <command> [arguments]"
-        echo "Run '$0 help' for a list of available commands"
+        log_info "Usage: $0 <command> [arguments]"
+        log_info "Run '$0 help' for a list of available commands"
         exit 1
     fi
     

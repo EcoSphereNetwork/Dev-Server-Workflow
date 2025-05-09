@@ -1,4 +1,26 @@
 #!/usr/bin/env python3
+
+import os
+import sys
+from pathlib import Path
+
+# Füge das Verzeichnis der gemeinsamen Bibliothek zum Pfad hinzu
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR / "scripts" / "common" / "python"))
+
+# Importiere die gemeinsame Bibliothek
+from common import (
+    setup_logging, ConfigManager, DockerUtils, ProcessManager,
+    NetworkUtils, SystemUtils, parse_arguments
+)
+
+# Konfiguriere Logging
+logger = setup_logging("INFO")
+
+# Lade Konfiguration
+config_manager = ConfigManager()
+config = config_manager.load_env_file(".env")
+
 """
 Test-Skript für den n8n MCP Server
 
@@ -50,7 +72,7 @@ def main() -> int:
         time.sleep(1)
         
         # Sende initialize-Anfrage
-        print("Sending initialize request...")
+        logger.info("Sending initialize request...")
         initialize_request = {
             "jsonrpc": "2.0",
             "id": 1,
@@ -64,11 +86,11 @@ def main() -> int:
         print(f"Initialize response: {json.dumps(initialize_response, indent=2)}")
         
         if "result" not in initialize_response or "capabilities" not in initialize_response["result"]:
-            print("Error: Failed to initialize MCP server")
+            logger.info("Error: Failed to initialize MCP server")
             return 1
         
         # Sende listTools-Anfrage
-        print("\nSending listTools request...")
+        logger.info("\nSending listTools request...")
         list_tools_request = {
             "jsonrpc": "2.0",
             "id": 2,
@@ -84,7 +106,7 @@ def main() -> int:
             print(f" - {tool.get('name')}: {tool.get('description')}")
         
         # Teste ein Tool
-        print("\nTesting tool execution...")
+        logger.info("\nTesting tool execution...")
         call_tool_request = {
             "jsonrpc": "2.0",
             "id": 3,
@@ -106,7 +128,7 @@ def main() -> int:
         call_tool_response = json.loads(process.stdout.readline())
         print(f"Tool execution response: {json.dumps(call_tool_response, indent=2)}")
         
-        print("\nMCP server test completed successfully!")
+        logger.info("\nMCP server test completed successfully!")
         return 0
         
     except Exception as e:
@@ -114,7 +136,7 @@ def main() -> int:
         return 1
     finally:
         # Beende den MCP-Server
-        print("Terminating MCP server...")
+        logger.info("Terminating MCP server...")
         process.terminate()
         try:
             process.wait(timeout=5)

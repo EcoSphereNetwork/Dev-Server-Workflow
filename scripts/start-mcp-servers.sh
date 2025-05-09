@@ -1,4 +1,14 @@
 #!/bin/bash
+
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
 # Verbessertes Skript zum Starten der MCP-Server mit Versionsprüfung und besserer Fehlerbehandlung
 
 # Strikte Fehlerbehandlung aktivieren
@@ -28,50 +38,50 @@ CURRENT_CONTAINER=""
 
 # Funktion zum Anzeigen von Nachrichten
 log() {
-    echo -e "${GREEN}[INFO]${NC} $1"
+    log_info "${GREEN}[INFO]${NC} $1"
 }
 
 warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
+    log_info "${YELLOW}[WARN]${NC} $1"
 }
 
 error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+    log_info "${RED}[ERROR]${NC} $1"
 }
 
 info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
+    log_info "${BLUE}[INFO]${NC} $1"
 }
 
 # Funktion zum Anzeigen von Hilfe
 show_help() {
-    echo -e "${BLUE}MCP-Server Starter${NC}"
-    echo "Dieses Skript startet die MCP-Server für das Dev-Server-Workflow-Projekt."
+    log_info "${BLUE}MCP-Server Starter${NC}"
+    log_info "Dieses Skript startet die MCP-Server für das Dev-Server-Workflow-Projekt."
     echo ""
-    echo "Verwendung:"
-    echo "  $0 [Optionen]"
+    log_info "Verwendung:"
+    log_info "  $0 [Optionen]"
     echo ""
-    echo "Optionen:"
-    echo "  -h, --help                Zeigt diese Hilfe an"
-    echo "  -n, --n8n-url URL         URL der n8n-Instanz (Standard: $N8N_URL)"
-    echo "  -k, --api-key KEY         API-Schlüssel für n8n"
-    echo "  -w, --max-workers N       Maximale Anzahl von Worker-Threads für OpenHands (Standard: $OPENHANDS_MAX_WORKERS)"
-    echo "  -d, --servers-dir DIR     Verzeichnis für generierte Server (Standard: $GENERATOR_SERVERS_DIR)"
-    echo "  -v, --verbose             Ausführliche Ausgabe"
-    echo "  -a, --all                 Alle MCP-Server starten"
-    echo "  --n8n                     n8n MCP-Server starten"
-    echo "  --openhands               OpenHands MCP-Server starten"
-    echo "  --generator               MCP-Server-Generator starten"
+    log_info "Optionen:"
+    log_info "  -h, --help                Zeigt diese Hilfe an"
+    log_info "  -n, --n8n-url URL         URL der n8n-Instanz (Standard: $N8N_URL)"
+    log_info "  -k, --api-key KEY         API-Schlüssel für n8n"
+    log_info "  -w, --max-workers N       Maximale Anzahl von Worker-Threads für OpenHands (Standard: $OPENHANDS_MAX_WORKERS)"
+    log_info "  -d, --servers-dir DIR     Verzeichnis für generierte Server (Standard: $GENERATOR_SERVERS_DIR)"
+    log_info "  -v, --verbose             Ausführliche Ausgabe"
+    log_info "  -a, --all                 Alle MCP-Server starten"
+    log_info "  --n8n                     n8n MCP-Server starten"
+    log_info "  --openhands               OpenHands MCP-Server starten"
+    log_info "  --generator               MCP-Server-Generator starten"
     echo ""
-    echo "Umgebungsvariablen:"
-    echo "  N8N_URL                   URL der n8n-Instanz"
-    echo "  N8N_API_KEY               API-Schlüssel für n8n"
-    echo "  OPENHANDS_MAX_WORKERS     Maximale Anzahl von Worker-Threads für OpenHands"
-    echo "  GENERATOR_SERVERS_DIR     Verzeichnis für generierte Server"
+    log_info "Umgebungsvariablen:"
+    log_info "  N8N_URL                   URL der n8n-Instanz"
+    log_info "  N8N_API_KEY               API-Schlüssel für n8n"
+    log_info "  OPENHANDS_MAX_WORKERS     Maximale Anzahl von Worker-Threads für OpenHands"
+    log_info "  GENERATOR_SERVERS_DIR     Verzeichnis für generierte Server"
     echo ""
-    echo "Beispiel:"
-    echo "  $0 --all -k my-api-key"
-    echo "  $0 --n8n --openhands -k my-api-key -w 10"
+    log_info "Beispiel:"
+    log_info "  $0 --all -k my-api-key"
+    log_info "  $0 --n8n --openhands -k my-api-key -w 10"
 }
 
 # Funktion zum Einrichten eines Alias für docker-compose
