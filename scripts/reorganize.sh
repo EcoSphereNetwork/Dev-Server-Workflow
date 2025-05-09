@@ -1,8 +1,18 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # Function to print colored output
 print_step() {
-    echo -e "\033[0;34m==> $1\033[0m"
+    log_info "\033[0;34m==> $1\033[0m"
 }
 
 # Function to check and install Python package

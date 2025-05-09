@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # Paketmanagement-Funktionen für die Dev-Server CLI
 
 # Lade Konfiguration
@@ -20,48 +30,48 @@ install_package() {
     local manager="$2"
     local options="$3"
     
-    echo -e "${BLUE}=== Installiere Paket ===${NC}"
-    echo -e "${CYAN}Paket:${NC} $package"
-    echo -e "${CYAN}Manager:${NC} $manager"
-    echo -e "${CYAN}Optionen:${NC} $options"
+    log_info "${BLUE}=== Installiere Paket ===${NC}"
+    log_info "${CYAN}Paket:${NC} $package"
+    log_info "${CYAN}Manager:${NC} $manager"
+    log_info "${CYAN}Optionen:${NC} $options"
     
     case "$manager" in
         "apt")
-            echo -e "${YELLOW}Führe aus: sudo apt-get install -y $package $options${NC}"
+            log_info "${YELLOW}Führe aus: sudo apt-get install -y $package $options${NC}"
             sudo apt-get update
             sudo apt-get install -y $package $options
             ;;
         "pip")
-            echo -e "${YELLOW}Führe aus: pip install $package $options${NC}"
+            log_info "${YELLOW}Führe aus: pip install $package $options${NC}"
             pip install $package $options
             ;;
         "pip3")
-            echo -e "${YELLOW}Führe aus: pip3 install $package $options${NC}"
+            log_info "${YELLOW}Führe aus: pip3 install $package $options${NC}"
             pip3 install $package $options
             ;;
         "npm")
-            echo -e "${YELLOW}Führe aus: npm install $package $options${NC}"
+            log_info "${YELLOW}Führe aus: npm install $package $options${NC}"
             npm install $package $options
             ;;
         "npx")
-            echo -e "${YELLOW}Führe aus: npx $package $options${NC}"
+            log_info "${YELLOW}Führe aus: npx $package $options${NC}"
             npx $package $options
             ;;
         "dpkg")
-            echo -e "${YELLOW}Führe aus: sudo dpkg -i $package${NC}"
+            log_info "${YELLOW}Führe aus: sudo dpkg -i $package${NC}"
             sudo dpkg -i $package
             ;;
         *)
-            echo -e "${RED}Unbekannter Paketmanager: $manager${NC}"
-            echo "Verfügbare Paketmanager: apt, pip, pip3, npm, npx, dpkg"
+            log_info "${RED}Unbekannter Paketmanager: $manager${NC}"
+            log_info "Verfügbare Paketmanager: apt, pip, pip3, npm, npx, dpkg"
             return 1
             ;;
     esac
     
     if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✅ Paket $package erfolgreich installiert${NC}"
+        log_info "${GREEN}✅ Paket $package erfolgreich installiert${NC}"
     else
-        echo -e "${RED}❌ Fehler beim Installieren von Paket $package${NC}"
+        log_info "${RED}❌ Fehler beim Installieren von Paket $package${NC}"
         return 1
     fi
 }
@@ -72,43 +82,43 @@ uninstall_package() {
     local manager="$2"
     local options="$3"
     
-    echo -e "${BLUE}=== Deinstalliere Paket ===${NC}"
-    echo -e "${CYAN}Paket:${NC} $package"
-    echo -e "${CYAN}Manager:${NC} $manager"
-    echo -e "${CYAN}Optionen:${NC} $options"
+    log_info "${BLUE}=== Deinstalliere Paket ===${NC}"
+    log_info "${CYAN}Paket:${NC} $package"
+    log_info "${CYAN}Manager:${NC} $manager"
+    log_info "${CYAN}Optionen:${NC} $options"
     
     case "$manager" in
         "apt")
-            echo -e "${YELLOW}Führe aus: sudo apt-get remove -y $package $options${NC}"
+            log_info "${YELLOW}Führe aus: sudo apt-get remove -y $package $options${NC}"
             sudo apt-get remove -y $package $options
             ;;
         "pip")
-            echo -e "${YELLOW}Führe aus: pip uninstall -y $package $options${NC}"
+            log_info "${YELLOW}Führe aus: pip uninstall -y $package $options${NC}"
             pip uninstall -y $package $options
             ;;
         "pip3")
-            echo -e "${YELLOW}Führe aus: pip3 uninstall -y $package $options${NC}"
+            log_info "${YELLOW}Führe aus: pip3 uninstall -y $package $options${NC}"
             pip3 uninstall -y $package $options
             ;;
         "npm")
-            echo -e "${YELLOW}Führe aus: npm uninstall $package $options${NC}"
+            log_info "${YELLOW}Führe aus: npm uninstall $package $options${NC}"
             npm uninstall $package $options
             ;;
         "dpkg")
-            echo -e "${YELLOW}Führe aus: sudo dpkg -r $package${NC}"
+            log_info "${YELLOW}Führe aus: sudo dpkg -r $package${NC}"
             sudo dpkg -r $package
             ;;
         *)
-            echo -e "${RED}Unbekannter Paketmanager: $manager${NC}"
-            echo "Verfügbare Paketmanager: apt, pip, pip3, npm, dpkg"
+            log_info "${RED}Unbekannter Paketmanager: $manager${NC}"
+            log_info "Verfügbare Paketmanager: apt, pip, pip3, npm, dpkg"
             return 1
             ;;
     esac
     
     if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✅ Paket $package erfolgreich deinstalliert${NC}"
+        log_info "${GREEN}✅ Paket $package erfolgreich deinstalliert${NC}"
     else
-        echo -e "${RED}❌ Fehler beim Deinstallieren von Paket $package${NC}"
+        log_info "${RED}❌ Fehler beim Deinstallieren von Paket $package${NC}"
         return 1
     fi
 }
@@ -119,44 +129,44 @@ update_package() {
     local manager="$2"
     local options="$3"
     
-    echo -e "${BLUE}=== Aktualisiere Paket ===${NC}"
-    echo -e "${CYAN}Paket:${NC} $package"
-    echo -e "${CYAN}Manager:${NC} $manager"
-    echo -e "${CYAN}Optionen:${NC} $options"
+    log_info "${BLUE}=== Aktualisiere Paket ===${NC}"
+    log_info "${CYAN}Paket:${NC} $package"
+    log_info "${CYAN}Manager:${NC} $manager"
+    log_info "${CYAN}Optionen:${NC} $options"
     
     case "$manager" in
         "apt")
-            echo -e "${YELLOW}Führe aus: sudo apt-get update && sudo apt-get install --only-upgrade -y $package $options${NC}"
+            log_info "${YELLOW}Führe aus: sudo apt-get update && sudo apt-get install --only-upgrade -y $package $options${NC}"
             sudo apt-get update
             sudo apt-get install --only-upgrade -y $package $options
             ;;
         "pip")
-            echo -e "${YELLOW}Führe aus: pip install --upgrade $package $options${NC}"
+            log_info "${YELLOW}Führe aus: pip install --upgrade $package $options${NC}"
             pip install --upgrade $package $options
             ;;
         "pip3")
-            echo -e "${YELLOW}Führe aus: pip3 install --upgrade $package $options${NC}"
+            log_info "${YELLOW}Führe aus: pip3 install --upgrade $package $options${NC}"
             pip3 install --upgrade $package $options
             ;;
         "npm")
-            echo -e "${YELLOW}Führe aus: npm update $package $options${NC}"
+            log_info "${YELLOW}Führe aus: npm update $package $options${NC}"
             npm update $package $options
             ;;
         "dpkg")
-            echo -e "${RED}Direkte Aktualisierung mit dpkg nicht möglich. Bitte deinstallieren und neu installieren.${NC}"
+            log_info "${RED}Direkte Aktualisierung mit dpkg nicht möglich. Bitte deinstallieren und neu installieren.${NC}"
             return 1
             ;;
         *)
-            echo -e "${RED}Unbekannter Paketmanager: $manager${NC}"
-            echo "Verfügbare Paketmanager: apt, pip, pip3, npm, dpkg"
+            log_info "${RED}Unbekannter Paketmanager: $manager${NC}"
+            log_info "Verfügbare Paketmanager: apt, pip, pip3, npm, dpkg"
             return 1
             ;;
     esac
     
     if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✅ Paket $package erfolgreich aktualisiert${NC}"
+        log_info "${GREEN}✅ Paket $package erfolgreich aktualisiert${NC}"
     else
-        echo -e "${RED}❌ Fehler beim Aktualisieren von Paket $package${NC}"
+        log_info "${RED}❌ Fehler beim Aktualisieren von Paket $package${NC}"
         return 1
     fi
 }
@@ -166,39 +176,39 @@ upgrade_package() {
     local manager="$1"
     local options="$2"
     
-    echo -e "${BLUE}=== Aktualisiere alle Pakete ===${NC}"
-    echo -e "${CYAN}Manager:${NC} $manager"
-    echo -e "${CYAN}Optionen:${NC} $options"
+    log_info "${BLUE}=== Aktualisiere alle Pakete ===${NC}"
+    log_info "${CYAN}Manager:${NC} $manager"
+    log_info "${CYAN}Optionen:${NC} $options"
     
     case "$manager" in
         "apt")
-            echo -e "${YELLOW}Führe aus: sudo apt-get update && sudo apt-get upgrade -y $options${NC}"
+            log_info "${YELLOW}Führe aus: sudo apt-get update && sudo apt-get upgrade -y $options${NC}"
             sudo apt-get update
             sudo apt-get upgrade -y $options
             ;;
         "pip")
-            echo -e "${YELLOW}Führe aus: pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1 | xargs -n1 pip install --upgrade${NC}"
+            log_info "${YELLOW}Führe aus: pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1 | xargs -n1 pip install --upgrade${NC}"
             pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1 | xargs -n1 pip install --upgrade
             ;;
         "pip3")
-            echo -e "${YELLOW}Führe aus: pip3 list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1 | xargs -n1 pip3 install --upgrade${NC}"
+            log_info "${YELLOW}Führe aus: pip3 list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1 | xargs -n1 pip3 install --upgrade${NC}"
             pip3 list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1 | xargs -n1 pip3 install --upgrade
             ;;
         "npm")
-            echo -e "${YELLOW}Führe aus: npm update -g $options${NC}"
+            log_info "${YELLOW}Führe aus: npm update -g $options${NC}"
             npm update -g $options
             ;;
         *)
-            echo -e "${RED}Unbekannter Paketmanager: $manager${NC}"
-            echo "Verfügbare Paketmanager: apt, pip, pip3, npm"
+            log_info "${RED}Unbekannter Paketmanager: $manager${NC}"
+            log_info "Verfügbare Paketmanager: apt, pip, pip3, npm"
             return 1
             ;;
     esac
     
     if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✅ Alle Pakete erfolgreich aktualisiert${NC}"
+        log_info "${GREEN}✅ Alle Pakete erfolgreich aktualisiert${NC}"
     else
-        echo -e "${RED}❌ Fehler beim Aktualisieren aller Pakete${NC}"
+        log_info "${RED}❌ Fehler beim Aktualisieren aller Pakete${NC}"
         return 1
     fi
 }
@@ -208,64 +218,64 @@ check_package() {
     local package="$1"
     local manager="$2"
     
-    echo -e "${BLUE}=== Überprüfe Paket ===${NC}"
-    echo -e "${CYAN}Paket:${NC} $package"
-    echo -e "${CYAN}Manager:${NC} $manager"
+    log_info "${BLUE}=== Überprüfe Paket ===${NC}"
+    log_info "${CYAN}Paket:${NC} $package"
+    log_info "${CYAN}Manager:${NC} $manager"
     
     case "$manager" in
         "apt")
-            echo -e "${YELLOW}Führe aus: dpkg -l | grep $package${NC}"
+            log_info "${YELLOW}Führe aus: dpkg -l | grep $package${NC}"
             if dpkg -l | grep -q "$package"; then
-                echo -e "${GREEN}✅ Paket $package ist installiert${NC}"
+                log_info "${GREEN}✅ Paket $package ist installiert${NC}"
                 dpkg -l | grep "$package"
             else
-                echo -e "${RED}❌ Paket $package ist nicht installiert${NC}"
+                log_info "${RED}❌ Paket $package ist nicht installiert${NC}"
                 return 1
             fi
             ;;
         "pip")
-            echo -e "${YELLOW}Führe aus: pip show $package${NC}"
+            log_info "${YELLOW}Führe aus: pip show $package${NC}"
             if pip show "$package" &> /dev/null; then
-                echo -e "${GREEN}✅ Paket $package ist installiert${NC}"
+                log_info "${GREEN}✅ Paket $package ist installiert${NC}"
                 pip show "$package"
             else
-                echo -e "${RED}❌ Paket $package ist nicht installiert${NC}"
+                log_info "${RED}❌ Paket $package ist nicht installiert${NC}"
                 return 1
             fi
             ;;
         "pip3")
-            echo -e "${YELLOW}Führe aus: pip3 show $package${NC}"
+            log_info "${YELLOW}Führe aus: pip3 show $package${NC}"
             if pip3 show "$package" &> /dev/null; then
-                echo -e "${GREEN}✅ Paket $package ist installiert${NC}"
+                log_info "${GREEN}✅ Paket $package ist installiert${NC}"
                 pip3 show "$package"
             else
-                echo -e "${RED}❌ Paket $package ist nicht installiert${NC}"
+                log_info "${RED}❌ Paket $package ist nicht installiert${NC}"
                 return 1
             fi
             ;;
         "npm")
-            echo -e "${YELLOW}Führe aus: npm list $package${NC}"
+            log_info "${YELLOW}Führe aus: npm list $package${NC}"
             if npm list "$package" 2>/dev/null | grep -q "$package"; then
-                echo -e "${GREEN}✅ Paket $package ist installiert${NC}"
+                log_info "${GREEN}✅ Paket $package ist installiert${NC}"
                 npm list "$package"
             else
-                echo -e "${RED}❌ Paket $package ist nicht installiert${NC}"
+                log_info "${RED}❌ Paket $package ist nicht installiert${NC}"
                 return 1
             fi
             ;;
         "dpkg")
-            echo -e "${YELLOW}Führe aus: dpkg -l | grep $package${NC}"
+            log_info "${YELLOW}Führe aus: dpkg -l | grep $package${NC}"
             if dpkg -l | grep -q "$package"; then
-                echo -e "${GREEN}✅ Paket $package ist installiert${NC}"
+                log_info "${GREEN}✅ Paket $package ist installiert${NC}"
                 dpkg -l | grep "$package"
             else
-                echo -e "${RED}❌ Paket $package ist nicht installiert${NC}"
+                log_info "${RED}❌ Paket $package ist nicht installiert${NC}"
                 return 1
             fi
             ;;
         *)
-            echo -e "${RED}Unbekannter Paketmanager: $manager${NC}"
-            echo "Verfügbare Paketmanager: apt, pip, pip3, npm, dpkg"
+            log_info "${RED}Unbekannter Paketmanager: $manager${NC}"
+            log_info "Verfügbare Paketmanager: apt, pip, pip3, npm, dpkg"
             return 1
             ;;
     esac
@@ -296,8 +306,8 @@ main() {
             check_package "$package" "$manager"
             ;;
         *)
-            echo -e "${RED}Unbekannte Aktion: $action${NC}"
-            echo "Verfügbare Aktionen: install, uninstall, update, upgrade, check"
+            log_info "${RED}Unbekannte Aktion: $action${NC}"
+            log_info "Verfügbare Aktionen: install, uninstall, update, upgrade, check"
             return 1
             ;;
     esac
@@ -306,10 +316,10 @@ main() {
 # Führe die Hauptfunktion aus, wenn das Skript direkt ausgeführt wird
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     if [ $# -lt 3 ]; then
-        echo -e "${RED}Unvollständige Parameter${NC}"
-        echo "Verwendung: $0 <Aktion> <Paket> <Manager> [Optionen]"
-        echo "Verfügbare Aktionen: install, uninstall, update, upgrade, check"
-        echo "Verfügbare Paketmanager: apt, pip, pip3, npm, npx, dpkg"
+        log_info "${RED}Unvollständige Parameter${NC}"
+        log_info "Verwendung: $0 <Aktion> <Paket> <Manager> [Optionen]"
+        log_info "Verfügbare Aktionen: install, uninstall, update, upgrade, check"
+        log_info "Verfügbare Paketmanager: apt, pip, pip3, npm, npx, dpkg"
         exit 1
     fi
     

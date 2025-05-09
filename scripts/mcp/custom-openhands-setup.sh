@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # Angepasstes Setup-Skript für OpenHands mit benutzerdefiniertem Port und Workspace
 
 # Definiere den benutzerdefinierten Port und Workspace
@@ -155,20 +165,20 @@ EOF3
 cat > "$HOME/start-openhands.sh" << EOF4
 #!/bin/bash
 docker compose -f $HOME/openhands-docker-compose.yml up -d
-echo "OpenHands gestartet unter http://localhost:${CUSTOM_PORT}"
+log_info "OpenHands gestartet unter http://localhost:${CUSTOM_PORT}"
 EOF4
 chmod +x "$HOME/start-openhands.sh"
 
-echo "=== Angepasste OpenHands-Konfiguration abgeschlossen ==="
+log_info "=== Angepasste OpenHands-Konfiguration abgeschlossen ==="
 echo ""
-echo "OpenHands wurde konfiguriert, um auf Port ${CUSTOM_PORT} zu laufen."
-echo "Der Workspace-Pfad wurde auf ${WORKSPACE_DIR} gesetzt."
+log_info "OpenHands wurde konfiguriert, um auf Port ${CUSTOM_PORT} zu laufen."
+log_info "Der Workspace-Pfad wurde auf ${WORKSPACE_DIR} gesetzt."
 echo ""
-echo "Starte OpenHands mit:"
-echo "  $HOME/start-openhands.sh"
+log_info "Starte OpenHands mit:"
+log_info "  $HOME/start-openhands.sh"
 echo ""
-echo "OpenHands wird verfügbar sein unter:"
-echo "  http://localhost:${CUSTOM_PORT}"
-echo "  MCP-Endpunkt: http://localhost:${CUSTOM_PORT}/mcp"
+log_info "OpenHands wird verfügbar sein unter:"
+log_info "  http://localhost:${CUSTOM_PORT}"
+log_info "  MCP-Endpunkt: http://localhost:${CUSTOM_PORT}/mcp"
 echo ""
-echo "Starte Claude Desktop neu, um die Änderungen zu übernehmen."
+log_info "Starte Claude Desktop neu, um die Änderungen zu übernehmen."

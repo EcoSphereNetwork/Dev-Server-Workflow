@@ -1,71 +1,73 @@
 #!/bin/bash
 
-# Installiere MCP-Server und OpenHands
-echo "=== Installiere MCP-Server und OpenHands ==="
+# Verbesserte MCP-Server und OpenHands Installation
+# Verwendet die gemeinsame Bibliothek für konsistente Funktionen und Konfigurationen
+
+# Basisverzeichnis
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BASE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+info "=== Installiere MCP-Server und OpenHands ==="
 
 # Erstelle .env-Datei, falls nicht vorhanden
-if [ ! -f ".env" ]; then
-    cat > .env << 'ENVEOF'
-# API-Keys
+if [ ! -f "${BASE_DIR}/.env" ]; then
+    info "Erstelle .env-Datei..."
+    cat > "${BASE_DIR}/.env" << 'ENVEOF'
+# ---------- API-Keys ----------
 BRAVE_API_KEY=""
 GITHUB_TOKEN=""
 GITLAB_TOKEN=""
 GITLAB_URL="https://gitlab.ecospherenet.work"
 WOLFRAM_APP_ID=""
 
-# GitHub Benutzerinformationen
+# ---------- GitHub Benutzerinformationen ----------
 GITHUB_USERNAME="161sam"
 GITHUB_EMAIL="sschimmelpfennig@proton.me"
 
-# Pfad-Konfigurationen
-WORKSPACE_PATH="/home/sam"
+# ---------- Pfad-Konfigurationen ----------
+WORKSPACE_PATH="$HOME"
 
-# Ollama-Konfiguration
+# ---------- Ollama-Konfiguration ----------
 OLLAMA_MODEL="qwen2.5-coder:7b-instruct"
 OLLAMA_BASE_URL="http://localhost:11434"
+OLLAMA_PORT=8000
 
-# OpenHands-Konfiguration
-OPENHANDS_STATE_DIR="/home/sam/.openhands-state"
-OPENHANDS_WORKSPACE_DIR="/home/sam/openhands-workspace"
-OPENHANDS_CONFIG_DIR="/home/sam/.config/openhands"
+# ---------- OpenHands-Konfiguration ----------
+OPENHANDS_PORT=3000
+OPENHANDS_STATE_DIR="$HOME/.openhands-state"
+OPENHANDS_WORKSPACE_DIR="$HOME/openhands-workspace"
+OPENHANDS_CONFIG_DIR="$HOME/.config/openhands"
+OPENHANDS_MAX_WORKERS=5
+
+# ---------- n8n Konfiguration ----------
+N8N_URL="http://localhost:5678"
+N8N_API_KEY=""
+MCP_HTTP_PORT=3333
+
+# ---------- Logging Konfiguration ----------
+LOG_DIR="/tmp/mcp-logs"
 ENVEOF
-    echo "Bitte fülle die API-Keys in der .env-Datei aus und starte das Script erneut."
+    warn "Bitte fülle die API-Keys in der .env-Datei aus und starte das Script erneut."
     exit 1
 fi
 
-# Lade Umgebungsvariablen
-source .env
-
-# Erstelle Verzeichnisse
-mkdir -p "$HOME/.config/Claude"
-mkdir -p "$OPENHANDS_STATE_DIR"
-mkdir -p "$OPENHANDS_WORKSPACE_DIR"
-mkdir -p "$OPENHANDS_CONFIG_DIR"
-
 # Installiere MCP-Server
-echo "Installiere MCP-Server..."
-npm install -g @modelcontextprotocol/inspector
-npm install -g @modelcontextprotocol/server-filesystem
-npm install -g @modelcontextprotocol/server-brave-search
-npm install -g @modelcontextprotocol/server-github
-npm install -g @modelcontextprotocol/server-memory
-npm install -g @modelcontextprotocol/server-everything
+install_mcp_servers
 
 # Installiere Ollama-MCP-Bridge
-echo "Installiere Ollama-MCP-Bridge..."
-if [ ! -d "ollama-mcp-bridge" ]; then
-    git clone https://github.com/patruff/ollama-mcp-bridge.git
-    cd ollama-mcp-bridge
-    npm install
-    npm run build
-    cd ..
-fi
+install_ollama_bridge
 
-# Erstelle Konfigurationsdateien
-./create-configs.sh
+# Erstelle Konfigurationen
+create_openhands_config
+create_claude_config
 
 # Erstelle Start-Skripte
-./create-scripts.sh
+create_start_scripts
 
-echo "=== Installation abgeschlossen ==="
-echo "Führe './start-all-mcp.sh' aus, um alle Dienste zu starten."
+info "=== Installation abgeschlossen ==="
+log "Führe '$HOME/start-all-mcp.sh' aus, um alle Dienste zu starten."
+log "OpenHands ist unter http://localhost:${OPENHANDS_PORT} erreichbar."
+log "Ollama-MCP-Bridge ist unter http://localhost:${OLLAMA_PORT}/mcp erreichbar."

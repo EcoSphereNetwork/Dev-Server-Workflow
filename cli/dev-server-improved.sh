@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # Dev-Server CLI
 # Eine umfassende CLI zur Verwaltung des Dev-Server-Workflows
 
@@ -42,178 +52,178 @@ log() {
     
     case "$level" in
         "INFO")
-            echo -e "${BLUE}[INFO]${NC} $message"
+            log_info "${BLUE}[INFO]${NC} $message"
             ;;
         "SUCCESS")
-            echo -e "${GREEN}[SUCCESS]${NC} $message"
+            log_info "${GREEN}[SUCCESS]${NC} $message"
             ;;
         "WARNING")
-            echo -e "${YELLOW}[WARNING]${NC} $message"
+            log_info "${YELLOW}[WARNING]${NC} $message"
             ;;
         "ERROR")
-            echo -e "${RED}[ERROR]${NC} $message"
+            log_info "${RED}[ERROR]${NC} $message"
             ;;
         *)
-            echo -e "[LOG] $message"
+            log_info "[LOG] $message"
             ;;
     esac
     
-    echo "[$timestamp] [$level] $message" >> "$LOGS_DIR/dev-server.log"
+    log_info "[$timestamp] [$level] $message" >> "$LOGS_DIR/dev-server.log"
 }
 
 # Hilfefunktion
 show_help() {
-    echo -e "${BLUE}Dev-Server CLI${NC} - Eine umfassende CLI zur Verwaltung des Dev-Server-Workflows"
+    log_info "${BLUE}Dev-Server CLI${NC} - Eine umfassende CLI zur Verwaltung des Dev-Server-Workflows"
     echo
-    echo -e "Verwendung: ${YELLOW}dev-server${NC} ${GREEN}[Befehl]${NC} ${CYAN}[Optionen]${NC}"
+    log_info "Verwendung: ${YELLOW}dev-server${NC} ${GREEN}[Befehl]${NC} ${CYAN}[Optionen]${NC}"
     echo
-    echo -e "${GREEN}Verfügbare Befehle:${NC}"
-    echo -e "  ${YELLOW}help${NC}                     Zeigt diese Hilfe an"
-    echo -e "  ${YELLOW}status${NC}                   Zeigt den Status aller Komponenten an"
-    echo -e "  ${YELLOW}start${NC} ${CYAN}[Komponente]${NC}        Startet eine Komponente"
-    echo -e "  ${YELLOW}stop${NC} ${CYAN}[Komponente]${NC}         Stoppt eine Komponente"
-    echo -e "  ${YELLOW}restart${NC} ${CYAN}[Komponente]${NC}      Startet eine Komponente neu"
-    echo -e "  ${YELLOW}logs${NC} ${CYAN}[Komponente]${NC}         Zeigt die Logs einer Komponente an"
-    echo -e "  ${YELLOW}config${NC} ${CYAN}[Option] [Wert]${NC}    Konfiguriert eine Option
+    log_info "${GREEN}Verfügbare Befehle:${NC}"
+    log_info "  ${YELLOW}help${NC}                     Zeigt diese Hilfe an"
+    log_info "  ${YELLOW}status${NC}                   Zeigt den Status aller Komponenten an"
+    log_info "  ${YELLOW}start${NC} ${CYAN}[Komponente]${NC}        Startet eine Komponente"
+    log_info "  ${YELLOW}stop${NC} ${CYAN}[Komponente]${NC}         Stoppt eine Komponente"
+    log_info "  ${YELLOW}restart${NC} ${CYAN}[Komponente]${NC}      Startet eine Komponente neu"
+    log_info "  ${YELLOW}logs${NC} ${CYAN}[Komponente]${NC}         Zeigt die Logs einer Komponente an"
+    log_info "  ${YELLOW}config${NC} ${CYAN}[Option] [Wert]${NC}    Konfiguriert eine Option
                                 Optionen: llm-api-key, github-token, openproject-token,
                                 n8n-api-key, workspace-path, openhands-docker-mcp"
-    echo -e "  ${YELLOW}web-ui${NC} ${CYAN}[Aktion]${NC}           Verwaltet die Web-UI
+    log_info "  ${YELLOW}web-ui${NC} ${CYAN}[Aktion]${NC}           Verwaltet die Web-UI
                                 Aktionen: start, stop, logs, open"
-    echo -e "  ${YELLOW}list${NC} ${CYAN}[Ressourcentyp]${NC}      Listet verfügbare Ressourcen auf"
-    echo -e "  ${YELLOW}install${NC} ${CYAN}[Komponente]${NC}      Installiert eine Komponente"
-    echo -e "  ${YELLOW}switch-llm${NC} ${CYAN}[LLM]${NC}          Wechselt zwischen LLMs (llamafile, claude)"
-    echo -e "  ${YELLOW}update${NC} ${CYAN}[Komponente]${NC}       Aktualisiert eine Komponente"
-    echo -e "  ${YELLOW}backup${NC} ${CYAN}[Komponente]${NC}       Erstellt ein Backup einer Komponente"
-    echo -e "  ${YELLOW}restore${NC} ${CYAN}[Backup]${NC}          Stellt ein Backup wieder her"
+    log_info "  ${YELLOW}list${NC} ${CYAN}[Ressourcentyp]${NC}      Listet verfügbare Ressourcen auf"
+    log_info "  ${YELLOW}install${NC} ${CYAN}[Komponente]${NC}      Installiert eine Komponente"
+    log_info "  ${YELLOW}switch-llm${NC} ${CYAN}[LLM]${NC}          Wechselt zwischen LLMs (llamafile, claude)"
+    log_info "  ${YELLOW}update${NC} ${CYAN}[Komponente]${NC}       Aktualisiert eine Komponente"
+    log_info "  ${YELLOW}backup${NC} ${CYAN}[Komponente]${NC}       Erstellt ein Backup einer Komponente"
+    log_info "  ${YELLOW}restore${NC} ${CYAN}[Backup]${NC}          Stellt ein Backup wieder her"
     echo
-    echo -e "${GREEN}Erweiterte Befehle:${NC}"
-    echo -e "  ${YELLOW}package${NC} ${CYAN}[Aktion] [Paket] [Manager] [Optionen]${NC}    Paketmanagement"
-    echo -e "                                Aktionen: install, uninstall, update, upgrade, check"
-    echo -e "                                Manager: apt, pip, pip3, npm, npx, dpkg"
-    echo -e "  ${YELLOW}configure${NC} ${CYAN}[Aktion] [Datei] [Schlüssel] [Wert] [Extra]${NC}    Konfigurationsmanagement"
-    echo -e "                                Aktionen: set, get, comment, uncomment, set-json, get-json,"
-    echo -e "                                          set-yaml, get-yaml, set-xml, get-xml, set-env, get-env"
-    echo -e "  ${YELLOW}monitor${NC} ${CYAN}[Aktion] [Argumente...]${NC}    Monitoring-Funktionen"
-    echo -e "                                Aktionen: check-service, get-logs, check-disk, check-memory,"
-    echo -e "                                          check-cpu, check-port, check-url, check-container,"
-    echo -e "                                          container-stats, check-prometheus"
-    echo -e "  ${YELLOW}ai${NC} ${CYAN}[Prompt]${NC}               Führt einen KI-Befehl aus"
-    echo -e "  ${YELLOW}menu${NC}                     Öffnet das interaktive Menü"
+    log_info "${GREEN}Erweiterte Befehle:${NC}"
+    log_info "  ${YELLOW}package${NC} ${CYAN}[Aktion] [Paket] [Manager] [Optionen]${NC}    Paketmanagement"
+    log_info "                                Aktionen: install, uninstall, update, upgrade, check"
+    log_info "                                Manager: apt, pip, pip3, npm, npx, dpkg"
+    log_info "  ${YELLOW}configure${NC} ${CYAN}[Aktion] [Datei] [Schlüssel] [Wert] [Extra]${NC}    Konfigurationsmanagement"
+    log_info "                                Aktionen: set, get, comment, uncomment, set-json, get-json,"
+    log_info "                                          set-yaml, get-yaml, set-xml, get-xml, set-env, get-env"
+    log_info "  ${YELLOW}monitor${NC} ${CYAN}[Aktion] [Argumente...]${NC}    Monitoring-Funktionen"
+    log_info "                                Aktionen: check-service, get-logs, check-disk, check-memory,"
+    log_info "                                          check-cpu, check-port, check-url, check-container,"
+    log_info "                                          container-stats, check-prometheus"
+    log_info "  ${YELLOW}ai${NC} ${CYAN}[Prompt]${NC}               Führt einen KI-Befehl aus"
+    log_info "  ${YELLOW}menu${NC}                     Öffnet das interaktive Menü"
     echo
-    echo -e "${GREEN}Komponenten:${NC}"
-    echo -e "  ${CYAN}all${NC}                        Alle Komponenten"
-    echo -e "  ${CYAN}mcp${NC}                        MCP-Server (Docker Container)"
-    echo -e "  ${CYAN}n8n-mcp${NC}                    n8n MCP-Server"
-    echo -e "  ${CYAN}docker-mcp${NC}                 Docker MCP-Server"
-    echo -e "  ${CYAN}monitoring${NC}                 Monitoring Stack (Prometheus, Grafana, Alertmanager)"
-    echo -e "  ${CYAN}n8n${NC}                        n8n-Workflow-Engine"
-    echo -e "  ${CYAN}ollama${NC}                     Ollama LLM-Server"
-    echo -e "  ${CYAN}openhands${NC}                  OpenHands KI-Agent"
-    echo -e "  ${CYAN}appflowy${NC}                   AppFlowy Notizen-App"
-    echo -e "  ${CYAN}llamafile${NC}                  Llamafile LLM"
-    echo -e "  ${CYAN}web-ui${NC}                     Web-UI für die Verwaltung aller Komponenten"
+    log_info "${GREEN}Komponenten:${NC}"
+    log_info "  ${CYAN}all${NC}                        Alle Komponenten"
+    log_info "  ${CYAN}mcp${NC}                        MCP-Server (Docker Container)"
+    log_info "  ${CYAN}n8n-mcp${NC}                    n8n MCP-Server"
+    log_info "  ${CYAN}docker-mcp${NC}                 Docker MCP-Server"
+    log_info "  ${CYAN}monitoring${NC}                 Monitoring Stack (Prometheus, Grafana, Alertmanager)"
+    log_info "  ${CYAN}n8n${NC}                        n8n-Workflow-Engine"
+    log_info "  ${CYAN}ollama${NC}                     Ollama LLM-Server"
+    log_info "  ${CYAN}openhands${NC}                  OpenHands KI-Agent"
+    log_info "  ${CYAN}appflowy${NC}                   AppFlowy Notizen-App"
+    log_info "  ${CYAN}llamafile${NC}                  Llamafile LLM"
+    log_info "  ${CYAN}web-ui${NC}                     Web-UI für die Verwaltung aller Komponenten"
     echo
-    echo -e "${GREEN}Beispiele:${NC}"
-    echo -e "  ${YELLOW}dev-server status${NC}"
-    echo -e "  ${YELLOW}dev-server start${NC} ${CYAN}mcp${NC}"
-    echo -e "  ${YELLOW}dev-server logs${NC} ${CYAN}n8n${NC}"
-    echo -e "  ${YELLOW}dev-server ai${NC} ${CYAN}\"Wie starte ich den MCP-Server?\"${NC}"
-    echo -e "  ${YELLOW}dev-server install${NC} ${CYAN}appflowy${NC}"
-    echo -e "  ${YELLOW}dev-server menu${NC}"
+    log_info "${GREEN}Beispiele:${NC}"
+    log_info "  ${YELLOW}dev-server status${NC}"
+    log_info "  ${YELLOW}dev-server start${NC} ${CYAN}mcp${NC}"
+    log_info "  ${YELLOW}dev-server logs${NC} ${CYAN}n8n${NC}"
+    log_info "  ${YELLOW}dev-server ai${NC} ${CYAN}\"Wie starte ich den MCP-Server?\"${NC}"
+    log_info "  ${YELLOW}dev-server install${NC} ${CYAN}appflowy${NC}"
+    log_info "  ${YELLOW}dev-server menu${NC}"
 }
 
 # Statusfunktion
 show_status() {
-    echo -e "${BLUE}=== Dev-Server Status ===${NC}"
+    log_info "${BLUE}=== Dev-Server Status ===${NC}"
     
     # MCP-Server Status
     if docker ps | grep -q "mcp-"; then
-        echo -e "${GREEN}✅ MCP-Server (Docker):${NC} Läuft"
+        log_info "${GREEN}✅ MCP-Server (Docker):${NC} Läuft"
         docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep "mcp-"
     else
-        echo -e "${RED}❌ MCP-Server (Docker):${NC} Gestoppt"
+        log_info "${RED}❌ MCP-Server (Docker):${NC} Gestoppt"
     fi
     
     # n8n MCP Server Status
     if pgrep -f "n8n_mcp_server.py" > /dev/null; then
-        echo -e "${GREEN}✅ n8n MCP-Server:${NC} Läuft"
+        log_info "${GREEN}✅ n8n MCP-Server:${NC} Läuft"
         ps aux | grep "[n]8n_mcp_server.py" | awk '{print $2, $11, $12, $13}'
     else
-        echo -e "${RED}❌ n8n MCP-Server:${NC} Gestoppt"
+        log_info "${RED}❌ n8n MCP-Server:${NC} Gestoppt"
     fi
     
     # Docker MCP Server Status
     if pgrep -f "docker_mcp_server.py" > /dev/null; then
-        echo -e "${GREEN}✅ Docker MCP-Server:${NC} Läuft"
+        log_info "${GREEN}✅ Docker MCP-Server:${NC} Läuft"
         ps aux | grep "[d]ocker_mcp_server.py" | awk '{print $2, $11, $12, $13}'
     else
-        echo -e "${RED}❌ Docker MCP-Server:${NC} Gestoppt"
+        log_info "${RED}❌ Docker MCP-Server:${NC} Gestoppt"
     fi
     
     # n8n Status
     if docker ps | grep -q "n8n"; then
-        echo -e "${GREEN}✅ n8n:${NC} Läuft"
+        log_info "${GREEN}✅ n8n:${NC} Läuft"
         docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep "n8n"
     else
-        echo -e "${RED}❌ n8n:${NC} Gestoppt"
+        log_info "${RED}❌ n8n:${NC} Gestoppt"
     fi
     
     # Ollama Status
     if docker ps | grep -q "ollama"; then
-        echo -e "${GREEN}✅ Ollama:${NC} Läuft"
+        log_info "${GREEN}✅ Ollama:${NC} Läuft"
         docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep "ollama"
     else
-        echo -e "${RED}❌ Ollama:${NC} Gestoppt"
+        log_info "${RED}❌ Ollama:${NC} Gestoppt"
     fi
     
     # OpenHands Status
     if docker ps | grep -q "openhands"; then
-        echo -e "${GREEN}✅ OpenHands:${NC} Läuft"
+        log_info "${GREEN}✅ OpenHands:${NC} Läuft"
         docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep "openhands"
     else
-        echo -e "${RED}❌ OpenHands:${NC} Gestoppt"
+        log_info "${RED}❌ OpenHands:${NC} Gestoppt"
     fi
     
     # AppFlowy Status
     if docker ps | grep -q "appflowy"; then
-        echo -e "${GREEN}✅ AppFlowy:${NC} Läuft"
+        log_info "${GREEN}✅ AppFlowy:${NC} Läuft"
         docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep "appflowy"
     else
-        echo -e "${RED}❌ AppFlowy:${NC} Gestoppt"
+        log_info "${RED}❌ AppFlowy:${NC} Gestoppt"
     fi
     
     # Llamafile Status
     if pgrep -f "llamafile" > /dev/null; then
-        echo -e "${GREEN}✅ Llamafile:${NC} Läuft"
+        log_info "${GREEN}✅ Llamafile:${NC} Läuft"
         ps aux | grep "[l]lamafile" | awk '{print $2, $11, $12, $13}'
     else
-        echo -e "${RED}❌ Llamafile:${NC} Gestoppt"
+        log_info "${RED}❌ Llamafile:${NC} Gestoppt"
     fi
     
     # Web-UI Status
     if pgrep -f "npm.*start" > /dev/null && [ -d "$WEB_UI_DIR" ]; then
-        echo -e "${GREEN}✅ Web-UI:${NC} Läuft"
+        log_info "${GREEN}✅ Web-UI:${NC} Läuft"
         ps aux | grep "[n]pm.*start" | awk '{print $2, $11, $12, $13}'
     else
-        echo -e "${RED}❌ Web-UI:${NC} Gestoppt"
+        log_info "${RED}❌ Web-UI:${NC} Gestoppt"
     fi
     
     # LLM-Konfiguration
-    echo -e "\n${BLUE}=== LLM-Konfiguration ===${NC}"
-    echo -e "Aktives LLM: ${CYAN}$ACTIVE_LLM${NC}"
+    log_info "\n${BLUE}=== LLM-Konfiguration ===${NC}"
+    log_info "Aktives LLM: ${CYAN}$ACTIVE_LLM${NC}"
     
     if [ "$ACTIVE_LLM" == "llamafile" ]; then
         if [ -f "$LLAMAFILE_PATH" ]; then
-            echo -e "Llamafile: ${GREEN}Installiert${NC} ($LLAMAFILE_PATH)"
+            log_info "Llamafile: ${GREEN}Installiert${NC} ($LLAMAFILE_PATH)"
         else
-            echo -e "Llamafile: ${RED}Nicht installiert${NC}"
+            log_info "Llamafile: ${RED}Nicht installiert${NC}"
         fi
     elif [ "$ACTIVE_LLM" == "claude" ]; then
         if [ -n "$ANTHROPIC_API_KEY" ]; then
-            echo -e "Claude API-Schlüssel: ${GREEN}Konfiguriert${NC}"
-            echo -e "Claude Modell: ${CYAN}$CLAUDE_MODEL${NC}"
+            log_info "Claude API-Schlüssel: ${GREEN}Konfiguriert${NC}"
+            log_info "Claude Modell: ${CYAN}$CLAUDE_MODEL${NC}"
         else
-            echo -e "Claude API-Schlüssel: ${RED}Nicht konfiguriert${NC}"
+            log_info "Claude API-Schlüssel: ${RED}Nicht konfiguriert${NC}"
         fi
     fi
 }
@@ -365,7 +375,7 @@ start_component() {
             ;;
         *)
             log "ERROR" "Unbekannte Komponente: $component"
-            echo "Verfügbare Komponenten: all, mcp, n8n-mcp, docker-mcp, n8n, ollama, openhands, appflowy, llamafile, web-ui"
+            log_info "Verfügbare Komponenten: all, mcp, n8n-mcp, docker-mcp, n8n, ollama, openhands, appflowy, llamafile, web-ui"
             ;;
     esac
 }
@@ -520,7 +530,7 @@ stop_component() {
             ;;
         *)
             log "ERROR" "Unbekannte Komponente: $component"
-            echo "Verfügbare Komponenten: all, mcp, n8n-mcp, docker-mcp, n8n, ollama, openhands, appflowy, llamafile, web-ui"
+            log_info "Verfügbare Komponenten: all, mcp, n8n-mcp, docker-mcp, n8n, ollama, openhands, appflowy, llamafile, web-ui"
             ;;
     esac
 }
@@ -599,7 +609,7 @@ show_logs() {
             ;;
         *)
             log "ERROR" "Unbekannte Komponente: $component"
-            echo "Verfügbare Komponenten: mcp, n8n-mcp, docker-mcp, n8n, ollama, openhands, appflowy, llamafile, web-ui"
+            log_info "Verfügbare Komponenten: mcp, n8n-mcp, docker-mcp, n8n, ollama, openhands, appflowy, llamafile, web-ui"
             ;;
     esac
 }
@@ -646,7 +656,7 @@ configure() {
             ;;
         *)
             log "ERROR" "Unbekannte Option: $option"
-            echo "Verfügbare Optionen: llm-api-key, github-token, openproject-token, n8n-api-key, workspace-path, active-llm"
+            log_info "Verfügbare Optionen: llm-api-key, github-token, openproject-token, n8n-api-key, workspace-path, active-llm"
             ;;
     esac
 }
@@ -680,7 +690,7 @@ manage_web_ui() {
             ;;
         *)
             log "ERROR" "Unbekannte Aktion: $action"
-            echo "Verfügbare Aktionen: start, stop, logs, open"
+            log_info "Verfügbare Aktionen: start, stop, logs, open"
             ;;
     esac
 }
@@ -700,7 +710,7 @@ switch_llm() {
             ;;
         *)
             log "ERROR" "Unbekanntes LLM: $llm"
-            echo "Verfügbare LLMs: llamafile, claude"
+            log_info "Verfügbare LLMs: llamafile, claude"
             ;;
     esac
 }
@@ -775,7 +785,7 @@ update() {
             ;;
         *)
             log "ERROR" "Unbekannte Komponente: $component"
-            echo "Verfügbare Komponenten: all, mcp, n8n, ollama, openhands, appflowy, llamafile, web-ui"
+            log_info "Verfügbare Komponenten: all, mcp, n8n, ollama, openhands, appflowy, llamafile, web-ui"
             ;;
     esac
 }
@@ -857,7 +867,7 @@ backup() {
             ;;
         *)
             log "ERROR" "Unbekannte Komponente: $component"
-            echo "Verfügbare Komponenten: all, mcp, n8n, ollama, openhands, appflowy, config"
+            log_info "Verfügbare Komponenten: all, mcp, n8n, ollama, openhands, appflowy, config"
             ;;
     esac
 }
@@ -965,7 +975,7 @@ manage_package() {
             ;;
         *)
             log "ERROR" "Unbekannte Aktion: $action"
-            echo "Verfügbare Aktionen: install, uninstall, update, upgrade, check"
+            log_info "Verfügbare Aktionen: install, uninstall, update, upgrade, check"
             ;;
     esac
 }
@@ -1020,7 +1030,7 @@ manage_configuration() {
             ;;
         *)
             log "ERROR" "Unbekannte Aktion: $action"
-            echo "Verfügbare Aktionen: set, get, comment, uncomment, set-json, get-json, set-yaml, get-yaml, set-xml, get-xml, set-env, get-env"
+            log_info "Verfügbare Aktionen: set, get, comment, uncomment, set-json, get-json, set-yaml, get-yaml, set-xml, get-xml, set-env, get-env"
             ;;
     esac
 }
@@ -1067,7 +1077,7 @@ monitor() {
             ;;
         *)
             log "ERROR" "Unbekannte Aktion: $action"
-            echo "Verfügbare Aktionen: check-service, get-logs, check-disk, check-memory, check-cpu, check-port, check-url, check-container, container-stats, check-prometheus"
+            log_info "Verfügbare Aktionen: check-service, get-logs, check-disk, check-memory, check-cpu, check-port, check-url, check-container, container-stats, check-prometheus"
             ;;
     esac
 }
@@ -1101,8 +1111,8 @@ main() {
         "start")
             if [ $# -eq 0 ]; then
                 log "ERROR" "Keine Komponente angegeben"
-                echo "Verwendung: dev-server start <Komponente>"
-                echo "Verfügbare Komponenten: all, mcp, n8n-mcp, docker-mcp, n8n, ollama, openhands, appflowy, llamafile, web-ui"
+                log_info "Verwendung: dev-server start <Komponente>"
+                log_info "Verfügbare Komponenten: all, mcp, n8n-mcp, docker-mcp, n8n, ollama, openhands, appflowy, llamafile, web-ui"
                 exit 1
             fi
             start_component "$1"
@@ -1110,8 +1120,8 @@ main() {
         "stop")
             if [ $# -eq 0 ]; then
                 log "ERROR" "Keine Komponente angegeben"
-                echo "Verwendung: dev-server stop <Komponente>"
-                echo "Verfügbare Komponenten: all, mcp, n8n-mcp, docker-mcp, n8n, ollama, openhands, appflowy, llamafile, web-ui"
+                log_info "Verwendung: dev-server stop <Komponente>"
+                log_info "Verfügbare Komponenten: all, mcp, n8n-mcp, docker-mcp, n8n, ollama, openhands, appflowy, llamafile, web-ui"
                 exit 1
             fi
             stop_component "$1"
@@ -1119,8 +1129,8 @@ main() {
         "restart")
             if [ $# -eq 0 ]; then
                 log "ERROR" "Keine Komponente angegeben"
-                echo "Verwendung: dev-server restart <Komponente>"
-                echo "Verfügbare Komponenten: all, mcp, n8n-mcp, docker-mcp, n8n, ollama, openhands, appflowy, llamafile, web-ui"
+                log_info "Verwendung: dev-server restart <Komponente>"
+                log_info "Verfügbare Komponenten: all, mcp, n8n-mcp, docker-mcp, n8n, ollama, openhands, appflowy, llamafile, web-ui"
                 exit 1
             fi
             restart_component "$1"
@@ -1128,8 +1138,8 @@ main() {
         "logs")
             if [ $# -eq 0 ]; then
                 log "ERROR" "Keine Komponente angegeben"
-                echo "Verwendung: dev-server logs <Komponente> [Anzahl Zeilen]"
-                echo "Verfügbare Komponenten: mcp, n8n-mcp, docker-mcp, n8n, ollama, openhands, appflowy, llamafile, web-ui"
+                log_info "Verwendung: dev-server logs <Komponente> [Anzahl Zeilen]"
+                log_info "Verfügbare Komponenten: mcp, n8n-mcp, docker-mcp, n8n, ollama, openhands, appflowy, llamafile, web-ui"
                 exit 1
             fi
             show_logs "$1" "$2"
@@ -1137,8 +1147,8 @@ main() {
         "config")
             if [ $# -lt 2 ]; then
                 log "ERROR" "Unvollständige Parameter"
-                echo "Verwendung: dev-server config <Option> <Wert>"
-                echo "Verfügbare Optionen: llm-api-key, github-token, openproject-token, n8n-api-key, workspace-path, active-llm"
+                log_info "Verwendung: dev-server config <Option> <Wert>"
+                log_info "Verfügbare Optionen: llm-api-key, github-token, openproject-token, n8n-api-key, workspace-path, active-llm"
                 exit 1
             fi
             configure "$1" "$2"
@@ -1146,8 +1156,8 @@ main() {
         "web-ui")
             if [ $# -eq 0 ]; then
                 log "ERROR" "Keine Aktion angegeben"
-                echo "Verwendung: dev-server web-ui <Aktion>"
-                echo "Verfügbare Aktionen: start, stop, logs, open"
+                log_info "Verwendung: dev-server web-ui <Aktion>"
+                log_info "Verfügbare Aktionen: start, stop, logs, open"
                 exit 1
             fi
             manage_web_ui "$1"
@@ -1155,8 +1165,8 @@ main() {
         "install")
             if [ $# -eq 0 ]; then
                 log "ERROR" "Keine Komponente angegeben"
-                echo "Verwendung: dev-server install <Komponente>"
-                echo "Verfügbare Komponenten: all, docker, docker-compose, n8n, mcp, openhands, appflowy, llamafile, ollama, web-ui"
+                log_info "Verwendung: dev-server install <Komponente>"
+                log_info "Verfügbare Komponenten: all, docker, docker-compose, n8n, mcp, openhands, appflowy, llamafile, ollama, web-ui"
                 exit 1
             fi
             install "$1"
@@ -1164,8 +1174,8 @@ main() {
         "switch-llm")
             if [ $# -eq 0 ]; then
                 log "ERROR" "Kein LLM angegeben"
-                echo "Verwendung: dev-server switch-llm <LLM>"
-                echo "Verfügbare LLMs: llamafile, claude"
+                log_info "Verwendung: dev-server switch-llm <LLM>"
+                log_info "Verfügbare LLMs: llamafile, claude"
                 exit 1
             fi
             switch_llm "$1"
@@ -1173,8 +1183,8 @@ main() {
         "update")
             if [ $# -eq 0 ]; then
                 log "ERROR" "Keine Komponente angegeben"
-                echo "Verwendung: dev-server update <Komponente>"
-                echo "Verfügbare Komponenten: all, mcp, n8n, ollama, openhands, appflowy, llamafile, web-ui"
+                log_info "Verwendung: dev-server update <Komponente>"
+                log_info "Verfügbare Komponenten: all, mcp, n8n, ollama, openhands, appflowy, llamafile, web-ui"
                 exit 1
             fi
             update "$1"
@@ -1182,8 +1192,8 @@ main() {
         "backup")
             if [ $# -eq 0 ]; then
                 log "ERROR" "Keine Komponente angegeben"
-                echo "Verwendung: dev-server backup <Komponente>"
-                echo "Verfügbare Komponenten: all, mcp, n8n, ollama, openhands, appflowy, config"
+                log_info "Verwendung: dev-server backup <Komponente>"
+                log_info "Verfügbare Komponenten: all, mcp, n8n, ollama, openhands, appflowy, config"
                 exit 1
             fi
             backup "$1"
@@ -1191,7 +1201,7 @@ main() {
         "restore")
             if [ $# -eq 0 ]; then
                 log "ERROR" "Keine Backup-Datei angegeben"
-                echo "Verwendung: dev-server restore <Backup-Datei>"
+                log_info "Verwendung: dev-server restore <Backup-Datei>"
                 exit 1
             fi
             restore "$1"
@@ -1199,9 +1209,9 @@ main() {
         "package")
             if [ $# -lt 3 ]; then
                 log "ERROR" "Unvollständige Parameter"
-                echo "Verwendung: dev-server package <Aktion> <Paket> <Manager> [Optionen]"
-                echo "Verfügbare Aktionen: install, uninstall, update, upgrade, check"
-                echo "Verfügbare Manager: apt, pip, pip3, npm, npx, dpkg"
+                log_info "Verwendung: dev-server package <Aktion> <Paket> <Manager> [Optionen]"
+                log_info "Verfügbare Aktionen: install, uninstall, update, upgrade, check"
+                log_info "Verfügbare Manager: apt, pip, pip3, npm, npx, dpkg"
                 exit 1
             fi
             manage_package "$1" "$2" "$3" "${@:4}"
@@ -1209,8 +1219,8 @@ main() {
         "configure")
             if [ $# -lt 3 ]; then
                 log "ERROR" "Unvollständige Parameter"
-                echo "Verwendung: dev-server configure <Aktion> <Datei> <Schlüssel> [Wert] [Extra]"
-                echo "Verfügbare Aktionen: set, get, comment, uncomment, set-json, get-json, set-yaml, get-yaml, set-xml, get-xml, set-env, get-env"
+                log_info "Verwendung: dev-server configure <Aktion> <Datei> <Schlüssel> [Wert] [Extra]"
+                log_info "Verfügbare Aktionen: set, get, comment, uncomment, set-json, get-json, set-yaml, get-yaml, set-xml, get-xml, set-env, get-env"
                 exit 1
             fi
             manage_configuration "$1" "$2" "$3" "$4" "$5"
@@ -1218,8 +1228,8 @@ main() {
         "monitor")
             if [ $# -eq 0 ]; then
                 log "ERROR" "Keine Aktion angegeben"
-                echo "Verwendung: dev-server monitor <Aktion> [Argumente...]"
-                echo "Verfügbare Aktionen: check-service, get-logs, check-disk, check-memory, check-cpu, check-port, check-url, check-container, container-stats, check-prometheus"
+                log_info "Verwendung: dev-server monitor <Aktion> [Argumente...]"
+                log_info "Verfügbare Aktionen: check-service, get-logs, check-disk, check-memory, check-cpu, check-port, check-url, check-container, container-stats, check-prometheus"
                 exit 1
             fi
             monitor "$1" "${@:2}"
@@ -1227,7 +1237,7 @@ main() {
         "ai")
             if [ $# -eq 0 ]; then
                 log "ERROR" "Kein Prompt angegeben"
-                echo "Verwendung: dev-server ai \"<Prompt>\""
+                log_info "Verwendung: dev-server ai \"<Prompt>\""
                 exit 1
             fi
             ai_assistant "$@"

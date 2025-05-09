@@ -1,4 +1,14 @@
 #!/bin/bash
+
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
 # Functions for the Dev-Server CLI
 
 # Load configuration
@@ -35,25 +45,25 @@ fi
 # Logging functions
 log_debug() {
     if [[ ${CURRENT_LOG_LEVEL} -le ${LOG_DEBUG} ]]; then
-        echo -e "${CYAN}[DEBUG]${NC} $1"
+        log_info "${CYAN}[DEBUG]${NC} $1"
     fi
 }
 
 log_info() {
     if [[ ${CURRENT_LOG_LEVEL} -le ${LOG_INFO} ]]; then
-        echo -e "${GREEN}[INFO]${NC} $1"
+        log_info "${GREEN}[INFO]${NC} $1"
     fi
 }
 
 log_warn() {
     if [[ ${CURRENT_LOG_LEVEL} -le ${LOG_WARN} ]]; then
-        echo -e "${YELLOW}[WARN]${NC} $1"
+        log_info "${YELLOW}[WARN]${NC} $1"
     fi
 }
 
 log_error() {
     if [[ ${CURRENT_LOG_LEVEL} -le ${LOG_ERROR} ]]; then
-        echo -e "${RED}[ERROR]${NC} $1"
+        log_info "${RED}[ERROR]${NC} $1"
     fi
 }
 
@@ -712,7 +722,7 @@ install_shellgpt() {
 
 # Check status of all components
 check_status() {
-    echo -e "${BLUE}=== Dev-Server Status ===${NC}"
+    log_info "${BLUE}=== Dev-Server Status ===${NC}"
     
     # Check if Docker is running
     if ! check_docker; then
@@ -724,56 +734,56 @@ check_status() {
     
     # Check MCP server status
     if check_process_running "n8n_mcp_server.py"; then
-        echo -e "${GREEN}✅ MCP-Server: Läuft${NC}"
+        log_info "${GREEN}✅ MCP-Server: Läuft${NC}"
     else
-        echo -e "${RED}❌ MCP-Server: Gestoppt${NC}"
+        log_info "${RED}❌ MCP-Server: Gestoppt${NC}"
     fi
     
     # Check n8n status
     if [[ "${docker_running}" == "true" ]]; then
         if check_container_running "n8n"; then
-            echo -e "${GREEN}✅ n8n: Läuft${NC}"
+            log_info "${GREEN}✅ n8n: Läuft${NC}"
         else
-            echo -e "${RED}❌ n8n: Gestoppt${NC}"
+            log_info "${RED}❌ n8n: Gestoppt${NC}"
         fi
     else
-        echo -e "${RED}❌ n8n: Gestoppt${NC}"
+        log_info "${RED}❌ n8n: Gestoppt${NC}"
     fi
     
     # Check Ollama status
     if [[ "${docker_running}" == "true" ]]; then
         if check_container_running "ollama"; then
-            echo -e "${GREEN}✅ Ollama: Läuft${NC}"
+            log_info "${GREEN}✅ Ollama: Läuft${NC}"
         else
-            echo -e "${RED}❌ Ollama: Gestoppt${NC}"
+            log_info "${RED}❌ Ollama: Gestoppt${NC}"
         fi
     else
-        echo -e "${RED}❌ Ollama: Gestoppt${NC}"
+        log_info "${RED}❌ Ollama: Gestoppt${NC}"
     fi
     
     # Check OpenHands status
     if [[ "${docker_running}" == "true" ]]; then
         if check_container_running "openhands"; then
-            echo -e "${GREEN}✅ OpenHands: Läuft${NC}"
+            log_info "${GREEN}✅ OpenHands: Läuft${NC}"
         else
-            echo -e "${RED}❌ OpenHands: Gestoppt${NC}"
+            log_info "${RED}❌ OpenHands: Gestoppt${NC}"
         fi
     else
-        echo -e "${RED}❌ OpenHands: Gestoppt${NC}"
+        log_info "${RED}❌ OpenHands: Gestoppt${NC}"
     fi
     
     # Check Llamafile status
     if check_process_running "${LLAMAFILE_PATH}"; then
-        echo -e "${GREEN}✅ Llamafile: Läuft${NC}"
+        log_info "${GREEN}✅ Llamafile: Läuft${NC}"
     else
-        echo -e "${RED}❌ Llamafile: Gestoppt${NC}"
+        log_info "${RED}❌ Llamafile: Gestoppt${NC}"
     fi
     
     # Check ShellGPT status
     if check_command "sgpt"; then
-        echo -e "${GREEN}✅ ShellGPT: Installiert${NC}"
+        log_info "${GREEN}✅ ShellGPT: Installiert${NC}"
     else
-        echo -e "${RED}❌ ShellGPT: Nicht installiert${NC}"
+        log_info "${RED}❌ ShellGPT: Nicht installiert${NC}"
     fi
 }
 

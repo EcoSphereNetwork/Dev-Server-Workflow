@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # MCP Inspector CLI-Skript
 # Dieses Skript ermöglicht die Verwendung des MCP Inspector im CLI-Modus
 # für die Interaktion mit MCP-Servern.
@@ -13,18 +23,18 @@ CONFIG_FILE="/app/config/config.json"
 
 # Hilfe-Funktion
 function show_help {
-    echo "Verwendung: $0 [Optionen]"
+    log_info "Verwendung: $0 [Optionen]"
     echo ""
-    echo "Optionen:"
-    echo "  --server SERVER       MCP-Server aus der Konfigurationsdatei"
-    echo "  --method METHOD       Methode (tools/list, tools/call, resources/list, prompts/list)"
-    echo "  --tool-name NAME      Name des Tools (für tools/call)"
-    echo "  --tool-arg KEY=VALUE  Argument für das Tool (mehrfach möglich)"
-    echo "  --help                Diese Hilfe anzeigen"
+    log_info "Optionen:"
+    log_info "  --server SERVER       MCP-Server aus der Konfigurationsdatei"
+    log_info "  --method METHOD       Methode (tools/list, tools/call, resources/list, prompts/list)"
+    log_info "  --tool-name NAME      Name des Tools (für tools/call)"
+    log_info "  --tool-arg KEY=VALUE  Argument für das Tool (mehrfach möglich)"
+    log_info "  --help                Diese Hilfe anzeigen"
     echo ""
-    echo "Beispiele:"
-    echo "  $0 --server github --method tools/list"
-    echo "  $0 --server desktop-commander --method tools/call --tool-name read_file --tool-arg path=/workspace/README.md"
+    log_info "Beispiele:"
+    log_info "  $0 --server github --method tools/list"
+    log_info "  $0 --server desktop-commander --method tools/call --tool-name read_file --tool-arg path=/workspace/README.md"
     echo ""
 }
 
@@ -52,7 +62,7 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         *)
-            echo "Unbekannte Option: $1"
+            log_info "Unbekannte Option: $1"
             show_help
             exit 1
             ;;
@@ -61,7 +71,7 @@ done
 
 # Überprüfen, ob ein Server angegeben wurde
 if [ -z "$SERVER" ]; then
-    echo "Fehler: Kein Server angegeben."
+    log_info "Fehler: Kein Server angegeben."
     show_help
     exit 1
 fi

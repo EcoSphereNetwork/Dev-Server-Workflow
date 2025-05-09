@@ -1,13 +1,23 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # Erstelle Konfigurationsdateien für MCP-Server und OpenHands
-echo "=== Erstelle Konfigurationsdateien ==="
+log_info "=== Erstelle Konfigurationsdateien ==="
 
 # Lade Umgebungsvariablen
 source .env
 
 # Erstelle Ollama-MCP-Bridge Konfiguration
-echo "Erstelle Ollama-MCP-Bridge Konfiguration..."
+log_info "Erstelle Ollama-MCP-Bridge Konfiguration..."
 cat > ./ollama-mcp-bridge/bridge_config.json << EOF1
 {
   "mcpServers": {
@@ -54,7 +64,7 @@ cat > ./ollama-mcp-bridge/bridge_config.json << EOF1
 EOF1
 
 # Erstelle Claude Desktop Konfiguration
-echo "Erstelle Claude Desktop Konfiguration..."
+log_info "Erstelle Claude Desktop Konfiguration..."
 cat > "$HOME/.config/Claude/claude_desktop_config.json" << EOF2
 {
   "mcpServers": {
@@ -110,7 +120,7 @@ cat > "$HOME/.config/Claude/claude_desktop_config.json" << EOF2
 EOF2
 
 # Erstelle OpenHands Konfiguration
-echo "Erstelle OpenHands Konfiguration..."
+log_info "Erstelle OpenHands Konfiguration..."
 mkdir -p "$OPENHANDS_CONFIG_DIR"
 cat > "$OPENHANDS_CONFIG_DIR/config.toml" << EOF3
 [core]
@@ -182,7 +192,7 @@ stdio_servers = [
 EOF3
 
 # Erstelle Docker-Compose-Datei
-echo "Erstelle Docker-Compose-Datei..."
+log_info "Erstelle Docker-Compose-Datei..."
 cat > "$HOME/openhands-docker-compose.yml" << EOF4
 version: "3"
 services:
@@ -204,4 +214,4 @@ services:
     restart: unless-stopped
 EOF4
 
-echo "Konfigurationsdateien erstellt."
+log_info "Konfigurationsdateien erstellt."

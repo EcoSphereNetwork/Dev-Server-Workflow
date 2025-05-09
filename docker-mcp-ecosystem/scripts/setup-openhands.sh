@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # OpenHands-Setup-Skript
 # Dieses Skript richtet OpenHands für die Verwendung mit den MCP-Servern ein.
 
@@ -16,18 +26,18 @@ OPENHANDS_PORT=3000
 
 # Hilfe-Funktion
 function show_help {
-    echo -e "${BLUE}OpenHands-Setup-Skript${NC}"
+    log_info "${BLUE}OpenHands-Setup-Skript${NC}"
     echo ""
-    echo "Verwendung: $0 [Optionen]"
+    log_info "Verwendung: $0 [Optionen]"
     echo ""
-    echo "Optionen:"
-    echo "  --config-dir DIR       Das Konfigurationsverzeichnis für OpenHands (Standard: ~/.config/openhands)"
-    echo "  --port PORT            Der Port, auf dem OpenHands laufen soll (Standard: 3000)"
-    echo "  --help                 Zeigt diese Hilfe an"
+    log_info "Optionen:"
+    log_info "  --config-dir DIR       Das Konfigurationsverzeichnis für OpenHands (Standard: ~/.config/openhands)"
+    log_info "  --port PORT            Der Port, auf dem OpenHands laufen soll (Standard: 3000)"
+    log_info "  --help                 Zeigt diese Hilfe an"
     echo ""
-    echo "Beispiele:"
-    echo "  $0                                              # Richtet OpenHands mit Standardeinstellungen ein"
-    echo "  $0 --config-dir /path/to/config --port 3333     # Richtet OpenHands mit benutzerdefinierten Einstellungen ein"
+    log_info "Beispiele:"
+    log_info "  $0                                              # Richtet OpenHands mit Standardeinstellungen ein"
+    log_info "  $0 --config-dir /path/to/config --port 3333     # Richtet OpenHands mit benutzerdefinierten Einstellungen ein"
     echo ""
 }
 
@@ -47,7 +57,7 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         *)
-            echo -e "${RED}Unbekannte Option: $1${NC}"
+            log_info "${RED}Unbekannte Option: $1${NC}"
             show_help
             exit 1
             ;;
@@ -58,11 +68,11 @@ done
 cd "$(dirname "$0")/.."
 
 # Erstelle das Konfigurationsverzeichnis, falls es nicht existiert
-echo -e "${BLUE}Erstelle Konfigurationsverzeichnis für OpenHands...${NC}"
+log_info "${BLUE}Erstelle Konfigurationsverzeichnis für OpenHands...${NC}"
 mkdir -p "$OPENHANDS_CONFIG_DIR"
 
 # Erstelle die OpenHands-Konfigurationsdatei
-echo -e "${BLUE}Erstelle OpenHands-Konfigurationsdatei...${NC}"
+log_info "${BLUE}Erstelle OpenHands-Konfigurationsdatei...${NC}"
 cat > "$OPENHANDS_CONFIG_DIR/config.toml" << EOF
 [server]
 port = $OPENHANDS_PORT
@@ -75,7 +85,7 @@ enabled = true
 EOF
 
 # Füge alle MCP-Server zur Konfiguration hinzu
-echo -e "${BLUE}Füge MCP-Server zur OpenHands-Konfiguration hinzu...${NC}"
+log_info "${BLUE}Füge MCP-Server zur OpenHands-Konfiguration hinzu...${NC}"
 
 # Brave Search MCP Server
 cat >> "$OPENHANDS_CONFIG_DIR/config.toml" << EOF
@@ -214,7 +224,7 @@ description = "n8n-Workflow-Automatisierung"
 EOF
 
 # Erstelle die Docker-Compose-Datei für OpenHands
-echo -e "${BLUE}Erstelle Docker-Compose-Datei für OpenHands...${NC}"
+log_info "${BLUE}Erstelle Docker-Compose-Datei für OpenHands...${NC}"
 cat > "$HOME/openhands-docker-compose.yml" << EOF
 version: "3"
 services:
@@ -243,14 +253,14 @@ networks:
 EOF
 
 # Erstelle das Start-Skript für OpenHands
-echo -e "${BLUE}Erstelle Start-Skript für OpenHands...${NC}"
+log_info "${BLUE}Erstelle Start-Skript für OpenHands...${NC}"
 cat > "$HOME/start-openhands.sh" << EOF
 #!/bin/bash
 docker compose -f $HOME/openhands-docker-compose.yml up -d
-echo "OpenHands gestartet unter http://localhost:$OPENHANDS_PORT"
+log_info "OpenHands gestartet unter http://localhost:$OPENHANDS_PORT"
 EOF
 chmod +x "$HOME/start-openhands.sh"
 
-echo -e "${GREEN}OpenHands wurde erfolgreich für die Verwendung mit den MCP-Servern eingerichtet.${NC}"
-echo -e "${GREEN}Du kannst OpenHands mit dem folgenden Befehl starten:${NC}"
-echo -e "${BLUE}$HOME/start-openhands.sh${NC}"
+log_info "${GREEN}OpenHands wurde erfolgreich für die Verwendung mit den MCP-Servern eingerichtet.${NC}"
+log_info "${GREEN}Du kannst OpenHands mit dem folgenden Befehl starten:${NC}"
+log_info "${BLUE}$HOME/start-openhands.sh${NC}"

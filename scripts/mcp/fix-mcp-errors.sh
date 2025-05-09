@@ -1,58 +1,66 @@
 #!/bin/bash
 
-# Skript zur Behebung von Problemen mit dem MCP-Setup und Änderung des OpenHands-Ports
+# Verbessertes Skript zur Behebung von Problemen mit dem MCP-Setup
+# Verwendet die gemeinsame Bibliothek für konsistente Funktionen und Konfigurationen
 
-echo "=== Behebe Probleme mit dem MCP-Setup ==="
+# Basisverzeichnis
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BASE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-# Definiere den benutzerdefinierten Port für OpenHands
-CUSTOM_PORT=3333
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+info "=== Behebe Probleme mit dem MCP-Setup ==="
+
+# Aktualisiere die .env-Datei mit dem benutzerdefinierten Port
+if [ -f "${BASE_DIR}/.env" ]; then
+    info "Aktualisiere .env-Datei mit benutzerdefinierten Ports..."
+    
+    # Prüfe, ob OPENHANDS_PORT bereits in der .env-Datei existiert
+    if ! grep -q "^OPENHANDS_PORT=" "${BASE_DIR}/.env"; then
+        log_info "OPENHANDS_PORT=3333" >> "${BASE_DIR}/.env"
+    else
+        # Aktualisiere den Wert
+        sed -i 's/^OPENHANDS_PORT=.*/OPENHANDS_PORT=3333/' "${BASE_DIR}/.env"
+    fi
+    
+    # Lade die aktualisierte .env-Datei
+    source "${BASE_DIR}/.env"
+fi
 
 # 1. Starte Ollama-Service neu
-echo "1. Starte Ollama-Service neu..."
-sudo systemctl restart ollama || echo "Konnte Ollama-Service nicht neu starten. Möglicherweise läuft er nicht als Systemdienst."
+info "1. Starte Ollama-Service neu..."
+if command -v systemctl &> /dev/null; then
+    sudo systemctl restart ollama || warn "Konnte Ollama-Service nicht neu starten. Möglicherweise läuft er nicht als Systemdienst."
+else
+    warn "systemctl nicht gefunden. Kann Ollama-Service nicht neu starten."
+fi
 sleep 5
 
 # 2. Versuche erneut, das Ollama-Modell zu ziehen
-echo "2. Ziehe Ollama-Modell..."
-ollama pull qwen2.5-coder:7b-instruct || echo "Konnte Ollama-Modell nicht ziehen. Stelle sicher, dass Ollama läuft."
-
-# 3. Installiere TypeScript global
-echo "3. Installiere TypeScript global..."
-sudo npm install -g typescript || npm install -g typescript
-
-# 4. Korrigiere den Pfad zur Ollama-MCP-Bridge
-echo "4. Korrigiere den Pfad zur Ollama-MCP-Bridge..."
-OLLAMA_BRIDGE_DIR="$HOME/ollama-mcp-bridge"
-
-# Prüfe, ob das Verzeichnis existiert
-if [ ! -d "$OLLAMA_BRIDGE_DIR" ]; then
-    echo "Erstelle Ollama-MCP-Bridge Verzeichnis..."
-    mkdir -p "$OLLAMA_BRIDGE_DIR"
-    
-    echo "Klone Ollama-MCP-Bridge Repository..."
-    git clone https://github.com/patruff/ollama-mcp-bridge.git "$OLLAMA_BRIDGE_DIR"
-    
-    echo "Installiere Abhängigkeiten..."
-    cd "$OLLAMA_BRIDGE_DIR"
-    npm install
-    
-    echo "Baue Ollama-MCP-Bridge..."
-    npm run build || echo "Konnte Ollama-MCP-Bridge nicht bauen. Möglicherweise fehlen Berechtigungen."
+info "2. Ziehe Ollama-Modell..."
+if command -v ollama &> /dev/null; then
+    ollama pull "$OLLAMA_MODEL" || warn "Konnte Ollama-Modell nicht ziehen. Stelle sicher, dass Ollama läuft."
+else
+    warn "ollama nicht gefunden. Kann Ollama-Modell nicht ziehen."
 fi
 
-# 5. Aktualisiere das Start-Skript für Ollama-MCP-Bridge
-echo "5. Aktualisiere das Start-Skript für Ollama-MCP-Bridge..."
-cat > "$HOME/start-ollama-bridge.sh" << EOFSCRIPT
-#!/bin/bash
-cd $OLLAMA_BRIDGE_DIR
-npm start
-EOFSCRIPT
-chmod +x "$HOME/start-ollama-bridge.sh"
+# 3. Installiere TypeScript global
+info "3. Installiere TypeScript global..."
+if command -v npm &> /dev/null; then
+    sudo npm install -g typescript || npm install -g typescript
+else
+    warn "npm nicht gefunden. Kann TypeScript nicht installieren."
+fi
 
-# 6. Erstelle eine package.json im Home-Verzeichnis als Fallback
-echo "6. Erstelle eine package.json im Home-Verzeichnis als Fallback..."
+# 4. Installiere Ollama-MCP-Bridge
+info "4. Installiere Ollama-MCP-Bridge..."
+install_ollama_bridge
+
+# 5. Erstelle eine package.json im Home-Verzeichnis als Fallback
+info "5. Erstelle eine package.json im Home-Verzeichnis als Fallback..."
 if [ ! -f "$HOME/package.json" ]; then
-    cat > "$HOME/package.json" << EOFPACKAGE
+    cat > "$HOME/package.json" << EOF
 {
   "name": "home-directory",
   "version": "1.0.0",
@@ -61,137 +69,31 @@ if [ ! -f "$HOME/package.json" ]; then
     "start": "echo 'No start script defined'"
   }
 }
-EOFPACKAGE
+EOF
 fi
 
-# 7. Aktualisiere die Docker-Compose-Datei für OpenHands mit benutzerdefiniertem Port
-echo "7. Aktualisiere die Docker-Compose-Datei für OpenHands mit Port $CUSTOM_PORT..."
-cat > "$HOME/openhands-docker-compose.yml" << EOFDOCKER
-version: "3"
-services:
-  openhands:
-    image: docker.all-hands.dev/all-hands-ai/openhands:0.36
-    ports:
-      - "$CUSTOM_PORT:3000"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - $HOME/.openhands-state:/.openhands-state
-      - $HOME/.config/openhands:/config
-      - $HOME/openhands-workspace:/workspace
-    environment:
-      - SANDBOX_RUNTIME_CONTAINER_IMAGE=docker.all-hands.dev/all-hands-ai/runtime:0.36-nikolaik
-      - LOG_ALL_EVENTS=true
-      - CONFIG_PATH=/config/config.toml
-    extra_hosts:
-      - host.docker.internal:host-gateway
-    restart: unless-stopped
-EOFDOCKER
+# 6. Aktualisiere die Konfigurationen
+info "6. Aktualisiere die Konfigurationen..."
+create_openhands_config
+create_claude_config
 
-# 8. Aktualisiere das Start-Skript für OpenHands
-echo "8. Aktualisiere das Start-Skript für OpenHands..."
-cat > "$HOME/start-openhands.sh" << EOFOPENHANDS
-#!/bin/bash
-docker compose -f $HOME/openhands-docker-compose.yml up -d
-echo "OpenHands gestartet unter http://localhost:$CUSTOM_PORT"
-EOFOPENHANDS
-chmod +x "$HOME/start-openhands.sh"
+# 7. Aktualisiere die Start-Skripte
+info "7. Aktualisiere die Start-Skripte..."
+create_start_scripts
 
-# 9. Aktualisiere das All-in-One-Skript
-echo "9. Aktualisiere das All-in-One-Skript..."
-cat > "$HOME/start-all-mcp.sh" << EOFALL
-#!/bin/bash
-
-# Starte alle MCP-Dienste
-echo "Starte alle MCP-Dienste..."
-
-# Starte OpenHands
-echo "Starte OpenHands..."
-$HOME/start-openhands.sh
-
-# Starte Ollama-MCP-Bridge im Hintergrund
-echo "Starte Ollama-MCP-Bridge..."
-$HOME/start-ollama-bridge.sh &
-OLLAMA_BRIDGE_PID=\$!
-
-echo "Alle Dienste wurden gestartet!"
-echo "OpenHands ist unter http://localhost:$CUSTOM_PORT erreichbar."
-echo "OpenHands MCP ist unter http://localhost:$CUSTOM_PORT/mcp erreichbar."
-echo "Ollama-MCP-Bridge ist unter http://localhost:8000/mcp erreichbar."
-echo "Drücke STRG+C, um alle Dienste zu beenden."
-
-# Warte auf Benutzerunterbrechung
-trap "echo 'Stoppe Dienste...'; kill \$OLLAMA_BRIDGE_PID; docker compose -f '$HOME/openhands-docker-compose.yml' down; echo 'Alle Dienste gestoppt.'" INT
-wait
-EOFALL
-chmod +x "$HOME/start-all-mcp.sh"
-
-# 10. Aktualisiere die Claude Desktop Konfiguration für den neuen Port
-echo "10. Aktualisiere die Claude Desktop Konfiguration für den neuen Port..."
-mkdir -p "$HOME/.config/Claude"
-cat > "$HOME/.config/Claude/claude_desktop_config.json" << EOFCLAUDE
-{
-  "mcpServers": {
-    "filesystem": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem"
-      ]
-    },
-    "brave-search": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-brave-search"
-      ],
-      "env": {
-        "BRAVE_API_KEY": ""
-      }
-    },
-    "github": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-github"
-      ],
-      "env": {
-        "GITHUB_TOKEN": ""
-      }
-    },
-    "memory": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-memory"
-      ]
-    },
-    "everything": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-everything"
-      ]
-    },
-    "openhands": {
-      "sseUrl": "http://localhost:$CUSTOM_PORT/mcp"
-    }
-  }
-}
-EOFCLAUDE
-
-echo "=== Problembehebung abgeschlossen ==="
-echo ""
-echo "OpenHands wurde konfiguriert, um auf Port $CUSTOM_PORT zu laufen."
-echo ""
-echo "Bitte führe folgende Befehle aus, um die Dienste zu starten:"
-echo "  $HOME/start-openhands.sh - Starte OpenHands"
-echo "  $HOME/start-ollama-bridge.sh - Starte Ollama-MCP-Bridge"
-echo "  $HOME/start-all-mcp.sh - Starte alle Dienste"
-echo ""
-echo "Wichtige URLs:"
-echo "  OpenHands: http://localhost:$CUSTOM_PORT"
-echo "  OpenHands MCP: http://localhost:$CUSTOM_PORT/mcp"
-echo "  Ollama-MCP-Bridge: http://localhost:8000/mcp"
-echo "  MCP-Inspektor: http://localhost:6274"
-echo ""
-echo "Starte Claude Desktop neu, um die Änderungen zu übernehmen."
+info "=== Problembehebung abgeschlossen ==="
+log ""
+log "OpenHands wurde konfiguriert, um auf Port $OPENHANDS_PORT zu laufen."
+log ""
+log "Bitte führe folgende Befehle aus, um die Dienste zu starten:"
+log "  $HOME/start-openhands.sh - Starte OpenHands"
+log "  $HOME/start-ollama-bridge.sh - Starte Ollama-MCP-Bridge"
+log "  $HOME/start-all-mcp.sh - Starte alle Dienste"
+log ""
+log "Wichtige URLs:"
+log "  OpenHands: http://localhost:$OPENHANDS_PORT"
+log "  OpenHands MCP: http://localhost:$OPENHANDS_PORT/mcp"
+log "  Ollama-MCP-Bridge: http://localhost:$OLLAMA_PORT/mcp"
+log "  MCP-Inspektor: http://localhost:6274"
+log ""
+log "Starte Claude Desktop neu, um die Änderungen zu übernehmen."

@@ -1,4 +1,26 @@
 #!/usr/bin/env python3
+
+import os
+import sys
+from pathlib import Path
+
+# Füge das Verzeichnis der gemeinsamen Bibliothek zum Pfad hinzu
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR / "scripts" / "common" / "python"))
+
+# Importiere die gemeinsame Bibliothek
+from common import (
+    setup_logging, ConfigManager, DockerUtils, ProcessManager,
+    NetworkUtils, SystemUtils, parse_arguments
+)
+
+# Konfiguriere Logging
+logger = setup_logging("INFO")
+
+# Lade Konfiguration
+config_manager = ConfigManager()
+config = config_manager.load_env_file(".env")
+
 """
 MCP-Server n8n Integration
 
@@ -19,7 +41,7 @@ try:
     import requests
 except ImportError:
     # Installiere requests, wenn es nicht verfügbar ist
-    print("Installiere erforderliche Pakete...")
+    logger.info("Installiere erforderliche Pakete...")
     subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
     import requests
 

@@ -1,4 +1,26 @@
 #!/usr/bin/env python3
+
+import os
+import sys
+from pathlib import Path
+
+# Füge das Verzeichnis der gemeinsamen Bibliothek zum Pfad hinzu
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR / "scripts" / "common" / "python"))
+
+# Importiere die gemeinsame Bibliothek
+from common import (
+    setup_logging, ConfigManager, DockerUtils, ProcessManager,
+    NetworkUtils, SystemUtils, parse_arguments
+)
+
+# Konfiguriere Logging
+logger = setup_logging("INFO")
+
+# Lade Konfiguration
+config_manager = ConfigManager()
+config = config_manager.load_env_file(".env")
+
 """
 n8n Setup - Credentials
 
@@ -15,7 +37,7 @@ def setup_github_credential(n8n_url, api_key, github_token):
     # Überprüfen, ob die Anmeldedaten bereits existieren
     existing_credential = find_credential_by_name(n8n_url, api_key, "GitHub")
     if existing_credential:
-        print("GitHub credential already exists. Skipping creation.")
+        logger.info("GitHub credential already exists. Skipping creation.")
         return existing_credential
     
     credential_data = {
@@ -43,7 +65,7 @@ def setup_openproject_credential(n8n_url, api_key, openproject_token):
     # Überprüfen, ob die Anmeldedaten bereits existieren
     existing_credential = find_credential_by_name(n8n_url, api_key, "OpenProject")
     if existing_credential:
-        print("OpenProject credential already exists. Skipping creation.")
+        logger.info("OpenProject credential already exists. Skipping creation.")
         return existing_credential
     
     credential_data = {
@@ -68,7 +90,7 @@ def setup_discord_credential(n8n_url, api_key, discord_webhook_url):
     # Überprüfen, ob die Anmeldedaten bereits existieren
     existing_credential = find_credential_by_name(n8n_url, api_key, "Discord")
     if existing_credential:
-        print("Discord credential already exists. Skipping creation.")
+        logger.info("Discord credential already exists. Skipping creation.")
         return existing_credential
     
     credential_data = {
@@ -92,7 +114,7 @@ def setup_affine_credential(n8n_url, api_key, affine_api_key):
     # Überprüfen, ob die Anmeldedaten bereits existieren
     existing_credential = find_credential_by_name(n8n_url, api_key, "AFFiNE")
     if existing_credential:
-        print("AFFiNE credential already exists. Skipping creation.")
+        logger.info("AFFiNE credential already exists. Skipping creation.")
         return existing_credential
     
     credential_data = {
@@ -117,7 +139,7 @@ def setup_appflowy_credential(n8n_url, api_key, appflowy_api_key):
     # Überprüfen, ob die Anmeldedaten bereits existieren
     existing_credential = find_credential_by_name(n8n_url, api_key, "AppFlowy")
     if existing_credential:
-        print("AppFlowy credential already exists. Skipping creation.")
+        logger.info("AppFlowy credential already exists. Skipping creation.")
         return existing_credential
     
     credential_data = {
@@ -142,7 +164,7 @@ def setup_openhands_credential(n8n_url, api_key, llm_api_key):
     # Überprüfen, ob die Anmeldedaten bereits existieren
     existing_credential = find_credential_by_name(n8n_url, api_key, "OpenHands")
     if existing_credential:
-        print("OpenHands credential already exists. Skipping creation.")
+        logger.info("OpenHands credential already exists. Skipping creation.")
         return existing_credential
     
     credential_data = {

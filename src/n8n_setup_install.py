@@ -1,4 +1,26 @@
 #!/usr/bin/env python3
+
+import os
+import sys
+from pathlib import Path
+
+# Füge das Verzeichnis der gemeinsamen Bibliothek zum Pfad hinzu
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR / "scripts" / "common" / "python"))
+
+# Importiere die gemeinsame Bibliothek
+from common import (
+    setup_logging, ConfigManager, DockerUtils, ProcessManager,
+    NetworkUtils, SystemUtils, parse_arguments
+)
+
+# Konfiguriere Logging
+logger = setup_logging("INFO")
+
+# Lade Konfiguration
+config_manager = ConfigManager()
+config = config_manager.load_env_file(".env")
+
 """
 n8n Setup - Installation
 
@@ -69,24 +91,24 @@ def install_n8n_docker() -> bool:
     # Start n8n using Docker Compose
     result = start_docker_compose('docker-compose.yml')
     if not result:
-        print("Failed to start n8n Docker container.")
+        logger.info("Failed to start n8n Docker container.")
         return False
     
-    print("n8n is starting up. It should be available at http://localhost:5678 in a few moments.")
-    print("Default credentials: admin / password")
+    logger.info("n8n is starting up. It should be available at http://localhost:5678 in a few moments.")
+    logger.info("Default credentials: admin / password")
     
     # Wait for n8n to start
     for _ in range(10):
         try:
             response = requests.get('http://localhost:5678/healthz')
             if response.status_code == 200:
-                print("n8n is up and running!")
+                logger.info("n8n is up and running!")
                 return True
         except:
             pass
         time.sleep(2)
     
-    print("n8n may still be starting up. Please check http://localhost:5678 in a few moments.")
+    logger.info("n8n may still be starting up. Please check http://localhost:5678 in a few moments.")
     return True
 
 
@@ -146,7 +168,7 @@ def stop_n8n_docker() -> None:
         subprocess.CalledProcessError: If the command fails
     """
     stop_docker_compose('docker-compose.yml')
-    print("n8n Docker container stopped.")
+    logger.info("n8n Docker container stopped.")
 
 
 def restart_n8n_docker() -> None:
@@ -157,7 +179,7 @@ def restart_n8n_docker() -> None:
         subprocess.CalledProcessError: If the command fails
     """
     restart_docker_compose('docker-compose.yml')
-    print("n8n Docker container restarted.")
+    logger.info("n8n Docker container restarted.")
 
 
 def setup_n8n_prerequisites() -> bool:
@@ -168,13 +190,13 @@ def setup_n8n_prerequisites() -> bool:
         bool: True if all prerequisites are met, False otherwise
     """
     if not check_docker_installed():
-        print("Docker is not installed. Please install Docker first.")
-        print("Visit https://docs.docker.com/get-docker/ for installation instructions.")
+        logger.info("Docker is not installed. Please install Docker first.")
+        logger.info("Visit https://docs.docker.com/get-docker/ for installation instructions.")
         return False
     
     if not check_docker_compose_installed():
-        print("Docker Compose is not installed. Please install Docker Compose first.")
-        print("Visit https://docs.docker.com/compose/install/ for installation instructions.")
+        logger.info("Docker Compose is not installed. Please install Docker Compose first.")
+        logger.info("Visit https://docs.docker.com/compose/install/ for installation instructions.")
         return False
     
     return True
@@ -191,7 +213,7 @@ def main() -> None:
         time.sleep(10)
         
         if check_n8n_status('http://localhost:5678'):
-            print("n8n is running!")
+            logger.info("n8n is running!")
             
             # Get API key
             try:
@@ -201,9 +223,9 @@ def main() -> None:
                 print(f"Failed to get API key: {str(e)}")
                 
         else:
-            print("n8n is not running.")
+            logger.info("n8n is not running.")
     else:
-        print("Prerequisites not met. Please install Docker and Docker Compose first.")
+        logger.info("Prerequisites not met. Please install Docker and Docker Compose first.")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # Dieses Skript korrigiert die Claude Desktop Konfigurationsdatei
 
 CONFIG_DIR="$HOME/.config/Claude"
@@ -60,5 +70,5 @@ cat > "$CONFIG_FILE" << 'EOF1'
 }
 EOF1
 
-echo "Claude Desktop Konfigurationsdatei wurde korrigiert."
-echo "Bitte starte Claude Desktop neu."
+log_info "Claude Desktop Konfigurationsdatei wurde korrigiert."
+log_info "Bitte starte Claude Desktop neu."

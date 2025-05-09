@@ -1,4 +1,14 @@
 #!/bin/bash
+
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
 # Common Library for MCP Server Management
 # This script provides shared functionality for docker-mcp-ecosystem and docker-mcp-servers
 
@@ -156,11 +166,11 @@ get_mcp_server_status() {
     
     # Check if server is running
     if docker ps --format '{{.Names}}' | grep -q "^${server_name}$"; then
-        echo "running"
+        log_info "running"
     elif docker ps -a --format '{{.Names}}' | grep -q "^${server_name}$"; then
-        echo "stopped"
+        log_info "stopped"
     else
-        echo "not_found"
+        log_info "not_found"
     fi
     
     return ${ERROR_CODES["SUCCESS"]}
@@ -416,7 +426,7 @@ monitor_mcp_server() {
     
     # Monitor resources
     for ((i=1; i<=count; i++)); do
-        echo "=== Monitoring $server_name (${i}/${count}) ==="
+        log_info "=== Monitoring $server_name (${i}/${count}) ==="
         docker stats --no-stream "$server_name"
         
         if [[ $i -lt $count ]]; then
@@ -567,22 +577,22 @@ main() {
             ;;
         *)
             log_message "ERROR" "Unknown command: $command"
-            echo "Available commands:"
-            echo "  check-docker                     Check Docker installation"
-            echo "  create-network <network>         Create Docker network"
-            echo "  start-server <server> <compose>  Start MCP server"
-            echo "  stop-server <server> <compose>   Stop MCP server"
-            echo "  status <server>                  Get MCP server status"
-            echo "  logs <server> [lines]            Get MCP server logs"
-            echo "  exec <server> <command>          Execute command in MCP server"
-            echo "  health <server> [port]           Check MCP server health"
-            echo "  list-servers <compose>           List all MCP servers"
-            echo "  list-tools <server> [port]       List MCP server tools"
-            echo "  call-tool <server> <tool> <args> Call MCP server tool"
-            echo "  backup <server> [dir]            Backup MCP server"
-            echo "  restore <server> <file>          Restore MCP server from backup"
-            echo "  update-config <server> <key> <val> Update MCP server configuration"
-            echo "  monitor <server> [interval] [count] Monitor MCP server resources"
+            log_info "Available commands:"
+            log_info "  check-docker                     Check Docker installation"
+            log_info "  create-network <network>         Create Docker network"
+            log_info "  start-server <server> <compose>  Start MCP server"
+            log_info "  stop-server <server> <compose>   Stop MCP server"
+            log_info "  status <server>                  Get MCP server status"
+            log_info "  logs <server> [lines]            Get MCP server logs"
+            log_info "  exec <server> <command>          Execute command in MCP server"
+            log_info "  health <server> [port]           Check MCP server health"
+            log_info "  list-servers <compose>           List all MCP servers"
+            log_info "  list-tools <server> [port]       List MCP server tools"
+            log_info "  call-tool <server> <tool> <args> Call MCP server tool"
+            log_info "  backup <server> [dir]            Backup MCP server"
+            log_info "  restore <server> <file>          Restore MCP server from backup"
+            log_info "  update-config <server> <key> <val> Update MCP server configuration"
+            log_info "  monitor <server> [interval] [count] Monitor MCP server resources"
             return ${ERROR_CODES["INVALID_ARGUMENT"]}
             ;;
     esac
@@ -593,8 +603,8 @@ main() {
 # If script is executed directly (not sourced), run main function
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     if [[ $# -lt 1 ]]; then
-        echo "Usage: $0 <command> [args...]"
-        echo "Run '$0 help' for a list of available commands"
+        log_info "Usage: $0 <command> [args...]"
+        log_info "Run '$0 help' for a list of available commands"
         exit 1
     fi
     

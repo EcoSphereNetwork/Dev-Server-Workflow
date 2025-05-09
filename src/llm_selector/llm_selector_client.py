@@ -1,4 +1,26 @@
 #!/usr/bin/env python3
+
+import os
+import sys
+from pathlib import Path
+
+# Füge das Verzeichnis der gemeinsamen Bibliothek zum Pfad hinzu
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR / "scripts" / "common" / "python"))
+
+# Importiere die gemeinsame Bibliothek
+from common import (
+    setup_logging, ConfigManager, DockerUtils, ProcessManager,
+    NetworkUtils, SystemUtils, parse_arguments
+)
+
+# Konfiguriere Logging
+logger = setup_logging("INFO")
+
+# Lade Konfiguration
+config_manager = ConfigManager()
+config = config_manager.load_env_file(".env")
+
 # -*- coding: utf-8 -*-
 
 """
@@ -87,7 +109,7 @@ def print_model_selection_result(result: Dict[str, Any]) -> None:
         return
     
     summary = result["summary"]
-    print("\n=== LLM Selection Result ===")
+    logger.info("\n=== LLM Selection Result ===")
     print(f"Task Type: {summary['task_type']}")
     print(f"Complexity: {summary['task_complexity']}")
     print(f"Selected Model: {summary['selected_model']} ({summary['provider']})")
@@ -95,14 +117,14 @@ def print_model_selection_result(result: Dict[str, Any]) -> None:
     print(f"Estimated Cost: €{summary['estimated_cost']:.6f}")
     print(f"Estimated Latency: {summary['estimated_latency']}")
     print(f"Quality Score: {summary['quality_score']}")
-    print("===========================\n")
+    logger.info("===========================\n")
     
     # Print all recommendations
-    print("All Recommendations:")
+    logger.info("All Recommendations:")
     for strategy, recommendation in result["all_recommendations"].items():
         print(f"  {strategy}: {recommendation['model']} (Cost: €{recommendation['cost']:.6f}, Latency: {recommendation['latency']:.2f}s, Quality: {recommendation['quality_score']}/10)")
     
-    print("\nRouting Details:")
+    logger.info("\nRouting Details:")
     routing = result["routing_details"]
     print(f"  Endpoint: {routing['endpoint']}")
     print(f"  API Key Required: {routing['api_key_required']}")

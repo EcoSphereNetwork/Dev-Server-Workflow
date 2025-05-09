@@ -1,0 +1,121 @@
+# Dev-Server-Workflow
+
+A comprehensive solution for integrating n8n workflows, MCP servers, and OpenHands for AI-assisted automation of development processes.
+
+## Overview
+
+The Dev-Server-Workflow project provides a modular, extensible, and maintainable architecture for integrating various development tools and services. It includes:
+
+- **MCP Servers**: Model Context Protocol servers for providing tools to clients
+- **n8n Integration**: Integration with n8n for workflow automation
+- **OpenHands Integration**: Integration with OpenHands for AI-assisted automation
+- **Docker Integration**: Docker-based deployment and management
+- **Web UI**: Web-based user interface for managing the system
+
+## Directory Structure
+
+```
+Dev-Server-Workflow/
+├── cli/                      # Command-line interface tools
+├── config/                   # Configuration files
+├── docs/                     # Documentation
+│   ├── dev/                  # Developer documentation
+│   ├── user/                 # User documentation
+│   └── api/                  # API documentation
+├── scripts/                  # Utility scripts
+│   ├── common/               # Common utilities
+│   ├── install/              # Installation scripts
+│   ├── setup/                # Setup scripts
+│   └── monitoring/           # Monitoring scripts
+├── src/                      # Source code
+│   ├── core/                 # Core modules
+│   ├── mcp/                  # MCP server implementations
+│   ├── n8n/                  # n8n integration
+│   ├── openhands/            # OpenHands integration
+│   └── web_ui/               # Web UI
+├── docker/                   # Docker configurations
+│   ├── compose/              # Docker Compose files
+│   └── images/               # Dockerfiles
+├── kubernetes/               # Kubernetes configurations
+└── tests/                    # Tests
+```
+
+## Installation
+
+### Prerequisites
+
+- Python 3.8 or higher
+- Docker and Docker Compose
+- n8n (optional)
+- OpenHands (optional)
+
+### Quick Start
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/EcoSphereNetwork/Dev-Server-Workflow.git
+cd Dev-Server-Workflow
+```
+
+2. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+3. Set up the environment:
+
+```bash
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+4. Start the services:
+
+```bash
+./scripts/start-all-mcp-servers.sh
+```
+
+## Usage
+
+### Command-Line Interface
+
+The project provides a command-line interface for managing the system:
+
+```bash
+./dev-server-cli.sh --help
+```
+
+### Web UI
+
+The project also provides a web-based user interface for managing the system:
+
+```bash
+./start-web-ui.sh
+```
+
+Then open http://localhost:8080 in your browser.
+
+## Documentation
+
+For more detailed documentation, see the [docs](docs/) directory:
+
+- [Developer Documentation](docs/dev/): Documentation for developers
+- [User Documentation](docs/user/): Documentation for users
+- [API Documentation](docs/api/): API reference
+
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgements
+
+- [n8n](https://n8n.io/) for workflow automation
+- [OpenHands](https://openhands.ai/) for AI-assisted automation
+- [Docker](https://www.docker.com/) for containerization
+- [Model Context Protocol](https://modelcontextprotocol.ai/) for standardized tool interfaces

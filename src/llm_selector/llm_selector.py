@@ -1,4 +1,26 @@
 #!/usr/bin/env python3
+
+import os
+import sys
+from pathlib import Path
+
+# Füge das Verzeichnis der gemeinsamen Bibliothek zum Pfad hinzu
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR / "scripts" / "common" / "python"))
+
+# Importiere die gemeinsame Bibliothek
+from common import (
+    setup_logging, ConfigManager, DockerUtils, ProcessManager,
+    NetworkUtils, SystemUtils, parse_arguments
+)
+
+# Konfiguriere Logging
+logger = setup_logging("INFO")
+
+# Lade Konfiguration
+config_manager = ConfigManager()
+config = config_manager.load_env_file(".env")
+
 # -*- coding: utf-8 -*-
 
 """
@@ -960,7 +982,7 @@ def main():
     
     # If no task provided, use interactive mode
     if not args.task:
-        print("Enter task description (Ctrl+D to finish):")
+        logger.info("Enter task description (Ctrl+D to finish):")
         task_lines = []
         try:
             while True:
@@ -988,7 +1010,7 @@ def main():
             print(f"Error: {result['error']}")
         else:
             summary = result["summary"]
-            print("\n=== LLM Selection Result ===")
+            logger.info("\n=== LLM Selection Result ===")
             print(f"Task Type: {summary['task_type']}")
             print(f"Complexity: {summary['task_complexity']}")
             print(f"Selected Model: {summary['selected_model']} ({summary['provider']})")
@@ -996,7 +1018,7 @@ def main():
             print(f"Estimated Cost: €{summary['estimated_cost']:.6f}")
             print(f"Estimated Latency: {summary['estimated_latency']}")
             print(f"Quality Score: {summary['quality_score']}")
-            print("===========================\n")
+            logger.info("===========================\n")
 
 
 if __name__ == "__main__":

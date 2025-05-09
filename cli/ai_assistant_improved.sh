@@ -1,4 +1,14 @@
 #!/bin/bash
+
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
 # Verbesserter KI-Assistent für die Dev-Server CLI
 
 # Source common functions
@@ -22,11 +32,11 @@ fi
 # Funktion zum Auswählen des LLM-Providers
 get_llm_provider() {
     if [ "$ACTIVE_LLM" == "llamafile" ]; then
-        echo "llamafile"
+        log_info "llamafile"
     elif [ "$ACTIVE_LLM" == "claude" ]; then
-        echo "claude"
+        log_info "claude"
     else
-        echo "llamafile" # Fallback
+        log_info "llamafile" # Fallback
     fi
 }
 
@@ -103,9 +113,9 @@ process_with_llamafile() {
     fi
     
     # Extrahiere die Antwort
-    local content=$(echo "$response" | jq -r '.content')
+    local content=$(log_info "$response" | jq -r '.content')
     
-    echo "$content"
+    log_info "$content"
     return 0
 }
 
@@ -136,9 +146,9 @@ process_with_claude() {
     fi
     
     # Extrahiere die Antwort
-    local content=$(echo "$response" | jq -r '.content[0].text')
+    local content=$(log_info "$response" | jq -r '.content[0].text')
     
-    echo "$content"
+    log_info "$content"
     return 0
 }
 
@@ -193,10 +203,10 @@ Antworte NUR mit dem exakten CLI-Befehl, der ausgeführt werden soll, nichts and
     log_info "Übersetzter Befehl: $response"
     
     # Extrahiere den Befehl
-    local cli_command=$(echo "$response" | tr -d '\r\n')
+    local cli_command=$(log_info "$response" | tr -d '\r\n')
     
     # Entferne Anführungszeichen, falls vorhanden
-    cli_command=$(echo "$cli_command" | sed 's/^"//;s/"$//')
+    cli_command=$(log_info "$cli_command" | sed 's/^"//;s/"$//')
     
     # Überprüfe, ob der Befehl mit "dev-server" beginnt
     if [[ "$cli_command" == dev-server* ]]; then
@@ -253,8 +263,8 @@ Gib eine präzise und hilfreiche Antwort."
     fi
     
     # Gib die Antwort aus
-    echo -e "${GREEN}KI-Assistent:${NC}"
-    echo -e "$response"
+    log_info "${GREEN}KI-Assistent:${NC}"
+    log_info "$response"
     
     return 0
 }

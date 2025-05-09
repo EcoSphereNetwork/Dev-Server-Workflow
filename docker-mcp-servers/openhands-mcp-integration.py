@@ -1,5 +1,27 @@
 #!/usr/bin/env python3
 
+import os
+import sys
+from pathlib import Path
+
+# Füge das Verzeichnis der gemeinsamen Bibliothek zum Pfad hinzu
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR / "scripts" / "common" / "python"))
+
+# Importiere die gemeinsame Bibliothek
+from common import (
+    setup_logging, ConfigManager, DockerUtils, ProcessManager,
+    NetworkUtils, SystemUtils, parse_arguments
+)
+
+# Konfiguriere Logging
+logger = setup_logging("INFO")
+
+# Lade Konfiguration
+config_manager = ConfigManager()
+config = config_manager.load_env_file(".env")
+
+
 import json
 import sys
 import os
@@ -8,7 +30,7 @@ import shutil
 
 def integrate_with_openhands(config_path, openhands_config_dir):
     """Integrate the MCP servers with OpenHands."""
-    print("Integrating MCP servers with OpenHands...")
+    logger.info("Integrating MCP servers with OpenHands...")
     
     # Load the MCP configuration
     try:
@@ -60,7 +82,7 @@ echo "MCP servers are ready for OpenHands!"
         print(f"❌ Error creating start script: {e}")
         return False
     
-    print("MCP servers have been integrated with OpenHands! 🎉")
+    logger.info("MCP servers have been integrated with OpenHands! 🎉")
     print(f"To start the MCP servers, run: {start_script_path}")
     return True
 

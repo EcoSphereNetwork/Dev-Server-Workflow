@@ -1,4 +1,26 @@
 #!/usr/bin/env python3
+
+import os
+import sys
+from pathlib import Path
+
+# Füge das Verzeichnis der gemeinsamen Bibliothek zum Pfad hinzu
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR / "scripts" / "common" / "python"))
+
+# Importiere die gemeinsame Bibliothek
+from common import (
+    setup_logging, ConfigManager, DockerUtils, ProcessManager,
+    NetworkUtils, SystemUtils, parse_arguments
+)
+
+# Konfiguriere Logging
+logger = setup_logging("INFO")
+
+# Lade Konfiguration
+config_manager = ConfigManager()
+config = config_manager.load_env_file(".env")
+
 """
 n8n Workflow Integration Setup
 
@@ -40,14 +62,14 @@ def main():
     env_file = Path(args.env_file)
     if not env_file.exists() and args.command != 'help':
         print(f"Error: Environment file {args.env_file} not found.")
-        print("Please create the file or specify a different file with --env-file.")
+        logger.info("Please create the file or specify a different file with --env-file.")
         return 1
     
     # Überprüfe, ob das src-Verzeichnis existiert
     src_dir = Path('src')
     if not src_dir.exists() and args.command != 'help':
-        print("Error: src directory not found.")
-        print("Please run this script from the root directory of the project.")
+        logger.info("Error: src directory not found.")
+        logger.info("Please run this script from the root directory of the project.")
         return 1
     
     # Führe den entsprechenden Befehl aus
@@ -92,7 +114,7 @@ Beispiele:
 
 def run_tests(args):
     """Run tests."""
-    print("=== Running tests ===")
+    logger.info("=== Running tests ===")
     
     # Führe das Test-Skript aus
     test_script = Path('test-setup.py')
@@ -100,7 +122,7 @@ def run_tests(args):
         subprocess.run([sys.executable, str(test_script)])
     else:
         print(f"Error: Test script {test_script} not found.")
-        print("Creating a simple test script...")
+        logger.info("Creating a simple test script...")
         
         # Erstelle ein einfaches Test-Skript
         with open(test_script, 'w') as f:
@@ -117,12 +139,12 @@ from pathlib import Path
 
 def main():
     \"\"\"Hauptfunktion zum Testen der Setup-Skripte.\"\"\"
-    print("=== Testing n8n Workflow Integration Setup ===")
+    logger.info("=== Testing n8n Workflow Integration Setup ===")
     
     # Überprüfe, ob die .env-Datei existiert
     env_file = Path('.env')
     if not env_file.exists():
-        print("Error: .env file not found. Please create it first.")
+        logger.info("Error: .env file not found. Please create it first.")
         return 1
     
     # Überprüfe, ob die Workflow-Dateien existieren
@@ -147,8 +169,8 @@ def main():
         else:
             print(f"✗ {file} does not exist")
     
-    print("\\n=== Test completed ===")
-    print("The setup files are present and ready to be used.")
+    logger.info("\\n=== Test completed ===")
+    logger.info("The setup files are present and ready to be used.")
     return 0
 
 if __name__ == "__main__":
@@ -160,7 +182,7 @@ if __name__ == "__main__":
 
 def install_workflows(args):
     """Install workflows."""
-    print("=== Installing workflows ===")
+    logger.info("=== Installing workflows ===")
     
     # Bereite die Befehlszeilenargumente vor
     cmd = [sys.executable, 'src/n8n_setup_main.py']

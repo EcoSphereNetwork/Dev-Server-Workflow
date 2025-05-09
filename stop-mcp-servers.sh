@@ -1,5 +1,7 @@
 #!/bin/bash
-# Verbessertes Skript zum Stoppen der MCP-Server mit besserer Fehlerbehandlung
+
+# Verbessertes Skript zum Stoppen der MCP-Server
+# Verwendet die gemeinsame Bibliothek für konsistente Funktionen und Konfigurationen
 
 # Strikte Fehlerbehandlung aktivieren
 set -euo pipefail
@@ -7,57 +9,32 @@ set -euo pipefail
 # Basisverzeichnis
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Farben für die Ausgabe
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-# Konfiguration
-LOG_DIR="/tmp/mcp-logs"
-MCP_SERVERS_DIR="${BASE_DIR%/*}/docker-mcp-servers"
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
 
 # Aktuelle Operation für Fehlerbehandlung
 CURRENT_OPERATION=""
 CURRENT_CONTAINER=""
 
-# Funktion zum Anzeigen von Nachrichten
-log() {
-    echo -e "${GREEN}[INFO]${NC} $1"
-}
-
-warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
-}
-
-error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
 # Funktion zum Anzeigen von Hilfe
 show_help() {
-    echo -e "${BLUE}MCP-Server Stopper${NC}"
-    echo "Dieses Skript stoppt die MCP-Server für das Dev-Server-Workflow-Projekt."
+    log_info "${BLUE}MCP-Server Stopper${NC}"
+    log_info "Dieses Skript stoppt die MCP-Server für das Dev-Server-Workflow-Projekt."
     echo ""
-    echo "Verwendung:"
-    echo "  $0 [Optionen]"
+    log_info "Verwendung:"
+    log_info "  $0 [Optionen]"
     echo ""
-    echo "Optionen:"
-    echo "  -h, --help                Zeigt diese Hilfe an"
-    echo "  -a, --all                 Alle MCP-Server stoppen"
-    echo "  --docker                  Nur Docker-basierte MCP-Server stoppen"
-    echo "  --n8n                     n8n MCP-Server stoppen"
-    echo "  --openhands               OpenHands MCP-Server stoppen"
-    echo "  --generator               MCP-Server-Generator stoppen"
+    log_info "Optionen:"
+    log_info "  -h, --help                Zeigt diese Hilfe an"
+    log_info "  -a, --all                 Alle MCP-Server stoppen"
+    log_info "  --docker                  Nur Docker-basierte MCP-Server stoppen"
+    log_info "  --n8n                     n8n MCP-Server stoppen"
+    log_info "  --openhands               OpenHands MCP-Server stoppen"
+    log_info "  --generator               MCP-Server-Generator stoppen"
     echo ""
-    echo "Beispiel:"
-    echo "  $0 --all"
-    echo "  $0 --n8n --openhands"
+    log_info "Beispiel:"
+    log_info "  $0 --all"
+    log_info "  $0 --n8n --openhands"
 }
 
 # Funktion zum Stoppen der Docker Compose MCP-Server
@@ -65,8 +42,10 @@ stop_docker_compose_servers() {
     info "Stoppe Docker Compose MCP-Server..."
     
     # Überprüfe, ob das Docker-Compose-File existiert
-    if [ ! -f "$MCP_SERVERS_DIR/docker-compose.yml" ]; then
-        warn "Docker-Compose-Datei nicht gefunden: $MCP_SERVERS_DIR/docker-compose.yml"
+    local docker_compose_dir="${BASE_DIR}/docker-mcp-servers"
+    
+    if [ ! -f "$docker_compose_dir/docker-compose.yml" ]; then
+        warn "Docker-Compose-Datei nicht gefunden: $docker_compose_dir/docker-compose.yml"
         warn "Es sind möglicherweise keine Docker Compose MCP-Server gestartet."
         return 0
     fi
@@ -76,7 +55,7 @@ stop_docker_compose_servers() {
     CURRENT_CONTAINER="all"
     
     # Wechsle in das MCP-Servers-Verzeichnis und stoppe die Container
-    cd "$MCP_SERVERS_DIR"
+    cd "$docker_compose_dir"
     
     # Verwende docker-compose oder docker compose, je nachdem, was verfügbar ist
     if command -v docker-compose &> /dev/null; then
@@ -239,7 +218,7 @@ stop_generator_mcp_server() {
     fi
     
     # Stoppe auch alle generierten Server
-    local generator_servers_dir="${BASE_DIR%/*}/generated_servers"
+    local generator_servers_dir="${BASE_DIR}/generated_servers"
     if [ -d "$generator_servers_dir" ]; then
         info "Stoppe generierte MCP-Server..."
         

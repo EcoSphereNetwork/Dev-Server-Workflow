@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Basisverzeichnis
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Lade die gemeinsame Bibliothek
+source "$BASE_DIR/scripts/common/shell/common.sh"
+
+# Lade Umgebungsvariablen aus .env-Datei
+load_env_file "${BASE_DIR}/.env"
+
+
 # MCP-Server-Verwaltungsskript
 # Dieses Skript ermöglicht die Verwaltung der MCP-Server.
 
@@ -17,30 +27,30 @@ LOG_LINES=100
 
 # Hilfe-Funktion
 function show_help {
-    echo -e "${BLUE}MCP-Server-Verwaltungsskript${NC}"
+    log_info "${BLUE}MCP-Server-Verwaltungsskript${NC}"
     echo ""
-    echo "Verwendung: $0 [Optionen]"
+    log_info "Verwendung: $0 [Optionen]"
     echo ""
-    echo "Aktionen:"
-    echo "  start                 Startet alle MCP-Server oder einen bestimmten MCP-Server"
-    echo "  stop                  Stoppt alle MCP-Server oder einen bestimmten MCP-Server"
-    echo "  restart               Startet alle MCP-Server oder einen bestimmten MCP-Server neu"
-    echo "  status                Zeigt den Status aller MCP-Server oder eines bestimmten MCP-Servers an"
-    echo "  logs                  Zeigt die Logs aller MCP-Server oder eines bestimmten MCP-Servers an"
-    echo "  list                  Listet alle verfügbaren MCP-Server auf"
-    echo "  inspect               Zeigt detaillierte Informationen zu einem bestimmten MCP-Server an"
-    echo "  test                  Testet die Verbindung zu einem bestimmten MCP-Server"
-    echo "  help                  Zeigt diese Hilfe an"
+    log_info "Aktionen:"
+    log_info "  start                 Startet alle MCP-Server oder einen bestimmten MCP-Server"
+    log_info "  stop                  Stoppt alle MCP-Server oder einen bestimmten MCP-Server"
+    log_info "  restart               Startet alle MCP-Server oder einen bestimmten MCP-Server neu"
+    log_info "  status                Zeigt den Status aller MCP-Server oder eines bestimmten MCP-Servers an"
+    log_info "  logs                  Zeigt die Logs aller MCP-Server oder eines bestimmten MCP-Servers an"
+    log_info "  list                  Listet alle verfügbaren MCP-Server auf"
+    log_info "  inspect               Zeigt detaillierte Informationen zu einem bestimmten MCP-Server an"
+    log_info "  test                  Testet die Verbindung zu einem bestimmten MCP-Server"
+    log_info "  help                  Zeigt diese Hilfe an"
     echo ""
-    echo "Optionen:"
-    echo "  --server SERVER       Der MCP-Server, auf den die Aktion angewendet werden soll"
-    echo "  --lines LINES         Anzahl der anzuzeigenden Log-Zeilen (Standard: 100)"
+    log_info "Optionen:"
+    log_info "  --server SERVER       Der MCP-Server, auf den die Aktion angewendet werden soll"
+    log_info "  --lines LINES         Anzahl der anzuzeigenden Log-Zeilen (Standard: 100)"
     echo ""
-    echo "Beispiele:"
-    echo "  $0 start                          # Startet alle MCP-Server"
-    echo "  $0 start --server github-mcp      # Startet nur den GitHub MCP-Server"
-    echo "  $0 logs --server github-mcp       # Zeigt die Logs des GitHub MCP-Servers an"
-    echo "  $0 test --server github-mcp       # Testet die Verbindung zum GitHub MCP-Server"
+    log_info "Beispiele:"
+    log_info "  $0 start                          # Startet alle MCP-Server"
+    log_info "  $0 start --server github-mcp      # Startet nur den GitHub MCP-Server"
+    log_info "  $0 logs --server github-mcp       # Zeigt die Logs des GitHub MCP-Servers an"
+    log_info "  $0 test --server github-mcp       # Testet die Verbindung zum GitHub MCP-Server"
     echo ""
 }
 
@@ -60,7 +70,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         *)
-            echo -e "${RED}Unbekannte Option: $1${NC}"
+            log_info "${RED}Unbekannte Option: $1${NC}"
             show_help
             exit 1
             ;;
@@ -69,7 +79,7 @@ done
 
 # Überprüfen, ob eine Aktion angegeben wurde
 if [ -z "$ACTION" ]; then
-    echo -e "${RED}Fehler: Keine Aktion angegeben.${NC}"
+    log_info "${RED}Fehler: Keine Aktion angegeben.${NC}"
     show_help
     exit 1
 fi
@@ -87,70 +97,70 @@ cd "$(dirname "$0")/.."
 case "$ACTION" in
     start)
         if [ -z "$SERVER" ]; then
-            echo -e "${GREEN}Starte alle MCP-Server...${NC}"
+            log_info "${GREEN}Starte alle MCP-Server...${NC}"
             docker compose up -d
         else
-            echo -e "${GREEN}Starte den MCP-Server $SERVER...${NC}"
+            log_info "${GREEN}Starte den MCP-Server $SERVER...${NC}"
             docker compose up -d $SERVER
         fi
         ;;
     stop)
         if [ -z "$SERVER" ]; then
-            echo -e "${YELLOW}Stoppe alle MCP-Server...${NC}"
+            log_info "${YELLOW}Stoppe alle MCP-Server...${NC}"
             docker compose down
         else
-            echo -e "${YELLOW}Stoppe den MCP-Server $SERVER...${NC}"
+            log_info "${YELLOW}Stoppe den MCP-Server $SERVER...${NC}"
             docker compose stop $SERVER
         fi
         ;;
     restart)
         if [ -z "$SERVER" ]; then
-            echo -e "${GREEN}Starte alle MCP-Server neu...${NC}"
+            log_info "${GREEN}Starte alle MCP-Server neu...${NC}"
             docker compose restart
         else
-            echo -e "${GREEN}Starte den MCP-Server $SERVER neu...${NC}"
+            log_info "${GREEN}Starte den MCP-Server $SERVER neu...${NC}"
             docker compose restart $SERVER
         fi
         ;;
     status)
         if [ -z "$SERVER" ]; then
-            echo -e "${BLUE}Status aller MCP-Server:${NC}"
+            log_info "${BLUE}Status aller MCP-Server:${NC}"
             docker compose ps
         else
-            echo -e "${BLUE}Status des MCP-Servers $SERVER:${NC}"
+            log_info "${BLUE}Status des MCP-Servers $SERVER:${NC}"
             docker compose ps $SERVER
         fi
         ;;
     logs)
         if [ -z "$SERVER" ]; then
-            echo -e "${BLUE}Logs aller MCP-Server (letzte $LOG_LINES Zeilen):${NC}"
+            log_info "${BLUE}Logs aller MCP-Server (letzte $LOG_LINES Zeilen):${NC}"
             docker compose logs --tail=$LOG_LINES
         else
-            echo -e "${BLUE}Logs des MCP-Servers $SERVER (letzte $LOG_LINES Zeilen):${NC}"
+            log_info "${BLUE}Logs des MCP-Servers $SERVER (letzte $LOG_LINES Zeilen):${NC}"
             docker compose logs --tail=$LOG_LINES $SERVER
         fi
         ;;
     list)
-        echo -e "${BLUE}Verfügbare MCP-Server:${NC}"
+        log_info "${BLUE}Verfügbare MCP-Server:${NC}"
         docker compose config --services | grep -E 'mcp$|mcp-bridge$'
         ;;
     inspect)
         if [ -z "$SERVER" ]; then
-            echo -e "${RED}Fehler: Kein MCP-Server für die Inspektion angegeben.${NC}"
+            log_info "${RED}Fehler: Kein MCP-Server für die Inspektion angegeben.${NC}"
             exit 1
         else
-            echo -e "${BLUE}Detaillierte Informationen zum MCP-Server $SERVER:${NC}"
+            log_info "${BLUE}Detaillierte Informationen zum MCP-Server $SERVER:${NC}"
             docker compose exec $SERVER env
-            echo -e "\n${BLUE}Container-Informationen:${NC}"
+            log_info "\n${BLUE}Container-Informationen:${NC}"
             docker inspect mcp-$SERVER
         fi
         ;;
     test)
         if [ -z "$SERVER" ]; then
-            echo -e "${RED}Fehler: Kein MCP-Server für den Test angegeben.${NC}"
+            log_info "${RED}Fehler: Kein MCP-Server für den Test angegeben.${NC}"
             exit 1
         else
-            echo -e "${BLUE}Teste Verbindung zum MCP-Server $SERVER...${NC}"
+            log_info "${BLUE}Teste Verbindung zum MCP-Server $SERVER...${NC}"
             
             # Ermittle den Port des MCP-Servers
             PORT=$(docker compose exec $SERVER env | grep MCP_PORT | cut -d= -f2)
@@ -160,14 +170,14 @@ case "$ACTION" in
             
             # Teste die Verbindung
             if curl -s "http://$SERVER:$PORT/health" > /dev/null; then
-                echo -e "${GREEN}Verbindung zum MCP-Server $SERVER erfolgreich.${NC}"
+                log_info "${GREEN}Verbindung zum MCP-Server $SERVER erfolgreich.${NC}"
             else
-                echo -e "${RED}Verbindung zum MCP-Server $SERVER fehlgeschlagen.${NC}"
+                log_info "${RED}Verbindung zum MCP-Server $SERVER fehlgeschlagen.${NC}"
             fi
         fi
         ;;
     *)
-        echo -e "${RED}Unbekannte Aktion: $ACTION${NC}"
+        log_info "${RED}Unbekannte Aktion: $ACTION${NC}"
         show_help
         exit 1
         ;;
