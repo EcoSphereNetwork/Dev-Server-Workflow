@@ -44,7 +44,8 @@ check_version() {
         return 2
     fi
 
-    if [ "$(printf '%s\n' "$min_version" "$current_version" | sort -V | head -n1)" != "$min_version" ]; then
+    # Vergleiche Versionen - nutze "sort -V" und kehre die Logik um, da wir prüfen, ob current >= min
+    if [ "$(printf '%s\n' "$min_version" "$current_version" | sort -V | head -n1)" = "$min_version" ]; then
         log "$package Version $current_version gefunden (Minimum: $min_version)."
         return 0
     else
@@ -195,7 +196,7 @@ check_docker_compose() {
             log "Docker Compose Version: $docker_compose_version"
             
             # Vergleiche mit der Mindestversion
-            if [ "$(printf '%s\n' "1.29.0" "$docker_compose_version" | sort -V | head -n1)" != "1.29.0" ]; then
+            if [ "$(printf '%s\n' "1.29.0" "$docker_compose_version" | sort -V | head -n1)" = "1.29.0" ]; then
                 log "Docker Compose ist ausreichend aktuell."
                 return 0
             else
@@ -298,7 +299,7 @@ install_n8n() {
         log "n8n ist bereits installiert (Version: $n8n_version)."
         
         # Überprüfe, ob ein Update erforderlich ist
-        if [ "$(printf '%s\n' "0.225.0" "$n8n_version" | sort -V | head -n1)" != "0.225.0" ]; then
+        if [ "$(printf '%s\n' "0.225.0" "$n8n_version" | sort -V | head -n1)" = "0.225.0" ]; then
             log "n8n Version ist ausreichend aktuell."
             return 0
         else
@@ -433,7 +434,7 @@ check_python_dependencies() {
         log "Python Version: $python_version"
         
         # Vergleiche mit der Mindestversion
-        if [ "$(printf '%s\n' "3.6.0" "$python_version" | sort -V | head -n1)" != "3.6.0" ]; then
+        if [ "$(printf '%s\n' "3.6.0" "$python_version" | sort -V | head -n1)" = "3.6.0" ]; then
             log "Python ist ausreichend aktuell."
         else
             warn "Python Version ist älter als 3.6.0. Ein Update wird empfohlen."
@@ -488,6 +489,10 @@ check_python_dependencies() {
 
 # Hauptfunktion
 main() {
+    # Aktuelle Arbeitsverzeichnisse speichern
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+    
     log "Starte Installation des Dev-Server-Workflow-Projekts..."
     
     # Anzahl der Schritte
@@ -504,15 +509,36 @@ main() {
     
     # Schritt 2: Installiere die MCP-Server
     show_progress $current_step $total_steps "Installiere die MCP-Server..."
-    ./install-mcp-servers.sh
-    check_result "Installation der MCP-Server fehlgeschlagen."
+    if [ -f "$SCRIPT_DIR/install-mcp-servers.sh" ]; then
+        "$SCRIPT_DIR/install-mcp-servers.sh"
+        check_result "Installation der MCP-Server fehlgeschlagen."
+    else
+        warn "MCP-Server-Installationsskript nicht gefunden, überspringe..."
+    fi
     current_step=$((current_step + 1))
     
     # Schritt 3: Starte die MCP-Server
     show_progress $current_step $total_steps "Starte die MCP-Server..."
-    cd docker-mcp-servers && ./start-mcp-servers.sh
-    check_result "Starten der MCP-Server fehlgeschlagen."
-    cd ..
+    if [ -d "$ROOT_DIR/docker-mcp-servers" ]; then
+        # Speichern des aktuellen Verzeichnisses
+        CURRENT_DIR="$(pwd)"
+        
+        # Wechseln ins docker-mcp-servers-Verzeichnis
+        cd "$ROOT_DIR/docker-mcp-servers"
+        
+        # Starten der MCP-Server
+        if [ -f "./start-mcp-servers.sh" ]; then
+            ./start-mcp-servers.sh
+            check_result "Starten der MCP-Server fehlgeschlagen."
+        else
+            warn "start-mcp-servers.sh nicht gefunden im Verzeichnis docker-mcp-servers"
+        fi
+        
+        # Zurück zum ursprünglichen Verzeichnis
+        cd "$CURRENT_DIR"
+    else
+        warn "MCP-Server-Verzeichnis nicht gefunden, überspringe..."
+    fi
     current_step=$((current_step + 1))
     
     # Schritt 4: Installiere n8n
@@ -540,8 +566,16 @@ main() {
     # Frage nach dem n8n-API-Key
     read -p "Bitte geben Sie den n8n-API-Key ein: " n8n_api_key
     
-    ./scripts/integrate-mcp-with-n8n.py --n8n-api-key "$n8n_api_key"
-    check_result "Integration der MCP-Server mit n8n fehlgeschlagen."
+    if [ -f "$SCRIPT_DIR/integrate-mcp-with-n8n.py" ]; then
+        python3 "$SCRIPT_DIR/integrate-mcp-with-n8n.py" --n8n-api-key "$n8n_api_key"
+        check_result "Integration der MCP-Server mit n8n fehlgeschlagen."
+    elif [ -f "$ROOT_DIR/docker-mcp-servers/n8n-mcp-integration.py" ]; then
+        python3 "$ROOT_DIR/docker-mcp-servers/n8n-mcp-integration.py" --n8n-api-key "$n8n_api_key"
+        check_result "Integration der MCP-Server mit n8n fehlgeschlagen."
+    else
+        warn "n8n-Integration-Skript nicht gefunden, überspringe..."
+    fi
+    
     current_step=$((current_step + 1))
     
     # Schritt 6: Integriere die MCP-Server mit OpenHands
@@ -555,11 +589,26 @@ main() {
     
     if [ -n "$openhands_config_dir" ]; then
         if [ -n "$github_token" ]; then
-            ./scripts/integrate-mcp-with-openhands.py --openhands-config-dir "$openhands_config_dir" --github-token "$github_token"
+            if [ -f "$SCRIPT_DIR/integrate-mcp-with-openhands.py" ]; then
+                python3 "$SCRIPT_DIR/integrate-mcp-with-openhands.py" --openhands-config-dir "$openhands_config_dir" --github-token "$github_token"
+                check_result "Integration der MCP-Server mit OpenHands fehlgeschlagen."
+            elif [ -f "$ROOT_DIR/docker-mcp-servers/openhands-mcp-integration.py" ]; then
+                python3 "$ROOT_DIR/docker-mcp-servers/openhands-mcp-integration.py" --openhands-config-dir "$openhands_config_dir" --github-token "$github_token"
+                check_result "Integration der MCP-Server mit OpenHands fehlgeschlagen."
+            else
+                warn "OpenHands-Integration-Skript nicht gefunden, überspringe..."
+            fi
         else
-            ./scripts/integrate-mcp-with-openhands.py --openhands-config-dir "$openhands_config_dir"
+            if [ -f "$SCRIPT_DIR/integrate-mcp-with-openhands.py" ]; then
+                python3 "$SCRIPT_DIR/integrate-mcp-with-openhands.py" --openhands-config-dir "$openhands_config_dir"
+                check_result "Integration der MCP-Server mit OpenHands fehlgeschlagen."
+            elif [ -f "$ROOT_DIR/docker-mcp-servers/openhands-mcp-integration.py" ]; then
+                python3 "$ROOT_DIR/docker-mcp-servers/openhands-mcp-integration.py" --openhands-config-dir "$openhands_config_dir"
+                check_result "Integration der MCP-Server mit OpenHands fehlgeschlagen."
+            else
+                warn "OpenHands-Integration-Skript nicht gefunden, überspringe..."
+            fi
         fi
-        check_result "Integration der MCP-Server mit OpenHands fehlgeschlagen."
     else
         log "Integration mit OpenHands übersprungen."
     fi
@@ -567,7 +616,7 @@ main() {
     # Installation abgeschlossen
     log "Installation des Dev-Server-Workflow-Projekts abgeschlossen!"
     log "Sie können die MCP-Server mit dem folgenden Befehl stoppen:"
-    log "  cd docker-mcp-servers && ./stop-mcp-servers.sh"
+    log "  cd $ROOT_DIR/docker-mcp-servers && ./stop-mcp-servers.sh"
     log "Sie können n8n mit dem folgenden Befehl stoppen:"
     log "  pkill -f n8n"
     
