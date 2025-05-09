@@ -23,6 +23,164 @@ error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+saschi@server1:/tmp/acme-test$ cd /opt/n8n
+sudo docker-compose down
+sudo docker-compose up -d
+sudo: docker-compose: Befehl nicht gefunden
+sudo: docker-compose: Befehl nicht gefunden
+saschi@server1:/opt/n8n$ sudo docker compose down
+WARN[0000] /opt/n8n/docker-compose.yml: the attribute version is obsolete, it will be ignored, please remove it to avoid potential confusion 
+[+] Running 2/2
+ ✔ Container n8n-n8n-1  Removed                                            1.6s 
+ ✔ Network n8n_default  Removed   
+
+Wie stelle ich in meinem ubuntu 22 ein, das beide kommandos, docker-compose und docker compose den befehl ausführen?
+Bearbeiten
+
+Es scheint, dass auf Ihrem Ubuntu 22.04 System der Befehl docker-compose nicht gefunden wird, während docker compose funktioniert. Dies liegt daran, dass Docker inzwischen den Compose-Befehl als Unterfunktion von Docker integriert hat (docker compose), während das separate docker-compose Tool nicht installiert ist.
+
+Um beide Befehle verwenden zu können, gibt es zwei Lösungswege:
+
+    Ein Alias erstellen: Sie können einen Alias in Ihrer Shell-Konfiguration hinzufügen:
+
+bash
+
+echo 'alias docker-compose="docker compose"' >> ~/.bashrc
+source ~/.bashrc
+
+Dies leitet alle docker-compose Aufrufe an docker compose weiter.
+Docker Compose Plugin installieren: Alternativ können Sie das separate Docker Compose-Plugin installieren:
+
+bash
+
+sudo apt update
+sudo apt install docker-compose-plugin
+
+Oder wenn Sie die eigenständige Version bevorzugen:
+
+    bash
+
+    sudo apt update
+    sudo apt install docker-compose
+
+Die erste Methode (Alias) ist einfacher und sicherer, da Sie immer die bereits installierte Version von Docker Compose verwenden. Die zweite Methode installiert zusätzliche Software, die möglicherweise gewartet werden muss.
+
+Nach der Einrichtung sollten beide Befehle wie gewünscht funktionieren.
+EcoSphereNetwork/Dev-Server-Workflow
+
+main
+
+GITHUB
+
+Ich möchte meine scripte überarbeiten. sie sollen prüfen, welche pakete und wwelche versionen bereits installiert sind und dann entsprechend die benötigten installationen durchführen. für docker compose soll ein alias angelegt werden. welche dateien von mir müssen überarbeitet werden? kann du das für mich tun und mir jeweils die vollständig überarbeitete version geben?
+Bearbeiten
+
+Nach Durchsicht Ihrer Dokumente sehe ich, dass mehrere Skripte überarbeitet werden sollten, um Paketversionen zu prüfen und einen Alias für Docker Compose einzurichten. Die Hauptdateien, die überarbeitet werden müssen, sind:
+
+    scripts/install-mcp-servers.sh - Installationsskript für MCP-Server
+    scripts/start-mcp-servers.sh - Skript zum Starten der MCP-Server
+    scripts/install-all.sh - Hauptinstallationsskript für das gesamte Projekt
+    start-web-ui.sh - Skript zum Starten der Web-UI
+    dev-server-cli.sh - Das CLI-Hauptskript
+
+Ich werde diese Dateien für Sie überarbeiten und eine vollständige, aktualisierte Version von jeder bereitstellen.
+1. scripts/install-mcp-servers.sh (überarbeitet)
+2. scripts/start-mcp-servers.sh (überarbeitet)
+
+Continue
+Bearbeiten
+
+Ich werde mit der Überarbeitung der Skripte fortfahren. Hier ist die Fortsetzung von start-mcp-servers.sh und dann die weiteren Skripte.
+3. scripts/install-all.sh (überarbeitet)
+
+Continue
+Bearbeiten
+
+Ich werde mit der Überarbeitung von install-all.sh fortfahren und dann die restlichen Skripte fertigstellen.
+4. start-web-ui.sh (überarbeitet)
+5. dev-server-cli.sh (überarbeitet)
+
+Weiter
+Bearbeiten
+
+Ich werde das letzte Skript dev-server-cli.sh jetzt überarbeiten.
+Zusammenfassung der Änderungen
+
+Ich habe alle fünf Skripte erfolgreich überarbeitet, um Paketversionen zu prüfen und einen Alias für Docker Compose einzurichten. Hier ist eine Zusammenfassung der wichtigsten Verbesserungen in jedem Skript:
+
+    install-mcp-servers.sh:
+        Hinzufügung von Funktionen zur Überprüfung installierter Pakete und deren Versionen
+        Implementierung einer Funktion zum Einrichten eines Alias für docker-compose
+        Verbesserung der Erkennung und Installation von Systemabhängigkeiten
+        Fehlerbehandlung und bessere Benutzerführung
+    start-mcp-servers.sh:
+        Prüfung der Docker- un
+
+Weiter
+Bearbeiten
+
+Hier ist die vollständige Zusammenfassung der Änderungen:
+Zusammenfassung der Änderungen
+
+Ich habe alle fünf Skripte erfolgreich überarbeitet, um Paketversionen zu prüfen und einen Alias für Docker Compose einzurichten. Hier ist eine Zusammenfassung der wichtigsten Verbesserungen in jedem Skript:
+
+    install-mcp-servers.sh:
+        Hinzufügung von Funktionen zur Überprüfung installierter Pakete und deren Versionen
+        Implementierung einer Funktion zum Einrichten eines Alias für docker-compose
+        Verbesserung der Erkennung und Installation von Systemabhängigkeiten
+        Fehlerbehandlung und bessere Benutzerführung
+    start-mcp-servers.sh:
+        Prüfung der Docker- und Docker Compose-Versionen
+        Einrichtung des docker-compose Alias für eine bessere Kompatibilität
+        Verbesserte Logging-Funktionalität
+        Hinzufügen von detaillierten Serverstatus-Prüfungen
+    install-all.sh:
+        Umfassende Prüfung und Installation aller Abhängigkeiten
+        Verbesserte Versionserkennung und Aktualisierungsvorschläge
+        Zuverlässigere n8n-Installation mit Versionsüberprüfung
+        Automatische Einrichtung des docker-compose Alias
+    start-web-ui.sh:
+        Verbesserte Docker und Docker Compose-Versionsüberprüfung
+        Intelligente Erkennung und Verwendung des passenden Docker Compose-Befehls
+        Automatische Installation fehlender Pakete wie OpenSSL
+        Einrichtung des docker-compose Alias für die aktuelle Sitzung
+    dev-server-cli.sh:
+        Umfassendere Abhängigkeitsprüfungen für alle benötigten Komponenten
+        Dynamische Erkennung und Verwendung des passenden Docker Compose-Befehls
+        Neue Optionen für Abhängigkeitsprüfung (--check-deps) und Alias-Einrichtung (--setup-alias)
+        Verbesserte Komponentenverwaltung mit detaillierten Statusberichten
+
+Alle Skripte verfügen jetzt über:
+
+    Eine Funktion check_version() zum Überprüfen installierter Paketversionen
+    Eine Funktion setup_docker_compose_alias() zum Einrichten eines Alias für docker-compose
+    Automatische Erkennung des Betriebssystems für bessere Kompatibilität
+    Verbessertes Fehlerbehandlung und Logging
+    Detailliertere Benutzerführung mit farbigen Ausgaben
+
+Diese Verbesserungen machen Ihre Skripte robuster und benutzerfreundlicher, indem sie:
+
+    Automatisch fehlende Abhängigkeiten identifizieren und installieren
+    Veraltete Versionen erkennen und Aktualisierungsvorschläge machen
+    Die Kompatibilität zwischen docker-compose und docker compose sicherstellen
+    Detaillierte Anweisungen für den Benutzer bereitstellen
+
+Damit sollten Ihre Skripte nun in einer Vielzahl von Umgebungen besser funktionieren und dem Benutzer eine klarere Anleitung geben, falls etwas nicht wie erwartet funktioniert.
+
+saschi@server1:~/Dev-Server-Workflow/scripts$ sudo ./install-all.sh
+[sudo] Passwort für saschi: 
+./install-all.sh: Zeile 45: Syntaxfehler beim unerwarteten Wort »}«
+./install-all.sh: Zeile 45: `    }'
+Bearbeiten
+
+Es gibt einen Syntaxfehler in der Datei install-all.sh. Der Fehler liegt in der check_version()-Funktion, wo eine schließende geschweifte Klammer } ohne passende öffnende Klammer erscheint. Ich werde den Fehler beheben und Ihnen den korrigierten Code für die Funktion zeigen.
+
+Das Problem liegt in Zeile 45, wo der Vergleich der Versionen fehlerhaft ist. Die Funktion verwendet geschweifte Klammern an einer Stelle, wo sie nicht hingehören.
+
+Hier ist die korrigierte Version der betroffenen Funktion:
+
+bash
+
 # Funktion zum Überprüfen einer Paketversion
 check_version() {
     local package=$1
@@ -42,7 +200,7 @@ check_version() {
     if [ -z "$current_version" ]; then
         warn "Konnte die Version von $package nicht ermitteln."
         return 2
-    }
+    fi
 
     if [ "$(printf '%s\n' "$min_version" "$current_version" | sort -V | head -n1)" != "$min_version" ]; then
         log "$package Version $current_version gefunden (Minimum: $min_version)."
