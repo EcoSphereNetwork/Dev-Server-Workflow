@@ -294,6 +294,20 @@ Die generierte Webhook-URL muss in der OpenHands-Konfiguration eingetragen werde
 
 Dieses Repository unterstützt die Integration des Model Context Protocols (MCP) für die Verbindung zwischen OpenHands und n8n. Hiermit können KI-Agenten direkt mit n8n-Workflows interagieren.
 
+### Verbesserte MCP-Skripte
+
+Die MCP-Skripte wurden überarbeitet, um folgende Verbesserungen zu implementieren:
+
+1. **Gemeinsame Bibliothek**: Eine zentrale Bibliothek (`scripts/common/mcp_common.sh`) wurde erstellt, die gemeinsame Funktionen und Konfigurationen enthält. Dies reduziert Code-Duplikation und verbessert die Wartbarkeit.
+
+2. **Konsistente Konfiguration**: Umgebungsvariablen werden aus einer zentralen `.env`-Datei geladen und mit sinnvollen Standardwerten versehen.
+
+3. **Verbesserte Fehlerbehandlung**: Die Skripte enthalten nun eine robustere Fehlerbehandlung und Logging.
+
+4. **Modularisierung**: Die Funktionalität wurde in kleinere, wiederverwendbare Funktionen aufgeteilt.
+
+5. **Dokumentation**: Alle Skripte enthalten ausführliche Kommentare und Hilfe-Funktionen.
+
 ### MCP-Server Implementierung
 
 Wir haben folgende MCP-Server implementiert:
@@ -312,6 +326,22 @@ Die MCP-Server sind als Docker-Container implementiert und können mit dem folge
 ```bash
 cd docker-mcp-servers
 ./setup.sh
+```
+
+Alternativ können Sie die verbesserten Skripte verwenden:
+
+```bash
+# Installation der MCP-Server
+./scripts/mcp/install-mcp.sh
+
+# Starten der MCP-Server
+./start-mcp-servers.sh
+
+# Stoppen der MCP-Server
+./stop-mcp-servers.sh
+
+# Beheben von Problemen mit MCP-Servern
+./scripts/mcp/fix-mcp-errors.sh
 ```
 
 ### MCP-Server Konfiguration
