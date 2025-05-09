@@ -1,0 +1,25 @@
+# Befehl: docker volume ls
+# Ausgeführt am: Fr 9. Mai 13:58:46 CEST 2025
+# ------------------------------
+DRIVER    VOLUME NAME
+local     2a064cde0b19b0e6556280f7c704afea734149db60af77b68308c2d44e58636f
+local     7b725cba35679ea374cfa92126d08158d2d615207d926d23968a468ee50d3b05
+local     7e6e0f5e3ac24d275166b21c8a3073a6dbdc8533ccb1ce2275b76c0f9709f25b
+local     8b7e2c01711a84c7a104591ad265ed6feaea8ba0d17b1c64c4b7e0202595e367
+local     736a86533d283752ed10c72fad0882bee2bb744783ff59ce7b3a54ef85bd3e3a
+local     5700430fc0be0de6f9095c9b72f17b5bf8135334fb1d66609705c1375700ce9c
+local     03975959129c7a6bf24b1760f81f572403eb92c812e13b48d254eea13515874a
+local     a18615969f6ee6507dd2d92162a7d58cad715ad345bade3cb3f62cb88678f8f1
+local     ad80c1c9111aceb4203976c3a2412e0856261247563a6e9eb84f4ebca34d6f8e
+local     appflowy-cloud_minio_data
+local     appflowy-cloud_postgres_data
+local     ba6f83c82395b67832af3c717e9817afbe129a10f2ab49e4df4f665e572f5620
+local     dev-server-workflow_n8n_data
+local     docker-mcp-servers_basic_memory_data
+local     docker-mcp-servers_filesystem_data
+local     docker-mcp-servers_redis_data
+local     docker-mcp-servers_wikipedia_data
+local     edec82206233a754c82c8f605a4970f392a2ed9fcce5169ff634738ab6733118
+local     f03a50e3ac5d6d6ad742008d1f66ff057f9144890a05eab6ad10ad5371e856f4
+local     fa4a6f6d4f7a17ad45fda97ab2d8f116d5fb9ecc7af037fe88d42a6b436ef4f4
+local     n8n_n8n_data

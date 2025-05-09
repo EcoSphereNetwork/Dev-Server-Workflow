@@ -1,0 +1,6 @@
+# Befehl: free -h
+# Ausgeführt am: Fr 9. Mai 13:58:49 CEST 2025
+# ------------------------------
+               gesamt       benutzt     frei      gemns.  Puffer/Cache verfügbar
+Speicher:       62Gi        15Gi        25Gi       1,3Gi        21Gi        45Gi
+Auslager:      2,0Gi          0B       2,0Gi

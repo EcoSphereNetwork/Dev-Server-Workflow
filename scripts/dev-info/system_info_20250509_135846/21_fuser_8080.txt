@@ -1,0 +1,4 @@
+# Befehl: sudo fuser 8080/tcp 2>/dev/null || echo 'fuser nicht installiert oder Port nicht belegt'
+# Ausgeführt am: Fr 9. Mai 13:58:47 CEST 2025
+# ------------------------------
+  7653  7660

@@ -1,0 +1,117 @@
+# Befehl: sudo lsof -i -P -n
+# Ausgeführt am: Fr 9. Mai 13:58:47 CEST 2025
+# ------------------------------
+COMMAND      PID            USER   FD   TYPE  DEVICE SIZE/OFF NODE NAME
+systemd-r    497 systemd-resolve   13u  IPv4    8481      0t0  UDP 127.0.0.53:53 
+systemd-r    497 systemd-resolve   14u  IPv4    8482      0t0  TCP 127.0.0.53:53 (LISTEN)
+avahi-dae    724           avahi   12u  IPv4   10482      0t0  UDP *:5353 
+avahi-dae    724           avahi   13u  IPv6   10483      0t0  UDP *:5353 
+avahi-dae    724           avahi   14u  IPv4   10484      0t0  UDP *:55579 
+avahi-dae    724           avahi   15u  IPv6   10485      0t0  UDP *:36675 
+NetworkMa    729            root   25u  IPv4   13499      0t0  UDP 192.168.0.250:68->192.168.0.1:67 
+NetworkMa    729            root   27u  IPv6   13645      0t0  UDP [fe80::96c1:832b:4b4a:9359]:546 
+ruby         869     openproject    5u  IPv4   35373      0t0  TCP 127.0.0.1:35862->127.0.0.1:45432 (ESTABLISHED)
+ruby         869     openproject    6u  IPv4   20404      0t0  TCP 127.0.0.1:47466->127.0.0.1:11211 (ESTABLISHED)
+ruby         869     openproject    8u  IPv4   36046      0t0  TCP 127.0.0.1:35878->127.0.0.1:45432 (ESTABLISHED)
+ruby         869     openproject    9u  IPv4 1249750      0t0  TCP 127.0.0.1:43028->127.0.0.1:45432 (ESTABLISHED)
+ruby         869     openproject   11u  IPv4   86976      0t0  TCP 127.0.0.1:58274->127.0.0.1:11211 (ESTABLISHED)
+ruby         870     openproject    5u  IPv4   36980      0t0  TCP 127.0.0.1:35860->127.0.0.1:45432 (ESTABLISHED)
+ruby         870     openproject    6u  IPv4   16217      0t0  TCP 127.0.0.1:47452->127.0.0.1:11211 (ESTABLISHED)
+ruby         870     openproject    7u  IPv4   35399      0t0  TCP 127.0.0.1:6000 (LISTEN)
+cupsd        882            root    6u  IPv6    6064      0t0  TCP [::1]:631 (LISTEN)
+cupsd        882            root    7u  IPv4    6065      0t0  TCP 127.0.0.1:631 (LISTEN)
+memcached    883        memcache   22u  IPv4    8690      0t0  TCP 127.0.0.1:11211 (LISTEN)
+memcached    883        memcache   23u  IPv4   20940      0t0  TCP 127.0.0.1:11211->127.0.0.1:47452 (ESTABLISHED)
+memcached    883        memcache   24u  IPv4   20941      0t0  TCP 127.0.0.1:11211->127.0.0.1:47466 (ESTABLISHED)
+memcached    883        memcache   25u  IPv4   92273      0t0  TCP 127.0.0.1:11211->127.0.0.1:58274 (ESTABLISHED)
+memcached    883        memcache   26u  IPv4  293177      0t0  TCP 127.0.0.1:11211->127.0.0.1:56916 (ESTABLISHED)
+memcached    883        memcache   27u  IPv4  293371      0t0  TCP 127.0.0.1:11211->127.0.0.1:53016 (ESTABLISHED)
+memcached    883        memcache   28u  IPv4  591640      0t0  TCP 127.0.0.1:11211->127.0.0.1:51390 (ESTABLISHED)
+sshd         920            root    3u  IPv4   10510      0t0  TCP *:22 (LISTEN)
+sshd         920            root    4u  IPv6   10512      0t0  TCP *:22 (LISTEN)
+postgres     981        postgres    5u  IPv4    2781      0t0  TCP 127.0.0.1:45432 (LISTEN)
+postgres     981        postgres    7u  IPv4    6688      0t0  UDP 127.0.0.1:50144->127.0.0.1:50144 
+postgres     996        postgres    7u  IPv4    6688      0t0  UDP 127.0.0.1:50144->127.0.0.1:50144 
+postgres     997        postgres    7u  IPv4    6688      0t0  UDP 127.0.0.1:50144->127.0.0.1:50144 
+postgres     998        postgres    7u  IPv4    6688      0t0  UDP 127.0.0.1:50144->127.0.0.1:50144 
+postgres     999        postgres    7u  IPv4    6688      0t0  UDP 127.0.0.1:50144->127.0.0.1:50144 
+postgres    1001        postgres    7u  IPv4    6688      0t0  UDP 127.0.0.1:50144->127.0.0.1:50144 
+postgres    1002        postgres    7u  IPv4    6688      0t0  UDP 127.0.0.1:50144->127.0.0.1:50144 
+master      2985            root   13u  IPv4   16628      0t0  TCP *:25 (LISTEN)
+master      2985            root   14u  IPv6   16629      0t0  TCP *:25 (LISTEN)
+docker-pr   3177            root    7u  IPv4   14079      0t0  TCP *:8929 (LISTEN)
+docker-pr   3185            root    7u  IPv6   14080      0t0  TCP *:8929 (LISTEN)
+docker-pr   4285            root    7u  IPv4   16112      0t0  TCP *:9090 (LISTEN)
+docker-pr   4293            root    7u  IPv6   16113      0t0  TCP *:9090 (LISTEN)
+docker-pr   4300            root    7u  IPv4   16114      0t0  TCP *:9443 (LISTEN)
+docker-pr   4311            root    7u  IPv6   16115      0t0  TCP *:9443 (LISTEN)
+docker-pr   7653            root    3u  IPv4 1320664      0t0  TCP 127.0.0.1:8080->127.0.0.1:45720 (FIN_WAIT2)
+docker-pr   7653            root    7u  IPv4   33208      0t0  TCP *:8080 (LISTEN)
+docker-pr   7653            root   12u  IPv4 1195842      0t0  TCP 127.0.0.1:8080->127.0.0.1:54548 (FIN_WAIT2)
+docker-pr   7660            root    7u  IPv6   33209      0t0  TCP *:8080 (LISTEN)
+postgres    7943        postgres    7u  IPv4    6688      0t0  UDP 127.0.0.1:50144->127.0.0.1:50144 
+postgres    7943        postgres    8u  IPv4   35374      0t0  TCP 127.0.0.1:45432->127.0.0.1:35860 (ESTABLISHED)
+postgres    7944        postgres    7u  IPv4    6688      0t0  UDP 127.0.0.1:50144->127.0.0.1:50144 
+postgres    7944        postgres    8u  IPv4   35375      0t0  TCP 127.0.0.1:45432->127.0.0.1:35862 (ESTABLISHED)
+ruby        8069     openproject    7u  IPv4   35399      0t0  TCP 127.0.0.1:6000 (LISTEN)
+ruby        8069     openproject   15u  IPv4 1377684      0t0  TCP 127.0.0.1:47758->127.0.0.1:45432 (ESTABLISHED)
+ruby        8069     openproject   17u  IPv4  294921      0t0  TCP 127.0.0.1:53016->127.0.0.1:11211 (ESTABLISHED)
+ruby        8069     openproject   20u  IPv4  594494      0t0  TCP 127.0.0.1:51390->127.0.0.1:11211 (ESTABLISHED)
+ruby        8082     openproject    7u  IPv4   35399      0t0  TCP 127.0.0.1:6000 (LISTEN)
+ruby        8082     openproject   17u  IPv4  288627      0t0  TCP 127.0.0.1:56916->127.0.0.1:11211 (ESTABLISHED)
+postgres    8104        postgres    7u  IPv4    6688      0t0  UDP 127.0.0.1:50144->127.0.0.1:50144 
+postgres    8104        postgres    8u  IPv4   35410      0t0  TCP 127.0.0.1:45432->127.0.0.1:35878 (ESTABLISHED)
+firefox    27539          saschi  107u  IPv6 1167147      0t0  TCP [2a02:810a:b01:f00:b1c1:2646:bfb8:50e8]:54120->[2600:1901:0:38d7::]:80 (ESTABLISHED)
+firefox    27539          saschi  120u  IPv4 1171010      0t0  TCP 192.168.0.250:41044->34.107.221.82:80 (ESTABLISHED)
+firefox    27539          saschi  121u  IPv4 1251028      0t0  TCP 192.168.0.250:38368->34.107.243.93:443 (ESTABLISHED)
+firefox    27539          saschi  124u  IPv6 1402378      0t0  UDP *:48654 
+firefox    27539          saschi  132u  IPv6 1296385      0t0  TCP [2a02:810a:b01:f00:b1c1:2646:bfb8:50e8]:39816->[2600:1901:0:38d7::]:80 (ESTABLISHED)
+firefox    27539          saschi  159u  IPv4 1381559      0t0  TCP 192.168.0.250:52580->192.168.0.250:443 (ESTABLISHED)
+firefox    27539          saschi  169u  IPv4 1378844      0t0  TCP 192.168.0.250:48868->140.82.112.25:443 (ESTABLISHED)
+firefox    27539          saschi  184u  IPv4  345277      0t0  TCP 192.168.0.250:43982->35.174.127.31:443 (ESTABLISHED)
+firefox    27539          saschi  208u  IPv4  607113      0t0  TCP 192.168.0.250:48742->35.174.127.31:443 (ESTABLISHED)
+firefox    27539          saschi  232u  IPv4  226522      0t0  TCP 192.168.0.250:60528->35.174.127.31:443 (ESTABLISHED)
+docker-pr  28403            root    7u  IPv4  128013      0t0  TCP *:3000 (LISTEN)
+docker-pr  28410            root    7u  IPv6  128014      0t0  TCP *:3000 (LISTEN)
+docker-pr  75589            root    7u  IPv4  321630      0t0  TCP *:5678 (LISTEN)
+docker-pr  75596            root    7u  IPv6  321631      0t0  TCP *:5678 (LISTEN)
+/usr/sbin 106609            root    4u  IPv6  439323      0t0  TCP *:80 (LISTEN)
+/usr/sbin 106609            root    6u  IPv6  439327      0t0  TCP *:8443 (LISTEN)
+/usr/sbin 106609            root    8u  IPv6  439331      0t0  TCP *:443 (LISTEN)
+docker-pr 109326            root    3u  IPv4  500635      0t0  TCP 127.0.0.1:5670->127.0.0.1:54376 (FIN_WAIT2)
+docker-pr 109326            root    7u  IPv4  444682      0t0  TCP *:5670 (LISTEN)
+docker-pr 109326            root   12u  IPv4  797177      0t0  TCP 127.0.0.1:5670->127.0.0.1:46846 (FIN_WAIT2)
+docker-pr 109326            root   18u  IPv4  503421      0t0  TCP 127.0.0.1:5670->127.0.0.1:54386 (FIN_WAIT2)
+docker-pr 109326            root   24u  IPv4  501716      0t0  TCP 127.0.0.1:5670->127.0.0.1:42248 (FIN_WAIT2)
+docker-pr 109326            root   30u  IPv4 1245009      0t0  TCP 127.0.0.1:5670->127.0.0.1:48514 (FIN_WAIT2)
+/usr/sbin 122515        www-data    4u  IPv6  439323      0t0  TCP *:80 (LISTEN)
+/usr/sbin 122515        www-data    6u  IPv6  439327      0t0  TCP *:8443 (LISTEN)
+/usr/sbin 122515        www-data    8u  IPv6  439331      0t0  TCP *:443 (LISTEN)
+/usr/sbin 122515        www-data   26u  IPv4  599141      0t0  TCP 127.0.0.1:54358->127.0.0.1:6000 (CLOSE_WAIT)
+/usr/sbin 122515        www-data   27u  IPv4  501705      0t0  TCP 127.0.0.1:54376->127.0.0.1:5670 (CLOSE_WAIT)
+/usr/sbin 122515        www-data   28u  IPv4 1326112      0t0  TCP 127.0.0.1:45720->127.0.0.1:8080 (CLOSE_WAIT)
+/usr/sbin 122515        www-data   29u  IPv4  505261      0t0  TCP 127.0.0.1:54386->127.0.0.1:5670 (CLOSE_WAIT)
+/usr/sbin 122515        www-data   30u  IPv4 1326390      0t0  TCP 127.0.0.1:49372->127.0.0.1:6000 (CLOSE_WAIT)
+/usr/sbin 122515        www-data   31u  IPv4 1243884      0t0  TCP 127.0.0.1:48514->127.0.0.1:5670 (CLOSE_WAIT)
+/usr/sbin 122515        www-data   34u  IPv4  596358      0t0  TCP 127.0.0.1:54336->127.0.0.1:6000 (CLOSE_WAIT)
+/usr/sbin 122515        www-data   37u  IPv4  592723      0t0  TCP 127.0.0.1:54350->127.0.0.1:6000 (CLOSE_WAIT)
+/usr/sbin 122516        www-data    4u  IPv6  439323      0t0  TCP *:80 (LISTEN)
+/usr/sbin 122516        www-data    6u  IPv6  439327      0t0  TCP *:8443 (LISTEN)
+/usr/sbin 122516        www-data    8u  IPv6  439331      0t0  TCP *:443 (LISTEN)
+/usr/sbin 122516        www-data   26u  IPv6 1380587      0t0  TCP 192.168.0.250:443->192.168.0.250:52580 (ESTABLISHED)
+/usr/sbin 122516        www-data   27u  IPv4  596322      0t0  TCP 127.0.0.1:54308->127.0.0.1:6000 (CLOSE_WAIT)
+/usr/sbin 122516        www-data   28u  IPv4 1199515      0t0  TCP 127.0.0.1:54548->127.0.0.1:8080 (CLOSE_WAIT)
+/usr/sbin 122516        www-data   29u  IPv4 1399539      0t0  TCP 127.0.0.1:39508->127.0.0.1:6000 (CLOSE_WAIT)
+/usr/sbin 122516        www-data   30u  IPv4  798133      0t0  TCP 127.0.0.1:46846->127.0.0.1:5670 (CLOSE_WAIT)
+/usr/sbin 122516        www-data   31u  IPv4  503428      0t0  TCP 127.0.0.1:42248->127.0.0.1:5670 (CLOSE_WAIT)
+/usr/sbin 122516        www-data   33u  IPv4  598039      0t0  TCP 127.0.0.1:54330->127.0.0.1:6000 (CLOSE_WAIT)
+postgres  331988        postgres    7u  IPv4    6688      0t0  UDP 127.0.0.1:50144->127.0.0.1:50144 
+postgres  331988        postgres    8u  IPv4 1252393      0t0  TCP 127.0.0.1:45432->127.0.0.1:43028 (ESTABLISHED)
+docker-pr 340427            root    7u  IPv4 1280155      0t0  TCP *:3007 (LISTEN)
+docker-pr 340434            root    7u  IPv6 1280156      0t0  TCP *:3007 (LISTEN)
+docker-pr 340502            root    7u  IPv4 1276550      0t0  TCP *:3004 (LISTEN)
+docker-pr 340514            root    7u  IPv6 1276551      0t0  TCP *:3004 (LISTEN)
+docker-pr 340549            root    7u  IPv4 1277475      0t0  TCP *:3008 (LISTEN)
+docker-pr 340557            root    7u  IPv6 1277476      0t0  TCP *:3008 (LISTEN)
+postgres  372349        postgres    7u  IPv4    6688      0t0  UDP 127.0.0.1:50144->127.0.0.1:50144 
+postgres  372349        postgres    8u  IPv4 1375948      0t0  TCP 127.0.0.1:45432->127.0.0.1:47758 (ESTABLISHED)

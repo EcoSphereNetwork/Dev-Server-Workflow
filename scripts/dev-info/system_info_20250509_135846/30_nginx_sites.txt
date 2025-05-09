@@ -1,0 +1,9 @@
+# Befehl: ls -la /etc/nginx/sites-enabled/ 2>/dev/null || echo 'Nginx-Konfigurationsordner nicht gefunden'
+# Ausgeführt am: Fr 9. Mai 13:58:47 CEST 2025
+# ------------------------------
+insgesamt 8
+drwxr-xr-x 2 root root 4096 Mai  4 13:55 .
+drwxr-xr-x 8 root root 4096 Apr 30 23:52 ..
+lrwxrwxrwx 1 root root   51 Mai  1 22:27 affine.ecospherenet.work -> /etc/nginx/sites-available/affine.ecospherenet.work
+lrwxrwxrwx 1 root root   34 Apr 30 23:42 default -> /etc/nginx/sites-available/default
+lrwxrwxrwx 1 root root   48 Mai  4 13:55 n8n.ecospherenet.work -> /etc/nginx/sites-available/n8n.ecospherenet.work

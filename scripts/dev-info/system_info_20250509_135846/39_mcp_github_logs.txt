@@ -1,0 +1,32 @@
+# Befehl: docker logs mcp-github 2>&1 || echo 'Container nicht gefunden'
+# Ausgeführt am: Fr 9. Mai 13:58:48 CEST 2025
+# ------------------------------
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio
+GitHub MCP Server running on stdio

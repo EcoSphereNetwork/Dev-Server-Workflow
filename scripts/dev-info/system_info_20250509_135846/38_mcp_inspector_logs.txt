@@ -1,0 +1,3 @@
+# Befehl: docker logs mcp-inspector 2>&1 || echo 'Container nicht gefunden'
+# Ausgeführt am: Fr 9. Mai 13:58:48 CEST 2025
+# ------------------------------

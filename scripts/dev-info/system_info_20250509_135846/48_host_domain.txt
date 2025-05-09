@@ -1,0 +1,6 @@
+# Befehl: host ecospherenet.work || echo 'host nicht installiert'
+# Ausgeführt am: Fr 9. Mai 13:58:48 CEST 2025
+# ------------------------------
+ecospherenet.work has address 95.91.89.145
+ecospherenet.work mail is handled by 10 mx2.greenhost.nl.
+ecospherenet.work mail is handled by 10 mx1.greenhost.nl.

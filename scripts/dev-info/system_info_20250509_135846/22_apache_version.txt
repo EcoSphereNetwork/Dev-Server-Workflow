@@ -1,0 +1,6 @@
+# Befehl: which apache2 2>/dev/null && apache2 -v || echo 'Apache nicht installiert'
+# Ausgeführt am: Fr 9. Mai 13:58:47 CEST 2025
+# ------------------------------
+/usr/sbin/apache2
+Server version: Apache/2.4.52 (Ubuntu)
+Server built:   2025-04-03T09:05:48

@@ -1,0 +1,77 @@
+# Zusammenfassung der gesammelten Informationen
+# Erstellt am: Fr 9. Mai 13:58:49 CEST 2025
+# ------------------------------
+
+## Betriebssystem
+Ubuntu 22.04.5 LTS
+
+## Kernel
+# Befehl: uname -a
+# Ausgeführt am: Fr 9. Mai 13:58:46 CEST 2025
+# ------------------------------
+Linux server1 6.8.0-59-generic #61~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue Apr 15 17:03:15 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
+
+## Docker-Version
+# Befehl: docker --version
+# Ausgeführt am: Fr 9. Mai 13:58:46 CEST 2025
+# ------------------------------
+Docker version 28.1.1, build 4eba377
+
+## Laufende Docker-Container
+32
+
+## Offene Ports (Top 10)
+Netid State  Recv-Q Send-Q                      Local Address:Port  Peer Address:PortProcess                                                                                                             
+udp   UNCONN 0      0                                 0.0.0.0:5353       0.0.0.0:*    users:(("avahi-daemon",pid=724,fd=12))                                                                             
+udp   UNCONN 0      0                                 0.0.0.0:55579      0.0.0.0:*    users:(("avahi-daemon",pid=724,fd=14))                                                                             
+udp   UNCONN 0      0                           127.0.0.53%lo:53         0.0.0.0:*    users:(("systemd-resolve",pid=497,fd=13))                                                                          
+udp   UNCONN 0      0                                    [::]:36675         [::]:*    users:(("avahi-daemon",pid=724,fd=15))                                                                             
+udp   UNCONN 0      0                                    [::]:5353          [::]:*    users:(("avahi-daemon",pid=724,fd=13))                                                                             
+udp   UNCONN 0      0                                       *:48654            *:*    users:(("firefox",pid=27539,fd=124))                                                                               
+udp   UNCONN 0      0      [fe80::96c1:832b:4b4a:9359]%enp5s0:546           [::]:*    users:(("NetworkManager",pid=729,fd=27))                                                                           
+tcp   LISTEN 0      4096                              0.0.0.0:3008       0.0.0.0:*    users:(("docker-proxy",pid=340549,fd=7))                                                                           
+tcp   LISTEN 0      4096                              0.0.0.0:3000       0.0.0.0:*    users:(("docker-proxy",pid=28403,fd=7))                                                                            
+
+## Speichernutzung
+
+## Festplattennutzung
+# Befehl: df -h
+# Ausgeführt am: Fr 9. Mai 13:58:49 CEST 2025
+# ------------------------------
+Dateisystem    Größe Benutzt Verf. Verw% Eingehängt auf
+/dev/nvme0n1p2  938G     49G  841G    6% /
+efivarfs        192K     87K  101K   47% /sys/firmware/efi/efivars
+/dev/nvme0n1p1  511M    6,1M  505M    2% /boot/efi
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/ac2d96a509cacdb6db9c96de98169d54978708252e571583f38c18bf22a9e40c/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/74609ccd1d0cefce97cf06638cb149f519be745d5d861d4c6ff0222cec1a50e4/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/6ecdb80c1326078a35686a67acafe47adb28cd4d731ae9c7e40379b13e600225/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/e588eb3f0062d5c830f764f07a65bb707c99434431606d9dd550e54481dbbb33/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/14b70419d90b2e5455590f356c5827759c6316d05c30d7a6e07cc72f95831860/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/7f745ee20a77fae29a90bbcd78d8e18b6f61e594a075e415bc717981eae227ac/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/807d28e71f64d741c73638c49ac17450c09ef5993bf5b25b7bc910acef878faa/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/ab6891639b158d790bba3892b9759f5fbfa90b1a590604a1e34a9b9e64e7681f/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/902fb53f24253f61d45d80a618aa7f134ccd88476a9d153e079a7a5569ed09f2/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/d8da305271e4eeb85c3f7ab41ea9c5e71bc2c4e2e5f46f2638153776a70cef97/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/82b398aeb8c007d50b408be6f842645902ac04a6d3287a3791170d7223540c28/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/22d04b32f8277a77fcc77a0640a6c1a3c1b82286265fb3323f07d031365f6522/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/7b539788e75cf2bf97764130e2fd19d805735ab4c502c70acb5bfd4a0be07e92/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/525401727f4f2af241761d02f22ac95822db9c3567335521c14ac4a496e9ce3f/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/bc874e3ec773964e33cb78b5e9e448aeb01ae1558f87c8fe63fdeb4d8de32218/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/db2dc1619b5355ee4e0effdeea6ed4be12df6797d4ab9f7e1bca95004741bf84/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/1021d539a28528fbc0ff5bf5c52decb2ea031f2c4a82c9bd1756dfe545276297/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/a8e71319a02999e2deac2fbd6cb3e4409148301c6ff18a65f332c0487b4d7471/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/4214a9934c0ebdb3870dbcf2721f3e2a164f1493ea89e21a28f16fc975e51bc1/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/3e264ffe8e9f431af2e5771ff09138b0a53b35429761e2866fe61fee3945c260/merged
+
+## Probleme mit Port 8080
+# Befehl: sudo lsof -i :8080
+# Ausgeführt am: Fr 9. Mai 13:58:47 CEST 2025
+# ------------------------------
+COMMAND      PID     USER   FD   TYPE  DEVICE SIZE/OFF NODE NAME
+docker-pr   7653     root    3u  IPv4 1320664      0t0  TCP localhost:http-alt->localhost:45720 (FIN_WAIT2)
+docker-pr   7653     root    7u  IPv4   33208      0t0  TCP *:http-alt (LISTEN)
+docker-pr   7653     root   12u  IPv4 1195842      0t0  TCP localhost:http-alt->localhost:54548 (FIN_WAIT2)
+docker-pr   7660     root    7u  IPv6   33209      0t0  TCP *:http-alt (LISTEN)
+/usr/sbin 122515 www-data   28u  IPv4 1326112      0t0  TCP localhost:45720->localhost:http-alt (CLOSE_WAIT)
+/usr/sbin 122516 www-data   28u  IPv4 1199515      0t0  TCP localhost:54548->localhost:http-alt (CLOSE_WAIT)
+

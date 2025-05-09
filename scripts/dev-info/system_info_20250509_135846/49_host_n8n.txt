@@ -1,0 +1,4 @@
+# Befehl: host n8n.ecospherenet.work || echo 'host nicht installiert'
+# Ausgeführt am: Fr 9. Mai 13:58:48 CEST 2025
+# ------------------------------
+n8n.ecospherenet.work has address 192.168.0.250

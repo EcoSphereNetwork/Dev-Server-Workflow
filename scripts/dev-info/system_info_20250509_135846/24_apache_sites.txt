@@ -1,0 +1,19 @@
+# Befehl: ls -la /etc/apache2/sites-enabled/ 2>/dev/null || echo 'Apache-Konfigurationsordner nicht gefunden'
+# Ausgeführt am: Fr 9. Mai 13:58:47 CEST 2025
+# ------------------------------
+insgesamt 16
+drwxr-xr-x 2 root root 4096 Mai  9 09:32 .
+drwxr-xr-x 8 root root 4096 Mai  9 08:37 ..
+lrwxrwxrwx 1 root root   35 Mai  5 23:07 000-default.conf -> ../sites-available/000-default.conf
+lrwxrwxrwx 1 root root   33 Mai  5 23:07 99-affine.conf -> ../sites-available/99-affine.conf
+lrwxrwxrwx 1 root root   37 Mai  6 00:02 appflowy-ipv4.conf -> ../sites-available/appflowy-ipv4.conf
+lrwxrwxrwx 1 root root   30 Mai  5 23:07 gitlab.conf -> ../sites-available/gitlab.conf
+-rw-r--r-- 1 root root 1180 Mai  1 17:19 gitlab.conf.backup-20250501171951
+-rw-r--r-- 1 root root 1320 Mai  1 17:21 gitlab.conf.backup-20250501172149
+lrwxrwxrwx 1 root root   35 Mai  5 23:07 gitlab-http.conf -> ../sites-available/gitlab-http.conf
+lrwxrwxrwx 1 root root   34 Mai  5 23:07 gitlab-ssl.conf -> ../sites-available/gitlab-ssl.conf
+lrwxrwxrwx 1 root root   45 Mai  5 23:07 n8n.ecospherenet.work.conf -> ../sites-available/n8n.ecospherenet.work.conf
+lrwxrwxrwx 1 root root   37 Mai  9 09:32 n8n-localhost.conf -> ../sites-available/n8n-localhost.conf
+lrwxrwxrwx 1 root root   35 Mai  5 23:07 openproject.conf -> ../sites-available/openproject.conf
+lrwxrwxrwx 1 root root   52 Mai  9 08:27 openproject-le-ssl.conf -> /etc/apache2/sites-available/openproject-le-ssl.conf
+lrwxrwxrwx 1 root root   32 Mai  5 23:07 test8443.conf -> ../sites-available/test8443.conf

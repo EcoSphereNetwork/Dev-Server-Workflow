@@ -1,0 +1,25 @@
+# Befehl: sudo systemctl status apache2 2>/dev/null || echo 'Apache nicht installiert oder systemctl nicht verfügbar'
+# Ausgeführt am: Fr 9. Mai 13:58:47 CEST 2025
+# ------------------------------
+● apache2.service - The Apache HTTP Server
+     Loaded: loaded (/lib/systemd/system/apache2.service; enabled; vendor preset: enabled)
+     Active: active (running) since Fri 2025-05-09 09:15:36 CEST; 4h 43min ago
+       Docs: https://httpd.apache.org/docs/2.4/
+    Process: 106605 ExecStart=/usr/sbin/apachectl start (code=exited, status=0/SUCCESS)
+    Process: 122509 ExecReload=/usr/sbin/apachectl graceful (code=exited, status=0/SUCCESS)
+   Main PID: 106609 (/usr/sbin/apach)
+      Tasks: 56 (limit: 76758)
+     Memory: 33.4M
+        CPU: 3.720s
+     CGroup: /system.slice/apache2.service
+             ├─106609 /usr/sbin/apache2 -k start
+             ├─122513 /usr/sbin/apache2 -k start
+             ├─122515 /usr/sbin/apache2 -k start
+             └─122516 /usr/sbin/apache2 -k start
+
+Mai 09 09:15:36 server1 systemd[1]: Starting The Apache HTTP Server...
+Mai 09 09:15:36 server1 apachectl[106608]: AH00548: NameVirtualHost has no effect and will be removed in the next release /etc/apache2/conf-enabled/ssl-priority.conf:2
+Mai 09 09:15:36 server1 systemd[1]: Started The Apache HTTP Server.
+Mai 09 09:32:49 server1 systemd[1]: Reloading The Apache HTTP Server...
+Mai 09 09:32:49 server1 apachectl[122512]: AH00548: NameVirtualHost has no effect and will be removed in the next release /etc/apache2/conf-enabled/ssl-priority.conf:2
+Mai 09 09:32:49 server1 systemd[1]: Reloaded The Apache HTTP Server.

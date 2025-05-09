@@ -1,0 +1,4 @@
+# Befehl: docker --version
+# Ausgeführt am: Fr 9. Mai 13:58:46 CEST 2025
+# ------------------------------
+Docker version 28.1.1, build 4eba377

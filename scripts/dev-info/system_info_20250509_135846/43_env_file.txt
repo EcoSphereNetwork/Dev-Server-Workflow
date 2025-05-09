@@ -1,0 +1,4 @@
+# Befehl: cat .env 2>/dev/null || echo 'Datei nicht gefunden'
+# Ausgeführt am: Fr 9. Mai 13:58:48 CEST 2025
+# ------------------------------
+Datei nicht gefunden

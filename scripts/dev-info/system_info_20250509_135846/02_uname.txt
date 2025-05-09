@@ -1,0 +1,4 @@
+# Befehl: uname -a
+# Ausgeführt am: Fr 9. Mai 13:58:46 CEST 2025
+# ------------------------------
+Linux server1 6.8.0-59-generic #61~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue Apr 15 17:03:15 UTC 2 x86_64 x86_64 x86_64 GNU/Linux

@@ -1,0 +1,8 @@
+# Befehl: sudo systemctl status nginx 2>/dev/null || echo 'Nginx nicht installiert oder systemctl nicht verfügbar'
+# Ausgeführt am: Fr 9. Mai 13:58:47 CEST 2025
+# ------------------------------
+○ nginx.service - A high performance web server and a reverse proxy server
+     Loaded: loaded (/lib/systemd/system/nginx.service; disabled; vendor preset: enabled)
+     Active: inactive (dead)
+       Docs: man:nginx(8)
+Nginx nicht installiert oder systemctl nicht verfügbar

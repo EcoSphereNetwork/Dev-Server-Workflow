@@ -1,0 +1,26 @@
+# Befehl: sudo ufw status 2>/dev/null || echo 'UFW nicht installiert'
+# Ausgeführt am: Fr 9. Mai 13:58:47 CEST 2025
+# ------------------------------
+Status: Aktiv
+
+Zu                         Aktion      Von
+--                         ------      ---
+80,443/tcp                 ALLOW       Anywhere                  
+443/tcp                    ALLOW       Anywhere                  
+80/tcp                     ALLOW       Anywhere                  
+22/tcp                     ALLOW       Anywhere                  
+80                         ALLOW       Anywhere                  
+443                        ALLOW       Anywhere                  
+8443/tcp                   ALLOW       Anywhere                  
+9090/tcp                   ALLOW       Anywhere                  
+5670/tcp                   ALLOW       Anywhere                  
+80,443/tcp (v6)            ALLOW       Anywhere (v6)             
+443/tcp (v6)               ALLOW       Anywhere (v6)             
+80/tcp (v6)                ALLOW       Anywhere (v6)             
+22/tcp (v6)                ALLOW       Anywhere (v6)             
+80 (v6)                    ALLOW       Anywhere (v6)             
+443 (v6)                   ALLOW       Anywhere (v6)             
+8443/tcp (v6)              ALLOW       Anywhere (v6)             
+9090/tcp (v6)              ALLOW       Anywhere (v6)             
+5670/tcp (v6)              ALLOW       Anywhere (v6)             
+

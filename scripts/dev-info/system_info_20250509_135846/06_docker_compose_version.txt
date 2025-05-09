@@ -1,0 +1,5 @@
+# Befehl: docker-compose --version
+# Ausgeführt am: Fr 9. Mai 13:58:46 CEST 2025
+# ------------------------------
+bash: Zeile 1: docker-compose: Befehl nicht gefunden
+Fehler beim Ausführen von: docker-compose --version

@@ -1,0 +1,4 @@
+# Befehl: cat docker-mcp-servers/docker-compose.yml 2>/dev/null || echo 'Datei nicht gefunden'
+# Ausgeführt am: Fr 9. Mai 13:58:46 CEST 2025
+# ------------------------------
+Datei nicht gefunden

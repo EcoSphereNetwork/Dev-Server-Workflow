@@ -1,0 +1,18 @@
+# Befehl: curl -I http://localhost:8080 2>/dev/null || echo 'curl nicht installiert oder Port nicht erreichbar'
+# Ausgeführt am: Fr 9. Mai 13:58:49 CEST 2025
+# ------------------------------
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Access-Control-Allow-Origin: *
+X-Request-Id: selfhosted:http:615fb9a2-5ff1-4463-b1f2-0d08d27d8dbb
+Accept-Ranges: bytes
+Cache-Control: public, max-age=0
+Last-Modified: Wed, 30 Apr 2025 03:45:07 GMT
+ETag: W/"b1f-19684cc59b8"
+Content-Type: text/html; charset=utf-8
+Content-Length: 2847
+Server-Timing: affine-server;dur=1.35683
+Date: Fri, 09 May 2025 11:58:49 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+

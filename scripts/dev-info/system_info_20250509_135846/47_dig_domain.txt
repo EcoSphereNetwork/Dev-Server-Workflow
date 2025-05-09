@@ -1,0 +1,23 @@
+# Befehl: dig ecospherenet.work || echo 'dig nicht installiert'
+# Ausgeführt am: Fr 9. Mai 13:58:48 CEST 2025
+# ------------------------------
+
+; <<>> DiG 9.18.30-0ubuntu0.22.04.2-Ubuntu <<>> ecospherenet.work
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 14653
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 65494
+;; QUESTION SECTION:
+;ecospherenet.work.		IN	A
+
+;; ANSWER SECTION:
+ecospherenet.work.	3600	IN	A	95.91.89.145
+
+;; Query time: 25 msec
+;; SERVER: 127.0.0.53#53(127.0.0.53) (UDP)
+;; WHEN: Fri May 09 13:58:48 CEST 2025
+;; MSG SIZE  rcvd: 62
+

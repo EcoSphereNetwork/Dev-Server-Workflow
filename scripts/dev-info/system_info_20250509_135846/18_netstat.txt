@@ -1,0 +1,44 @@
+# Befehl: sudo netstat -tulpn 2>/dev/null || echo 'netstat nicht installiert'
+# Ausgeführt am: Fr 9. Mai 13:58:47 CEST 2025
+# ------------------------------
+Aktive Internetverbindungen (Nur Server)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
+tcp        0      0 0.0.0.0:3008            0.0.0.0:*               LISTEN      340549/docker-proxy 
+tcp        0      0 0.0.0.0:3000            0.0.0.0:*               LISTEN      28403/docker-proxy  
+tcp        0      0 0.0.0.0:3004            0.0.0.0:*               LISTEN      340502/docker-proxy 
+tcp        0      0 0.0.0.0:3007            0.0.0.0:*               LISTEN      340427/docker-proxy 
+tcp        0      0 0.0.0.0:25              0.0.0.0:*               LISTEN      2985/master         
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      920/sshd: /usr/sbin 
+tcp        0      0 0.0.0.0:8080            0.0.0.0:*               LISTEN      7653/docker-proxy   
+tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      497/systemd-resolve 
+tcp        0      0 0.0.0.0:5678            0.0.0.0:*               LISTEN      75589/docker-proxy  
+tcp        0      0 0.0.0.0:5670            0.0.0.0:*               LISTEN      109326/docker-proxy 
+tcp        0      0 0.0.0.0:9443            0.0.0.0:*               LISTEN      4300/docker-proxy   
+tcp        0      0 0.0.0.0:8929            0.0.0.0:*               LISTEN      3177/docker-proxy   
+tcp        0      0 0.0.0.0:9090            0.0.0.0:*               LISTEN      4285/docker-proxy   
+tcp        0      0 127.0.0.1:6000          0.0.0.0:*               LISTEN      870/puma 6.6.0 (tcp 
+tcp        0      0 127.0.0.1:631           0.0.0.0:*               LISTEN      882/cupsd           
+tcp        0      0 127.0.0.1:45432         0.0.0.0:*               LISTEN      981/postgres        
+tcp        0      0 127.0.0.1:11211         0.0.0.0:*               LISTEN      883/memcached       
+tcp6       0      0 :::3008                 :::*                    LISTEN      340557/docker-proxy 
+tcp6       0      0 :::3000                 :::*                    LISTEN      28410/docker-proxy  
+tcp6       0      0 :::3004                 :::*                    LISTEN      340514/docker-proxy 
+tcp6       0      0 :::3007                 :::*                    LISTEN      340434/docker-proxy 
+tcp6       0      0 :::80                   :::*                    LISTEN      106609/apache2      
+tcp6       0      0 :::25                   :::*                    LISTEN      2985/master         
+tcp6       0      0 :::22                   :::*                    LISTEN      920/sshd: /usr/sbin 
+tcp6       0      0 :::443                  :::*                    LISTEN      106609/apache2      
+tcp6       0      0 :::8080                 :::*                    LISTEN      7660/docker-proxy   
+tcp6       0      0 ::1:631                 :::*                    LISTEN      882/cupsd           
+tcp6       0      0 :::5678                 :::*                    LISTEN      75596/docker-proxy  
+tcp6       0      0 :::9443                 :::*                    LISTEN      4311/docker-proxy   
+tcp6       0      0 :::8443                 :::*                    LISTEN      106609/apache2      
+tcp6       0      0 :::8929                 :::*                    LISTEN      3185/docker-proxy   
+tcp6       0      0 :::9090                 :::*                    LISTEN      4293/docker-proxy   
+udp        0      0 0.0.0.0:5353            0.0.0.0:*                           724/avahi-daemon: r 
+udp        0      0 0.0.0.0:55579           0.0.0.0:*                           724/avahi-daemon: r 
+udp        0      0 127.0.0.53:53           0.0.0.0:*                           497/systemd-resolve 
+udp6       0      0 :::36675                :::*                                724/avahi-daemon: r 
+udp6       0      0 :::5353                 :::*                                724/avahi-daemon: r 
+udp6       0      0 :::48654                :::*                                27539/firefox       
+udp6       0      0 fe80::96c1:832b:4b4:546 :::*                                729/NetworkManager  

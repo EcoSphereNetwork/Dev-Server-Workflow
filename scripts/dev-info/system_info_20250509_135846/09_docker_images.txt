@@ -1,0 +1,31 @@
+# Befehl: docker images
+# Ausgeführt am: Fr 9. Mai 13:58:46 CEST 2025
+# ------------------------------
+REPOSITORY                                    TAG             IMAGE ID       CREATED        SIZE
+mcp/desktop-commander                         latest          538ede5947d5   21 hours ago   323MB
+docker.all-hands.dev/all-hands-ai/openhands   0.36            9a68113293d7   3 days ago     2.65GB
+docker.all-hands.dev/all-hands-ai/runtime     0.36-nikolaik   f96763f10b4e   3 days ago     6.76GB
+mcp/wikipedia-mcp                             latest          1598bde9669d   4 days ago     153MB
+appflowyinc/appflowy_cloud                    latest          b4015826766f   4 days ago     136MB
+appflowyinc/appflowy_worker                   latest          db453c571662   4 days ago     110MB
+appflowyinc/admin_frontend                    latest          017a98d4e3a1   4 days ago     145MB
+appflowyinc/gotrue                            latest          10b5f9e664ef   4 days ago     51.5MB
+dev-server-workflow-setup                     latest          8e64365b9d11   5 days ago     227MB
+mcp/puppeteer                                 latest          7a03c923f7bc   6 days ago     1.3GB
+mcp/basic-memory                              latest          c47f24521ffb   6 days ago     296MB
+mcp/github-chat                               latest          39f818dc36e8   7 days ago     193MB
+ghcr.io/toeverything/affine-graphql           stable          8da1b1b059c6   9 days ago     1.13GB
+mcp/sequentialthinking                        latest          62479b53d450   9 days ago     164MB
+mcp/github                                    latest          a3f4e8c18ad9   9 days ago     175MB
+mcp/filesystem                                latest          a6a9129adb7e   9 days ago     168MB
+appflowyinc/appflowy_web                      latest          288cffc45afe   10 days ago    66.8MB
+n8nio/n8n                                     latest          60b16fa21a91   2 weeks ago    725MB
+redis                                         7-alpine        9a07b03a1871   2 weeks ago    41.4MB
+redis                                         latest          550dba118f97   2 weeks ago    117MB
+minio/minio                                   latest          9d668e47f1fc   2 weeks ago    183MB
+gitlab/gitlab-ce                              latest          3f416ff94400   2 weeks ago    3.71GB
+nginx                                         latest          a830707172e8   3 weeks ago    192MB
+pgvector/pgvector                             pg16            43134ce75479   2 months ago   443MB
+postgres                                      16              2698c2096ca7   2 months ago   436MB
+mcp/inspector                                 latest          bd1c2114ae3a   3 months ago   536MB
+appflowyinc/appflowy_ai                       latest          f8d9cd1f7c5d   6 months ago   1.03GB

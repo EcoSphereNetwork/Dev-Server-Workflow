@@ -1,0 +1,18 @@
+# Befehl: cat /etc/hosts
+# Ausgeführt am: Fr 9. Mai 13:58:48 CEST 2025
+# ------------------------------
+127.0.0.1	localhost
+127.0.1.1	server1
+192.168.0.250 n8n.ecospherenet.work
+127.0.0.1 n8n.localhost
+192.168.0.250 affine.ecospherenet.work
+192.168.0.250 openproject.ecospherenet.work
+192.168.0.250 gitlab.ecospherenet.work
+192.168.0.250 appflowy.ecospherenet.work
+
+# The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters

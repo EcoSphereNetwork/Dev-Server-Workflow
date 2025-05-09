@@ -1,0 +1,13 @@
+# Befehl: ip route
+# Ausgeführt am: Fr 9. Mai 13:58:46 CEST 2025
+# ------------------------------
+default via 192.168.0.1 dev enp5s0 proto dhcp metric 100 
+169.254.0.0/16 dev enp5s0 scope link metric 1000 
+172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 
+172.18.0.0/16 dev br-1b8897093489 proto kernel scope link src 172.18.0.1 linkdown 
+172.19.0.0/16 dev br-29034126df03 proto kernel scope link src 172.19.0.1 
+172.20.0.0/16 dev br-4af8b79d5559 proto kernel scope link src 172.20.0.1 
+172.21.0.0/16 dev br-b01b32622252 proto kernel scope link src 172.21.0.1 
+172.22.0.0/16 dev br-5d77149974e5 proto kernel scope link src 172.22.0.1 
+172.23.0.0/16 dev br-8c2ea115a8da proto kernel scope link src 172.23.0.1 
+192.168.0.0/24 dev enp5s0 proto kernel scope link src 192.168.0.250 metric 100 

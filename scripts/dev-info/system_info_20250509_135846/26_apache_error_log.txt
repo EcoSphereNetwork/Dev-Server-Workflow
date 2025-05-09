@@ -1,0 +1,53 @@
+# Befehl: sudo tail -n 50 /var/log/apache2/error.log 2>/dev/null || echo 'Apache-Fehlerlog nicht gefunden'
+# Ausgeführt am: Fr 9. Mai 13:58:47 CEST 2025
+# ------------------------------
+[Fri May 09 09:32:49.946823 2025] [socache_shmcb:debug] [pid 106609:tid 128300310529920] mod_socache_shmcb.c(473): AH00828: subcache_data_size = 13864
+[Fri May 09 09:32:49.946825 2025] [socache_shmcb:debug] [pid 106609:tid 128300310529920] mod_socache_shmcb.c(475): AH00829: index_num = 88
+[Fri May 09 09:32:49.946875 2025] [socache_shmcb:info] [pid 106609:tid 128300310529920] AH00830: Shared memory socache initialised
+[Fri May 09 09:32:49.946877 2025] [ssl:info] [pid 106609:tid 128300310529920] AH01887: Init: Initializing (virtual) servers for SSL
+[Fri May 09 09:32:49.946879 2025] [ssl:info] [pid 106609:tid 128300310529920] AH01914: Configuring server n8n.ecospherenet.work:443 for SSL protocol
+[Fri May 09 09:32:49.947430 2025] [ssl:debug] [pid 106609:tid 128300310529920] ssl_engine_init.c(528): AH01893: Configuring TLS extension handling
+[Fri May 09 09:32:49.948885 2025] [ssl:debug] [pid 106609:tid 128300310529920] ssl_util_ssl.c(451): AH02412: [n8n.ecospherenet.work:443] Cert matches for name 'n8n.ecospherenet.work' [subject: CN=n8n.ecospherenet.work / issuer: CN=R11,O=Let's Encrypt,C=US / serial: 057FE1C883F86C2667243BEB5354403F15C5 / notbefore: May  9 05:38:27 2025 GMT / notafter: Aug  7 05:38:26 2025 GMT]
+[Fri May 09 09:32:49.948893 2025] [ssl:info] [pid 106609:tid 128300310529920] AH02568: Certificate and private key n8n.ecospherenet.work:443:0 configured from /etc/letsencrypt/live/n8n.ecospherenet.work/fullchain.pem and /etc/letsencrypt/live/n8n.ecospherenet.work/privkey.pem
+[Fri May 09 09:32:49.951481 2025] [ssl:info] [pid 106609:tid 128300310529920] AH01914: Configuring server gitlab.ecospherenet.work:443 for SSL protocol
+[Fri May 09 09:32:49.951634 2025] [ssl:debug] [pid 106609:tid 128300310529920] ssl_engine_init.c(528): AH01893: Configuring TLS extension handling
+[Fri May 09 09:32:49.952584 2025] [ssl:debug] [pid 106609:tid 128300310529920] ssl_util_ssl.c(451): AH02412: [gitlab.ecospherenet.work:443] Cert matches for name 'gitlab.ecospherenet.work' [subject: CN=gitlab.ecospherenet.work / issuer: CN=R11,O=Let's Encrypt,C=US / serial: 06E1C74D48C64306AF4D5BC055E94ABA896A / notbefore: May  4 11:34:03 2025 GMT / notafter: Aug  2 11:34:02 2025 GMT]
+[Fri May 09 09:32:49.952588 2025] [ssl:info] [pid 106609:tid 128300310529920] AH02568: Certificate and private key gitlab.ecospherenet.work:443:0 configured from /etc/letsencrypt/live/gitlab.ecospherenet.work/fullchain.pem and /etc/letsencrypt/live/gitlab.ecospherenet.work/privkey.pem
+[Fri May 09 09:32:49.954949 2025] [ssl:info] [pid 106609:tid 128300310529920] AH01876: mod_ssl/2.4.52 compiled against Server: Apache/2.4.52, Library: OpenSSL/3.0.2
+[Fri May 09 09:32:49.954995 2025] [watchdog:debug] [pid 106609:tid 128300310529920] mod_watchdog.c(445): AH010033: Watchdog: Running with WatchdogInterval 1000ms
+[Fri May 09 09:32:49.954997 2025] [watchdog:debug] [pid 106609:tid 128300310529920] mod_watchdog.c(454): AH02974: Watchdog: found parent providers.
+[Fri May 09 09:32:49.954998 2025] [watchdog:debug] [pid 106609:tid 128300310529920] mod_watchdog.c(500): AH02977: Watchdog: found child providers.
+[Fri May 09 09:32:49.955000 2025] [watchdog:debug] [pid 106609:tid 128300310529920] mod_watchdog.c(508): AH02978: Watchdog: Looking for child (_default_).
+[Fri May 09 09:32:49.955001 2025] [watchdog:debug] [pid 106609:tid 128300310529920] mod_watchdog.c(508): AH02978: Watchdog: Looking for child (_singleton_).
+[Fri May 09 09:32:49.956326 2025] [mpm_event:notice] [pid 106609:tid 128300310529920] AH00489: Apache/2.4.52 (Ubuntu) SVN/1.14.1 OpenSSL/3.0.2 mod_perl/2.0.12 Perl/v5.34.0 configured -- resuming normal operations
+[Fri May 09 09:32:49.956332 2025] [mpm_event:info] [pid 106609:tid 128300310529920] AH00490: Server built: 2025-04-03T09:05:48
+[Fri May 09 09:32:49.956336 2025] [core:notice] [pid 106609:tid 128300310529920] AH00094: Command line: '/usr/sbin/apache2'
+[Fri May 09 09:32:49.956337 2025] [core:debug] [pid 106609:tid 128300310529920] log.c(1570): AH02639: Using SO_REUSEPORT: yes (1)
+[Fri May 09 09:32:49.957461 2025] [watchdog:debug] [pid 122515:tid 128300310529920] mod_watchdog.c(559): AH02980: Watchdog: nothing configured?
+[Fri May 09 09:32:49.957505 2025] [proxy:debug] [pid 122515:tid 128300310529920] proxy_util.c(2122): AH00925: initializing worker proxy:reverse shared
+[Fri May 09 09:32:49.957513 2025] [proxy:debug] [pid 122515:tid 128300310529920] proxy_util.c(2182): AH00927: initializing worker proxy:reverse local
+[Fri May 09 09:32:49.957525 2025] [proxy:debug] [pid 122515:tid 128300310529920] proxy_util.c(2213): AH00930: initialized pool in child 122515 for (*) min=0 max=25 smax=25
+[Fri May 09 09:32:49.957549 2025] [proxy:debug] [pid 122515:tid 128300310529920] proxy_util.c(2122): AH00925: initializing worker http://localhost:5670/ shared
+[Fri May 09 09:32:49.957551 2025] [proxy:debug] [pid 122515:tid 128300310529920] proxy_util.c(2182): AH00927: initializing worker http://localhost:5670/ local
+[Fri May 09 09:32:49.957557 2025] [proxy:debug] [pid 122515:tid 128300310529920] proxy_util.c(2213): AH00930: initialized pool in child 122515 for (localhost) min=0 max=25 smax=25
+[Fri May 09 09:32:49.957558 2025] [proxy:debug] [pid 122515:tid 128300310529920] proxy_util.c(2122): AH00925: initializing worker http://127.0.0.1:8080/ shared
+[Fri May 09 09:32:49.957560 2025] [proxy:debug] [pid 122515:tid 128300310529920] proxy_util.c(2182): AH00927: initializing worker http://127.0.0.1:8080/ local
+[Fri May 09 09:32:49.957572 2025] [proxy:debug] [pid 122515:tid 128300310529920] proxy_util.c(2213): AH00930: initialized pool in child 122515 for (127.0.0.1) min=0 max=25 smax=25
+[Fri May 09 09:32:49.957585 2025] [proxy:debug] [pid 122515:tid 128300310529920] proxy_util.c(2122): AH00925: initializing worker http://127.0.0.1:9090/ shared
+[Fri May 09 09:32:49.957588 2025] [proxy:debug] [pid 122515:tid 128300310529920] proxy_util.c(2182): AH00927: initializing worker http://127.0.0.1:9090/ local
+[Fri May 09 09:32:49.957594 2025] [proxy:debug] [pid 122515:tid 128300310529920] proxy_util.c(2213): AH00930: initialized pool in child 122515 for (127.0.0.1) min=0 max=25 smax=25
+[Fri May 09 09:32:49.957682 2025] [mpm_event:debug] [pid 122515:tid 128300284376640] event.c(2373): AH02471: start_threads: Using epoll (wakeable)
+[Fri May 09 09:32:49.957708 2025] [watchdog:debug] [pid 122516:tid 128300310529920] mod_watchdog.c(559): AH02980: Watchdog: nothing configured?
+[Fri May 09 09:32:49.957733 2025] [proxy:debug] [pid 122516:tid 128300310529920] proxy_util.c(2122): AH00925: initializing worker proxy:reverse shared
+[Fri May 09 09:32:49.957737 2025] [proxy:debug] [pid 122516:tid 128300310529920] proxy_util.c(2182): AH00927: initializing worker proxy:reverse local
+[Fri May 09 09:32:49.957747 2025] [proxy:debug] [pid 122516:tid 128300310529920] proxy_util.c(2213): AH00930: initialized pool in child 122516 for (*) min=0 max=25 smax=25
+[Fri May 09 09:32:49.957770 2025] [proxy:debug] [pid 122516:tid 128300310529920] proxy_util.c(2122): AH00925: initializing worker http://localhost:5670/ shared
+[Fri May 09 09:32:49.957772 2025] [proxy:debug] [pid 122516:tid 128300310529920] proxy_util.c(2182): AH00927: initializing worker http://localhost:5670/ local
+[Fri May 09 09:32:49.957777 2025] [proxy:debug] [pid 122516:tid 128300310529920] proxy_util.c(2213): AH00930: initialized pool in child 122516 for (localhost) min=0 max=25 smax=25
+[Fri May 09 09:32:49.957779 2025] [proxy:debug] [pid 122516:tid 128300310529920] proxy_util.c(2122): AH00925: initializing worker http://127.0.0.1:8080/ shared
+[Fri May 09 09:32:49.957781 2025] [proxy:debug] [pid 122516:tid 128300310529920] proxy_util.c(2182): AH00927: initializing worker http://127.0.0.1:8080/ local
+[Fri May 09 09:32:49.957786 2025] [proxy:debug] [pid 122516:tid 128300310529920] proxy_util.c(2213): AH00930: initialized pool in child 122516 for (127.0.0.1) min=0 max=25 smax=25
+[Fri May 09 09:32:49.957800 2025] [proxy:debug] [pid 122516:tid 128300310529920] proxy_util.c(2122): AH00925: initializing worker http://127.0.0.1:9090/ shared
+[Fri May 09 09:32:49.957802 2025] [proxy:debug] [pid 122516:tid 128300310529920] proxy_util.c(2182): AH00927: initializing worker http://127.0.0.1:9090/ local
+[Fri May 09 09:32:49.957809 2025] [proxy:debug] [pid 122516:tid 128300310529920] proxy_util.c(2213): AH00930: initialized pool in child 122516 for (127.0.0.1) min=0 max=25 smax=25
+[Fri May 09 09:32:49.957891 2025] [mpm_event:debug] [pid 122516:tid 128300284376640] event.c(2373): AH02471: start_threads: Using epoll (wakeable)

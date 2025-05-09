@@ -1,0 +1,3 @@
+# Befehl: find . -name 'docker-compose*.yml' -type f | xargs cat 2>/dev/null || echo 'Keine Docker-Compose-Dateien gefunden'
+# Ausgeführt am: Fr 9. Mai 13:58:46 CEST 2025
+# ------------------------------

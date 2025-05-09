@@ -1,0 +1,13 @@
+# Befehl: docker network ls
+# Ausgeführt am: Fr 9. Mai 13:58:46 CEST 2025
+# ------------------------------
+NETWORK ID     NAME                              DRIVER    SCOPE
+29034126df03   affine_default                    bridge    local
+5d77149974e5   appflowy-cloud_default            bridge    local
+e944ae8cf1c2   bridge                            bridge    local
+4af8b79d5559   dev-server-workflow_n8n-network   bridge    local
+8c2ea115a8da   docker-mcp-servers_mcp-network    bridge    local
+1b8897093489   gitlab_default                    bridge    local
+6edd189b0a60   host                              host      local
+b01b32622252   n8n_default                       bridge    local
+9b77b056205f   none                              null      local

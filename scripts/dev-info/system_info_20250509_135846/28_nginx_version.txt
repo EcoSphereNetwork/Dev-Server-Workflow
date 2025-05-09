@@ -1,0 +1,5 @@
+# Befehl: which nginx 2>/dev/null && nginx -v || echo 'Nginx nicht installiert'
+# Ausgeführt am: Fr 9. Mai 13:58:47 CEST 2025
+# ------------------------------
+/usr/sbin/nginx
+nginx version: nginx/1.18.0 (Ubuntu)

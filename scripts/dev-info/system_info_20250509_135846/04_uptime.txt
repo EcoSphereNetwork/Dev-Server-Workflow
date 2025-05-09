@@ -1,0 +1,4 @@
+# Befehl: uptime
+# Ausgeführt am: Fr 9. Mai 13:58:46 CEST 2025
+# ------------------------------
+ 13:58:46 up  6:25,  2 users,  load average: 0,53, 0,67, 0,62

@@ -1,0 +1,31 @@
+# Befehl: df -h
+# Ausgeführt am: Fr 9. Mai 13:58:49 CEST 2025
+# ------------------------------
+Dateisystem    Größe Benutzt Verf. Verw% Eingehängt auf
+tmpfs           6,3G    4,1M  6,3G    1% /run
+/dev/nvme0n1p2  938G     49G  841G    6% /
+tmpfs            32G     16K   32G    1% /dev/shm
+tmpfs           5,0M    4,0K  5,0M    1% /run/lock
+efivarfs        192K     87K  101K   47% /sys/firmware/efi/efivars
+/dev/nvme0n1p1  511M    6,1M  505M    2% /boot/efi
+tmpfs           6,3G    1,7M  6,3G    1% /run/user/1000
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/ac2d96a509cacdb6db9c96de98169d54978708252e571583f38c18bf22a9e40c/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/74609ccd1d0cefce97cf06638cb149f519be745d5d861d4c6ff0222cec1a50e4/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/6ecdb80c1326078a35686a67acafe47adb28cd4d731ae9c7e40379b13e600225/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/e588eb3f0062d5c830f764f07a65bb707c99434431606d9dd550e54481dbbb33/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/14b70419d90b2e5455590f356c5827759c6316d05c30d7a6e07cc72f95831860/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/7f745ee20a77fae29a90bbcd78d8e18b6f61e594a075e415bc717981eae227ac/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/807d28e71f64d741c73638c49ac17450c09ef5993bf5b25b7bc910acef878faa/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/ab6891639b158d790bba3892b9759f5fbfa90b1a590604a1e34a9b9e64e7681f/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/902fb53f24253f61d45d80a618aa7f134ccd88476a9d153e079a7a5569ed09f2/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/d8da305271e4eeb85c3f7ab41ea9c5e71bc2c4e2e5f46f2638153776a70cef97/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/82b398aeb8c007d50b408be6f842645902ac04a6d3287a3791170d7223540c28/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/22d04b32f8277a77fcc77a0640a6c1a3c1b82286265fb3323f07d031365f6522/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/7b539788e75cf2bf97764130e2fd19d805735ab4c502c70acb5bfd4a0be07e92/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/525401727f4f2af241761d02f22ac95822db9c3567335521c14ac4a496e9ce3f/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/bc874e3ec773964e33cb78b5e9e448aeb01ae1558f87c8fe63fdeb4d8de32218/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/db2dc1619b5355ee4e0effdeea6ed4be12df6797d4ab9f7e1bca95004741bf84/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/1021d539a28528fbc0ff5bf5c52decb2ea031f2c4a82c9bd1756dfe545276297/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/a8e71319a02999e2deac2fbd6cb3e4409148301c6ff18a65f332c0487b4d7471/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/4214a9934c0ebdb3870dbcf2721f3e2a164f1493ea89e21a28f16fc975e51bc1/merged
+overlay         938G     49G  841G    6% /var/lib/docker/overlay2/3e264ffe8e9f431af2e5771ff09138b0a53b35429761e2866fe61fee3945c260/merged
