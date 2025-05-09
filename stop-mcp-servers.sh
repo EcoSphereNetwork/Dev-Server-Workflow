@@ -1,5 +1,5 @@
 #!/bin/bash
-# Skript zum Stoppen der MCP-Server
+# Verbessertes Skript zum Stoppen der MCP-Server mit besserer Fehlerbehandlung
 
 # Strikte Fehlerbehandlung aktivieren
 set -euo pipefail
@@ -7,30 +7,37 @@ set -euo pipefail
 # Basisverzeichnis
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Fehlerbehandlung einbinden
-if [[ -f "${BASE_DIR}/cli/error_handler.sh" ]]; then
-    source "${BASE_DIR}/cli/error_handler.sh"
-fi
-
-# Konfigurationsmanager einbinden
-if [[ -f "${BASE_DIR}/cli/config_manager.sh" ]]; then
-    source "${BASE_DIR}/cli/config_manager.sh"
-    # Alle Konfigurationen laden
-    if [[ "$(type -t load_all_configs)" == "function" ]]; then
-        load_all_configs
-    fi
-fi
-
 # Farben für die Ausgabe
-RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
+RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
+
+# Konfiguration
+LOG_DIR="/tmp/mcp-logs"
+MCP_SERVERS_DIR="${BASE_DIR%/*}/docker-mcp-servers"
 
 # Aktuelle Operation für Fehlerbehandlung
 CURRENT_OPERATION=""
 CURRENT_CONTAINER=""
+
+# Funktion zum Anzeigen von Nachrichten
+log() {
+    echo -e "${GREEN}[INFO]${NC} $1"
+}
+
+warn() {
+    echo -e "${YELLOW}[WARN]${NC} $1"
+}
+
+error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
 
 # Funktion zum Anzeigen von Hilfe
 show_help() {
@@ -43,6 +50,7 @@ show_help() {
     echo "Optionen:"
     echo "  -h, --help                Zeigt diese Hilfe an"
     echo "  -a, --all                 Alle MCP-Server stoppen"
+    echo "  --docker                  Nur Docker-basierte MCP-Server stoppen"
     echo "  --n8n                     n8n MCP-Server stoppen"
     echo "  --openhands               OpenHands MCP-Server stoppen"
     echo "  --generator               MCP-Server-Generator stoppen"
@@ -52,47 +60,249 @@ show_help() {
     echo "  $0 --n8n --openhands"
 }
 
+# Funktion zum Stoppen der Docker Compose MCP-Server
+stop_docker_compose_servers() {
+    info "Stoppe Docker Compose MCP-Server..."
+    
+    # Überprüfe, ob das Docker-Compose-File existiert
+    if [ ! -f "$MCP_SERVERS_DIR/docker-compose.yml" ]; then
+        warn "Docker-Compose-Datei nicht gefunden: $MCP_SERVERS_DIR/docker-compose.yml"
+        warn "Es sind möglicherweise keine Docker Compose MCP-Server gestartet."
+        return 0
+    fi
+    
+    # Setze aktuelle Operation
+    CURRENT_OPERATION="docker_compose_down"
+    CURRENT_CONTAINER="all"
+    
+    # Wechsle in das MCP-Servers-Verzeichnis und stoppe die Container
+    cd "$MCP_SERVERS_DIR"
+    
+    # Verwende docker-compose oder docker compose, je nachdem, was verfügbar ist
+    if command -v docker-compose &> /dev/null; then
+        log "Verwende docker-compose..."
+        docker-compose down
+    else
+        log "Verwende docker compose..."
+        docker compose down
+    fi
+    
+    log "Docker Compose MCP-Server erfolgreich gestoppt."
+    return 0
+}
+
 # Funktion zum Stoppen des n8n MCP-Servers
 stop_n8n_mcp_server() {
-    echo -e "${BLUE}Stoppe n8n MCP-Server...${NC}"
+    info "Stoppe n8n MCP-Server..."
     
-    if [ -f n8n-mcp-server.pid ]; then
-        PID=$(cat n8n-mcp-server.pid)
+    local pid_file="$LOG_DIR/n8n_mcp_server.pid"
+    if [ -f "$pid_file" ]; then
+        local pid
+        pid=$(cat "$pid_file")
         
-        if ps -p $PID > /dev/null; then
-            kill $PID
-            echo -e "${GREEN}n8n MCP-Server gestoppt (PID: $PID)${NC}"
+        if ps -p "$pid" > /dev/null 2>&1; then
+            log "Beende Prozess mit PID $pid..."
+            kill "$pid"
+            sleep 1
+            
+            # Überprüfe, ob der Prozess beendet wurde
+            if ps -p "$pid" > /dev/null 2>&1; then
+                warn "Prozess reagiert nicht, verwende SIGKILL..."
+                kill -9 "$pid"
+            fi
+            
+            log "n8n MCP-Server gestoppt."
         else
-            echo -e "${YELLOW}n8n MCP-Server läuft nicht (PID: $PID)${NC}"
+            warn "n8n MCP-Server läuft nicht (PID: $pid)."
         fi
         
-        rm n8n-mcp-server.pid
+        rm -f "$pid_file"
     else
-        echo -e "${YELLOW}n8n MCP-Server PID-Datei nicht gefunden${NC}"
+        warn "n8n MCP-Server PID-Datei nicht gefunden: $pid_file"
+        
+        # Suche nach laufenden Python-Prozessen, die n8n_mcp_server.py ausführen
+        local pids
+        pids=$(pgrep -f "python3.*n8n[_-]mcp[_-]server\.py" || true)
+        
+        if [ -n "$pids" ]; then
+            log "Gefundene n8n MCP-Server-Prozesse: $pids"
+            
+            for pid in $pids; do
+                log "Beende Prozess mit PID $pid..."
+                kill "$pid" 2>/dev/null || true
+            done
+            
+            log "n8n MCP-Server-Prozesse beendet."
+        else
+            warn "Keine laufenden n8n MCP-Server-Prozesse gefunden."
+        fi
     fi
+    
+    return 0
 }
 
 # Funktion zum Stoppen des OpenHands MCP-Servers
 stop_openhands_mcp_server() {
-    echo -e "${BLUE}Stoppe OpenHands MCP-Server...${NC}"
+    info "Stoppe OpenHands MCP-Server..."
     
-    if [ -f openhands-mcp-server.pid ]; then
-        PID=$(cat openhands-mcp-server.pid)
+    local pid_file="$LOG_DIR/openhands_mcp_server.pid"
+    if [ -f "$pid_file" ]; then
+        local pid
+        pid=$(cat "$pid_file")
         
-        if ps -p $PID > /dev/null; then
-            kill $PID
-            echo -e "${GREEN}OpenHands MCP-Server gestoppt (PID: $PID)${NC}"
+        if ps -p "$pid" > /dev/null 2>&1; then
+            log "Beende Prozess mit PID $pid..."
+            kill "$pid"
+            sleep 1
+            
+            # Überprüfe, ob der Prozess beendet wurde
+            if ps -p "$pid" > /dev/null 2>&1; then
+                warn "Prozess reagiert nicht, verwende SIGKILL..."
+                kill -9 "$pid"
+            fi
+            
+            log "OpenHands MCP-Server gestoppt."
         else
-            echo -e "${YELLOW}OpenHands MCP-Server läuft nicht (PID: $PID)${NC}"
+            warn "OpenHands MCP-Server läuft nicht (PID: $pid)."
         fi
         
-        rm openhands-mcp-server.pid
+        rm -f "$pid_file"
     else
-        echo -e "${YELLOW}OpenHands MCP-Server PID-Datei nicht gefunden${NC}"
+        warn "OpenHands MCP-Server PID-Datei nicht gefunden: $pid_file"
+        
+        # Suche nach laufenden Python-Prozessen, die openhands_mcp_server.py ausführen
+        local pids
+        pids=$(pgrep -f "python3.*openhands[_-]mcp[_-]server\.py" || true)
+        
+        if [ -n "$pids" ]; then
+            log "Gefundene OpenHands MCP-Server-Prozesse: $pids"
+            
+            for pid in $pids; do
+                log "Beende Prozess mit PID $pid..."
+                kill "$pid" 2>/dev/null || true
+            done
+            
+            log "OpenHands MCP-Server-Prozesse beendet."
+        else
+            warn "Keine laufenden OpenHands MCP-Server-Prozesse gefunden."
+        fi
     fi
+    
+    return 0
+}
+
+# Funktion zum Stoppen des MCP-Server-Generators
+stop_generator_mcp_server() {
+    info "Stoppe MCP-Server-Generator..."
+    
+    local pid_file="$LOG_DIR/generator_mcp_server.pid"
+    if [ -f "$pid_file" ]; then
+        local pid
+        pid=$(cat "$pid_file")
+        
+        if ps -p "$pid" > /dev/null 2>&1; then
+            log "Beende Prozess mit PID $pid..."
+            kill "$pid"
+            sleep 1
+            
+            # Überprüfe, ob der Prozess beendet wurde
+            if ps -p "$pid" > /dev/null 2>&1; then
+                warn "Prozess reagiert nicht, verwende SIGKILL..."
+                kill -9 "$pid"
+            fi
+            
+            log "MCP-Server-Generator gestoppt."
+        else
+            warn "MCP-Server-Generator läuft nicht (PID: $pid)."
+        fi
+        
+        rm -f "$pid_file"
+    else
+        warn "MCP-Server-Generator PID-Datei nicht gefunden: $pid_file"
+        
+        # Suche nach laufenden Python-Prozessen, die generator_mcp_server.py ausführen
+        local pids
+        pids=$(pgrep -f "python3.*generator[_-]mcp[_-]server\.py" || true)
+        
+        if [ -n "$pids" ]; then
+            log "Gefundene MCP-Server-Generator-Prozesse: $pids"
+            
+            for pid in $pids; do
+                log "Beende Prozess mit PID $pid..."
+                kill "$pid" 2>/dev/null || true
+            done
+            
+            log "MCP-Server-Generator-Prozesse beendet."
+        else
+            warn "Keine laufenden MCP-Server-Generator-Prozesse gefunden."
+        fi
+    fi
+    
+    # Stoppe auch alle generierten Server
+    local generator_servers_dir="${BASE_DIR%/*}/generated_servers"
+    if [ -d "$generator_servers_dir" ]; then
+        info "Stoppe generierte MCP-Server..."
+        
+        for pid_file in "$generator_servers_dir"/*/server.pid; do
+            if [ -f "$pid_file" ]; then
+                local pid
+                pid=$(cat "$pid_file")
+                local server_dir
+                server_dir=$(dirname "$pid_file")
+                local server_id
+                server_id=$(basename "$server_dir")
+                
+                if ps -p "$pid" > /dev/null 2>&1; then
+                    log "Beende generierten Server $server_id (PID: $pid)..."
+                    kill "$pid" 2>/dev/null || true
+                    
+                    # Aktualisiere den Status in der Konfigurationsdatei
+                    local config_file="$server_dir/config.json"
+                    if [ -f "$config_file" ]; then
+                        sed -i 's/"status": "running"/"status": "stopped"/g' "$config_file"
+                    fi
+                else
+                    warn "Generierter Server $server_id läuft nicht (PID: $pid)."
+                fi
+                
+                rm -f "$pid_file"
+            fi
+        done
+    fi
+    
+    return 0
+}
+
+# Funktion zum Stoppen aller MCP-Server-Prozesse
+stop_all_mcp_processes() {
+    info "Stoppe alle MCP-Server-Prozesse..."
+    
+    # Suche nach allen Python-Prozessen, die MCP-Server ausführen
+    local pids
+    pids=$(pgrep -f "python3.*mcp[_-]server\.py" || true)
+    
+    if [ -n "$pids" ]; then
+        log "Gefundene MCP-Server-Prozesse: $pids"
+        
+        for pid in $pids; do
+            log "Beende Prozess mit PID $pid..."
+            kill "$pid" 2>/dev/null || true
+        done
+        
+        log "Alle MCP-Server-Prozesse beendet."
+    else
+        warn "Keine laufenden MCP-Server-Prozesse gefunden."
+    fi
+    
+    # Bereinige PID-Dateien
+    rm -f "$LOG_DIR"/*.pid
+    
+    return 0
 }
 
 # Standardwerte
+STOP_ALL=false
+STOP_DOCKER=false
 STOP_N8N=false
 STOP_OPENHANDS=false
 STOP_GENERATOR=false
@@ -105,9 +315,11 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         -a|--all)
-            STOP_N8N=true
-            STOP_OPENHANDS=true
-            STOP_GENERATOR=true
+            STOP_ALL=true
+            shift
+            ;;
+        --docker)
+            STOP_DOCKER=true
             shift
             ;;
         --n8n)
@@ -123,74 +335,20 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         *)
-            echo -e "${RED}Fehler: Unbekannte Option $1${NC}"
+            error "Unbekannte Option: $1"
             show_help
             exit 1
             ;;
     esac
 done
 
-# Überprüfe, ob mindestens ein Server gestoppt werden soll
-if [ "$STOP_N8N" = false ] && [ "$STOP_OPENHANDS" = false ] && [ "$STOP_GENERATOR" = false ]; then
-    echo -e "${YELLOW}Warnung: Kein Server zum Stoppen angegeben${NC}"
-    echo "Bitte geben Sie mindestens einen Server mit --n8n, --openhands, --generator oder --all an"
-    show_help
-    exit 1
-fi
-
-# Funktion zum Stoppen des MCP-Server-Generators
-stop_generator_mcp_server() {
-    echo -e "${BLUE}Stoppe MCP-Server-Generator...${NC}"
-    
-    if [ -f generator-mcp-server.pid ]; then
-        PID=$(cat generator-mcp-server.pid)
-        
-        if ps -p $PID > /dev/null; then
-            kill $PID
-            echo -e "${GREEN}MCP-Server-Generator gestoppt (PID: $PID)${NC}"
-        else
-            echo -e "${YELLOW}MCP-Server-Generator läuft nicht (PID: $PID)${NC}"
-        fi
-        
-        rm generator-mcp-server.pid
-    else
-        echo -e "${YELLOW}MCP-Server-Generator PID-Datei nicht gefunden${NC}"
-    fi
-    
-    # Stoppe auch alle generierten Server
-    if [ -d "generated_servers" ]; then
-        echo -e "${BLUE}Stoppe generierte MCP-Server...${NC}"
-        for pid_file in generated_servers/*/server.pid; do
-            if [ -f "$pid_file" ]; then
-                PID=$(cat "$pid_file")
-                SERVER_DIR=$(dirname "$pid_file")
-                SERVER_ID=$(basename "$SERVER_DIR")
-                
-                if ps -p $PID > /dev/null; then
-                    kill $PID
-                    echo -e "${GREEN}Generierter MCP-Server $SERVER_ID gestoppt (PID: $PID)${NC}"
-                else
-                    echo -e "${YELLOW}Generierter MCP-Server $SERVER_ID läuft nicht (PID: $PID)${NC}"
-                fi
-                
-                rm "$pid_file"
-                
-                # Aktualisiere den Status in der Konfigurationsdatei
-                CONFIG_FILE="$SERVER_DIR/config.json"
-                if [ -f "$CONFIG_FILE" ]; then
-                    # Verwende temporäre Datei für die Aktualisierung
-                    TMP_FILE="$SERVER_DIR/config.tmp.json"
-                    cat "$CONFIG_FILE" | sed 's/"status": "running"/"status": "stopped"/g' > "$TMP_FILE"
-                    mv "$TMP_FILE" "$CONFIG_FILE"
-                fi
-            fi
-        done
-    fi
-}
-
-# Fehlerbehandlung einrichten
-if [[ "$(type -t handle_error)" == "function" ]]; then
-    trap 'handle_error $? $LINENO "$BASH_COMMAND"' ERR
+# Wenn keine spezifischen Server ausgewählt wurden und nicht alle gestoppt werden sollen,
+# stoppe standardmäßig die MCP-Server mit Docker Compose
+if [ "$STOP_ALL" = false ] && [ "$STOP_DOCKER" = false ] && [ "$STOP_N8N" = false ] && [ "$STOP_OPENHANDS" = false ] && [ "$STOP_GENERATOR" = false ]; then
+    # Setze Standard auf Docker Compose MCP-Server
+    info "Keine spezifischen Server ausgewählt. Stoppe die MCP-Server mit Docker Compose..."
+    stop_docker_compose_servers
+    exit $?
 fi
 
 # Hauptfunktion
@@ -198,44 +356,64 @@ main() {
     # Setze aktuelle Operation
     CURRENT_OPERATION="stop_mcp_servers"
     
-    # Stoppe die Server
-    if [ "$STOP_N8N" = true ]; then
-        CURRENT_OPERATION="stop_n8n_mcp_server"
-        CURRENT_CONTAINER="n8n-mcp-server"
+    # Stoppe entsprechende Server
+    if [ "$STOP_ALL" = true ]; then
+        info "Stoppe alle MCP-Server..."
+        
+        # Stoppe zuerst die Docker Compose MCP-Server
+        stop_docker_compose_servers
+        
+        # Stoppe dann die anderen Server
         stop_n8n_mcp_server
-    fi
-    
-    if [ "$STOP_OPENHANDS" = true ]; then
-        CURRENT_OPERATION="stop_openhands_mcp_server"
-        CURRENT_CONTAINER="openhands-mcp-server"
         stop_openhands_mcp_server
-    fi
-    
-    if [ "$STOP_GENERATOR" = true ]; then
-        CURRENT_OPERATION="stop_generator_mcp_server"
-        CURRENT_CONTAINER="generator-mcp-server"
         stop_generator_mcp_server
+        
+        # Zum Schluss stoppe alle übrigen MCP-Server-Prozesse
+        stop_all_mcp_processes
+    else
+        # Stoppe nur die ausgewählten Server
+        if [ "$STOP_DOCKER" = true ]; then
+            stop_docker_compose_servers
+        fi
+        
+        if [ "$STOP_N8N" = true ]; then
+            stop_n8n_mcp_server
+        fi
+        
+        if [ "$STOP_OPENHANDS" = true ]; then
+            stop_openhands_mcp_server
+        fi
+        
+        if [ "$STOP_GENERATOR" = true ]; then
+            stop_generator_mcp_server
+        fi
     fi
     
-    # Wenn keine Server ausgewählt wurden, stoppe alle
-    if [ "$STOP_N8N" = false ] && [ "$STOP_OPENHANDS" = false ] && [ "$STOP_GENERATOR" = false ]; then
-        echo -e "${YELLOW}Keine Server ausgewählt. Stoppe alle Server...${NC}"
-        
-        CURRENT_OPERATION="stop_n8n_mcp_server"
-        CURRENT_CONTAINER="n8n-mcp-server"
-        stop_n8n_mcp_server
-        
-        CURRENT_OPERATION="stop_openhands_mcp_server"
-        CURRENT_CONTAINER="openhands-mcp-server"
-        stop_openhands_mcp_server
-        
-        CURRENT_OPERATION="stop_generator_mcp_server"
-        CURRENT_CONTAINER="generator-mcp-server"
-        stop_generator_mcp_server
-    fi
-    
-    echo -e "${GREEN}Alle Server gestoppt${NC}"
+    info "MCP-Server-Stopp abgeschlossen."
 }
+
+# Fehlerbehandlung für unerwartete Fehler
+handle_error() {
+    local exit_code=$1
+    local line_number=$2
+    local command=$3
+    
+    error "Fehler in Zeile $line_number mit Exit-Code $exit_code beim Ausführen von: $command"
+    
+    # Versuche, fehlgeschlagene Operationen zu bereinigen
+    if [ "$CURRENT_OPERATION" = "docker_compose_down" ]; then
+        warn "Docker Compose down fehlgeschlagen. Versuche, Container zu stoppen..."
+        if command -v docker &> /dev/null; then
+            docker stop $(docker ps -q --filter "name=mcp-") 2>/dev/null || true
+        fi
+    fi
+    
+    info "MCP-Server-Stopp wurde mit Fehlern abgeschlossen."
+    exit $exit_code
+}
+
+# Richte Fehlerbehandlung ein
+trap 'handle_error $? $LINENO "$BASH_COMMAND"' ERR
 
 # Führe die Hauptfunktion aus
 main
