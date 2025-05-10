@@ -25,6 +25,33 @@ export DOCKER_DIR="${BASE_DIR}/docker-mcp-servers"
 # Erstelle Verzeichnisse, falls sie nicht existieren
 mkdir -p "${LOGS_DIR}" "${CONFIG_DIR}" "${DATA_DIR}"
 
+# Funktion zum Laden von Umgebungsvariablen aus einer .env-Datei
+load_env_file() {
+    local env_file="$1"
+    
+    if [ -f "$env_file" ]; then
+        log_info "Lade Umgebungsvariablen aus $env_file..."
+        
+        # Lese die .env-Datei und exportiere die Variablen
+        while IFS= read -r line || [[ -n "$line" ]]; do
+            # Überspringe Kommentare und leere Zeilen
+            if [[ ! "$line" =~ ^[[:space:]]*# && -n "$line" ]]; then
+                # Entferne führende und nachfolgende Leerzeichen
+                line=$(echo "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+                
+                # Exportiere die Variable
+                if [[ "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]]; then
+                    export "$line"
+                fi
+            fi
+        done < "$env_file"
+        
+        log_info "Umgebungsvariablen aus $env_file geladen."
+    else
+        log_warn "Umgebungsvariablen-Datei $env_file nicht gefunden."
+    fi
+}
+
 # Farben für die Ausgabe
 export RED='\033[0;31m'
 export GREEN='\033[0;32m'

@@ -35,7 +35,7 @@ fi
 
 # Stoppe die Web-UI
 log_info "${BLUE}Stoppe Dev-Server Web-UI...${NC}"
-docker compose -f docker compose.web-ui.yml down
+docker compose -f docker-compose.web-ui.yml down
 
 if [ $? -eq 0 ]; then
     log_info "${GREEN}Dev-Server Web-UI erfolgreich gestoppt.${NC}"
