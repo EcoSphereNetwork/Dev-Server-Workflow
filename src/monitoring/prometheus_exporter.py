@@ -259,9 +259,90 @@ class PrometheusExporter:
                 logger.warning("n8n container not found")
                 return
             
-            # TODO: Implement n8n metrics collection using the n8n API
-            # This would require authentication and API access to n8n
+            # Collect n8n metrics using the n8n API
+            import requests
+            import json
+            import os
             
+            # Get n8n API credentials from environment
+            n8n_host = os.environ.get('N8N_HOST', 'localhost')
+            n8n_port = os.environ.get('N8N_PORT', '5678')
+            n8n_api_key = os.environ.get('N8N_API_KEY', '')
+            
+            # Skip if no API key is available
+            if not n8n_api_key:
+                logger.warning("N8N_API_KEY not set, skipping n8n metrics collection")
+                return
+                
+            # Base URL for n8n API
+            base_url = f"http://{n8n_host}:{n8n_port}/api/v1"
+            
+            # Headers for authentication
+            headers = {
+                "X-N8N-API-KEY": n8n_api_key,
+                "Content-Type": "application/json"
+            }
+            
+            # Get workflow executions
+            try:
+                response = requests.get(f"{base_url}/executions", headers=headers)
+                if response.status_code == 200:
+                    executions = response.json()
+                    
+                    # Process executions by workflow
+                    workflow_executions = {}
+                    workflow_errors = {}
+                    workflow_times = {}
+                    
+                    for execution in executions.get('data', []):
+                        workflow_id = execution.get('workflowId', 'unknown')
+                        workflow_name = execution.get('workflowName', 'unknown')
+                        
+                        # Use workflow name as label
+                        if workflow_name not in workflow_executions:
+                            workflow_executions[workflow_name] = 0
+                            workflow_errors[workflow_name] = 0
+                            workflow_times[workflow_name] = []
+                            
+                        # Count executions
+                        workflow_executions[workflow_name] += 1
+                        
+                        # Count errors
+                        if execution.get('status') == 'failed':
+                            workflow_errors[workflow_name] += 1
+                            
+                        # Track execution times
+                        if execution.get('startedAt') and execution.get('stoppedAt'):
+                            start_time = execution.get('startedAt')
+                            stop_time = execution.get('stoppedAt')
+                            
+                            # Convert to datetime objects
+                            from datetime import datetime
+                            start_dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+                            stop_dt = datetime.fromisoformat(stop_time.replace('Z', '+00:00'))
+                            
+                            # Calculate duration in seconds
+                            duration = (stop_dt - start_dt).total_seconds()
+                            workflow_times[workflow_name].append(duration)
+                    
+                    # Update metrics
+                    for workflow_name, count in workflow_executions.items():
+                        N8N_WORKFLOW_EXECUTIONS.labels(workflow=workflow_name).inc(count)
+                        
+                    for workflow_name, count in workflow_errors.items():
+                        N8N_WORKFLOW_ERRORS.labels(workflow=workflow_name).inc(count)
+                        
+                    for workflow_name, times in workflow_times.items():
+                        if times:
+                            for time_value in times:
+                                N8N_WORKFLOW_EXECUTION_TIME.labels(workflow=workflow_name).observe(time_value)
+                    
+                    logger.debug(f"Collected metrics for {len(workflow_executions)} n8n workflows")
+                else:
+                    logger.warning(f"Failed to get n8n executions: {response.status_code} {response.text}")
+            except requests.RequestException as e:
+                logger.error(f"Error connecting to n8n API: {e}")
+                
             logger.debug("n8n metrics collected")
         except Exception as e:
             logger.error(f"Error collecting n8n metrics: {e}")

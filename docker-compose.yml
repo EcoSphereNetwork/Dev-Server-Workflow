@@ -1,0 +1,146 @@
+version: '3.8'
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_EDITOR_BASE_URL=http://${N8N_HOST:-localhost}:5678
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-n8n-encryption-key}
+      - N8N_USER_MANAGEMENT_DISABLED=false
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD:-password}
+      - DB_TYPE=sqlite
+      - DB_SQLITE_PATH=/home/node/.n8n/database.sqlite
+      - WEBHOOK_URL=http://${N8N_HOST:-localhost}:5678/
+      - EXECUTIONS_PROCESS=main
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-UTC}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./src:/app/src
+      - ./.env:/app/.env
+    networks:
+      - n8n-network
+
+  mcp-hub:
+    build:
+      context: .
+      dockerfile: ./src/mcp_hub/Dockerfile
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - MCP_HUB_PORT=3000
+      - MCP_HUB_HOST=0.0.0.0
+      - N8N_URL=http://n8n:5678
+      - N8N_API_KEY=${N8N_API_KEY:-}
+    volumes:
+      - ./src:/app/src
+      - ./.env:/app/.env
+    depends_on:
+      - n8n
+    networks:
+      - n8n-network
+
+  docker-mcp:
+    build:
+      context: .
+      dockerfile: ./src/mcp_servers/docker_mcp/Dockerfile
+    restart: always
+    ports:
+      - "3334:3334"
+    environment:
+      - MCP_SERVER_PORT=3334
+      - MCP_SERVER_HOST=0.0.0.0
+      - MCP_HUB_URL=http://mcp-hub:3000
+    volumes:
+      - ./src:/app/src
+      - ./.env:/app/.env
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - mcp-hub
+    networks:
+      - n8n-network
+
+  n8n-mcp:
+    build:
+      context: .
+      dockerfile: ./src/mcp_servers/n8n_mcp/Dockerfile
+    restart: always
+    ports:
+      - "3335:3335"
+    environment:
+      - MCP_SERVER_PORT=3335
+      - MCP_SERVER_HOST=0.0.0.0
+      - MCP_HUB_URL=http://mcp-hub:3000
+      - N8N_URL=http://n8n:5678
+      - N8N_API_KEY=${N8N_API_KEY:-}
+    volumes:
+      - ./src:/app/src
+      - ./.env:/app/.env
+    depends_on:
+      - mcp-hub
+      - n8n
+    networks:
+      - n8n-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - n8n-network
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: always
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - n8n-network
+
+  prometheus-exporter:
+    build:
+      context: .
+      dockerfile: ./src/monitoring/Dockerfile
+    restart: always
+    ports:
+      - "9091:9091"
+    environment:
+      - EXPORTER_PORT=9091
+      - EXPORTER_INTERVAL=15
+    volumes:
+      - ./src:/app/src
+      - ./.env:/app/.env
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - prometheus
+    networks:
+      - n8n-network
+
+volumes:
+  n8n_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  n8n-network:
+    driver: bridge

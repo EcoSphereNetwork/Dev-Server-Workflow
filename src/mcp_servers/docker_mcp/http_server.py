@@ -77,10 +77,29 @@ class HttpServer:
         Returns:
             HTTP response
         """
+        # Calculate uptime
+        import time
+        import psutil
+        
+        # Get process start time
+        process = psutil.Process()
+        start_time = process.create_time()
+        current_time = time.time()
+        
+        # Calculate uptime in seconds
+        uptime_seconds = int(current_time - start_time)
+        
+        # Format uptime as days, hours, minutes, seconds
+        days, remainder = divmod(uptime_seconds, 86400)
+        hours, remainder = divmod(remainder, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        
+        uptime_str = f"{days}d {hours}h {minutes}m {seconds}s"
+        
         return web.json_response({
             "status": "healthy",
             "version": "0.1.0",
-            "uptime": "unknown"  # TODO: Add uptime calculation
+            "uptime": uptime_str
         })
         
     async def metrics_handler(self, request: web.Request) -> web.Response:
