@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { Button, GridContainer, GridItem, Modal } from '../../design-system';
+import { Button, GridContainer, GridItem, Modal, Tabs, Tab } from '../../design-system';
 import Widget, { WidgetProps, WidgetType, WidgetSize } from './Widget';
 import SystemStatusWidget from './widgets/SystemStatusWidget';
 import MCPStatusWidget from './widgets/MCPStatusWidget';
@@ -18,6 +18,7 @@ import NotificationsWidget from './widgets/NotificationsWidget';
 import WeatherWidget from './widgets/WeatherWidget';
 import NewsWidget from './widgets/NewsWidget';
 import CustomWidget from './widgets/CustomWidget';
+import { DashboardOverview } from './DashboardOverview';
 
 // Dashboard-Props
 export interface DashboardProps {
@@ -48,6 +49,13 @@ const DashboardHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   margin-bottom: ${props => props.theme.spacing.lg};
+  flex-wrap: wrap;
+  
+  @media (max-width: ${props => props.theme.breakpoints.md}) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: ${props => props.theme.spacing.md};
+  }
 `;
 
 const DashboardTitle = styled.h1`
@@ -60,6 +68,13 @@ const DashboardActions = styled.div`
   display: flex;
   align-items: center;
   gap: ${props => props.theme.spacing.md};
+  flex-wrap: wrap;
+  
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
 `;
 
 const WidgetGrid = styled.div`
@@ -151,6 +166,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ className }) => {
   const [selectedWidgetType, setSelectedWidgetType] = useState<WidgetType | null>(null);
   const [customWidgetTitle, setCustomWidgetTitle] = useState('');
   
+  // State für aktiven Tab
+  const [activeTab, setActiveTab] = useState<'overview' | 'widgets'>('overview');
+  
   // Lade Widgets aus dem localStorage
   useEffect(() => {
     const savedWidgets = localStorage.getItem('dashboard-widgets');
@@ -164,14 +182,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ className }) => {
     } else {
       setWidgets(defaultWidgets);
     }
+    
+    // Lade den zuletzt aktiven Tab
+    const savedTab = localStorage.getItem('dashboard-active-tab');
+    if (savedTab === 'overview' || savedTab === 'widgets') {
+      setActiveTab(savedTab);
+    }
   }, []);
   
-  // Speichere Widgets im localStorage
+  // Speichere Widgets und aktiven Tab im localStorage
   useEffect(() => {
     if (widgets.length > 0) {
       localStorage.setItem('dashboard-widgets', JSON.stringify(widgets));
     }
-  }, [widgets]);
+    localStorage.setItem('dashboard-active-tab', activeTab);
+  }, [widgets, activeTab]);
   
   // Widget hinzufügen
   const handleAddWidget = () => {
@@ -260,30 +285,42 @@ export const Dashboard: React.FC<DashboardProps> = ({ className }) => {
       <DashboardHeader>
         <DashboardTitle>Dashboard</DashboardTitle>
         <DashboardActions>
-          <Button 
-            variant="outlined" 
-            onClick={handleResetDashboard}
-            aria-label="Dashboard zurücksetzen"
-          >
-            Zurücksetzen
-          </Button>
-          <Button 
-            variant="primary" 
-            onClick={() => setIsModalOpen(true)}
-            aria-label="Widget hinzufügen"
-          >
-            Widget hinzufügen
-          </Button>
+          <Tabs activeTab={activeTab} onChange={(tab) => setActiveTab(tab as 'overview' | 'widgets')}>
+            <Tab id="overview" label="Overview" />
+            <Tab id="widgets" label="Widgets" />
+          </Tabs>
+          {activeTab === 'widgets' && (
+            <>
+              <Button 
+                variant="outlined" 
+                onClick={handleResetDashboard}
+                aria-label="Dashboard zurücksetzen"
+              >
+                Zurücksetzen
+              </Button>
+              <Button 
+                variant="primary" 
+                onClick={() => setIsModalOpen(true)}
+                aria-label="Widget hinzufügen"
+              >
+                Widget hinzufügen
+              </Button>
+            </>
+          )}
         </DashboardActions>
       </DashboardHeader>
       
-      <WidgetGrid>
-        {widgets.map(widget => (
-          <div key={widget.id}>
-            {renderWidget(widget)}
-          </div>
-        ))}
-      </WidgetGrid>
+      {activeTab === 'overview' ? (
+        <DashboardOverview />
+      ) : (
+        <WidgetGrid>
+          {widgets.map(widget => (
+            <div key={widget.id}>
+              {renderWidget(widget)}
+            </div>
+          ))}
+        </WidgetGrid>
+      )}
       
       <Modal
         isOpen={isModalOpen}
