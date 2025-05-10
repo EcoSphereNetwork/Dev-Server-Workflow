@@ -1,0 +1,340 @@
+{
+  "name": "MCP-Server-Monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 5,
+              "unit": "minutes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "schedule-trigger"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Load MCP server configuration\nconst servers = [\n  { name: 'filesystem', url: 'http://mcp-filesystem:3001', type: 'filesystem' },\n  { name: 'desktop-commander', url: 'http://mcp-desktop-commander:3002', type: 'desktop' },\n  { name: 'sequential-thinking', url: 'http://mcp-sequential-thinking:3003', type: 'thinking' },\n  { name: 'github-chat', url: 'http://mcp-github-chat:3004', type: 'github' },\n  { name: 'github', url: 'http://mcp-github:3005', type: 'github' },\n  { name: 'puppeteer', url: 'http://mcp-puppeteer:3006', type: 'browser' },\n  { name: 'basic-memory', url: 'http://mcp-basic-memory:3007', type: 'memory' },\n  { name: 'wikipedia', url: 'http://mcp-wikipedia:3008', type: 'knowledge' }\n];\n\n// Return array of server objects\nreturn servers.map(server => ({\n  ...server,\n  check_time: new Date().toISOString()\n}));"
+      },
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "id": "get-mcp-servers"
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "id": "split-servers"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}/health",
+        "options": {
+          "timeout": 5000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "id": "check-server-health",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Process health check results\nconst server = $json;\nconst healthResponse = $json.response || {};\nconst statusCode = healthResponse.statusCode || 0;\nconst isHealthy = statusCode === 200;\nconst responseTime = healthResponse.timings ? healthResponse.timings.end - healthResponse.timings.start : null;\n\n// Create status report\nreturn {\n  server_name: server.name,\n  server_url: server.url,\n  server_type: server.type,\n  check_time: server.check_time,\n  is_healthy: isHealthy,\n  status_code: statusCode,\n  response_time_ms: responseTime,\n  error: !isHealthy ? (healthResponse.error || 'Server not responding correctly') : null,\n  severity: !isHealthy ? 'error' : 'info',\n  message: isHealthy ? `MCP Server ${server.name} is healthy (${responseTime}ms)` : `MCP Server ${server.name} is not responding correctly (Status: ${statusCode})`,\n  source_id: `mcp_health_${server.name}_${Date.now()}`,\n  type: 'server_health',\n  components: ['mcp', server.name, server.type],\n  raw_response: healthResponse.body || null\n};"
+      },
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1120, 300],
+      "id": "process-health-check"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.is_healthy }}",
+              "value2": true,
+              "operation": "equal"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1340, 300],
+      "id": "check-if-healthy"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.server_url }}/mcp",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "jsonrpc",
+              "value": "2.0"
+            },
+            {
+              "name": "id",
+              "value": 1
+            },
+            {
+              "name": "method",
+              "value": "mcp.listTools"
+            },
+            {
+              "name": "params",
+              "value": "{}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1560, 200],
+      "id": "get-server-tools",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Process tools response\nconst server = $json;\nconst toolsResponse = $json.response || {};\nconst statusCode = toolsResponse.statusCode || 0;\nconst responseBody = toolsResponse.body || {};\nconst tools = responseBody.result || [];\nconst hasTools = Array.isArray(tools) && tools.length > 0;\n\n// Create tools report\nreturn {\n  server_name: server.server_name,\n  server_url: server.server_url,\n  server_type: server.server_type,\n  check_time: server.check_time,\n  tools_count: hasTools ? tools.length : 0,\n  tools: hasTools ? tools : [],\n  tool_names: hasTools ? tools.map(t => t.name || t.id).join(', ') : 'None',\n  status_code: statusCode,\n  error: responseBody.error || null,\n  severity: hasTools ? 'info' : 'warning',\n  message: hasTools ? `MCP Server ${server.server_name} has ${tools.length} tools available` : `MCP Server ${server.server_name} has no tools available`,\n  source_id: `mcp_tools_${server.server_name}_${Date.now()}`,\n  type: 'server_tools',\n  components: ['mcp', server.server_name, server.server_type],\n  raw_response: responseBody\n};"
+      },
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1780, 200],
+      "id": "process-tools-response"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mcp-server-status",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [2000, 300],
+      "id": "mcp-status-webhook-out"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetName": "MCP Server Status",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 3,
+      "position": [2000, 500],
+      "id": "log-to-spreadsheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "googleSheetsOAuth2Api",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Work Packages",
+        "operation": "Create Work Package",
+        "subject": "={{ $json.message }}",
+        "description": "={{ `MCP Server Status Report\n\nServer: ${$json.server_name}\nURL: ${$json.server_url}\nType: ${$json.server_type}\nTimestamp: ${$json.check_time}\nSeverity: ${$json.severity}\nStatus: ${$json.is_healthy ? 'Healthy' : 'Unhealthy'}\n\n${$json.error ? 'Error: ' + JSON.stringify($json.error) : ''}\n${$json.tools ? 'Tools: ' + $json.tool_names : ''}` }}",
+        "_links": {
+          "project": {
+            "href": "/api/v3/projects/1"
+          },
+          "type": {
+            "href": "/api/v3/types/1"
+          },
+          "status": {
+            "href": "={{ '/api/v3/statuses/' + ($json.severity === 'error' ? '7' : $json.severity === 'warning' ? '6' : '1') }}"
+          },
+          "priority": {
+            "href": "={{ '/api/v3/priorities/' + ($json.severity === 'error' ? '7' : $json.severity === 'warning' ? '5' : '3') }}"
+          }
+        },
+        "additionalFields": {
+          "customField1": "mcp_server_status",
+          "customField2": "={{ $json.source_id }}",
+          "customField3": "={{ $json.server_name }}"
+        }
+      },
+      "type": "n8n-nodes-base.openProject",
+      "typeVersion": 1,
+      "position": [1560, 400],
+      "id": "create-status-work-package",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "channel": "={{ $env.SLACK_CHANNEL_ALERTS }}",
+        "text": "=**MCP Server Alert**: {{ $json.message }}\n\n**Server**: {{ $json.server_name }} ({{ $json.server_type }})\n**Status**: {{ $json.is_healthy ? 'Healthy' : 'Unhealthy' }}\n**Severity**: {{ $json.severity }}\n**Timestamp**: {{ $json.check_time }}\n\n{{ $json.error ? 'Error: ' + JSON.stringify($json.error) : '' }}",
+        "otherOptions": {
+          "attachments": "=[\n  {\n    \"color\": \"{{ $json.severity === 'error' ? '#FF0000' : $json.severity === 'warning' ? '#FFFF00' : '#00FF00' }}\",\n    \"fields\": [\n      {\n        \"title\": \"Response Time\",\n        \"value\": \"{{ $json.response_time_ms }}ms\",\n        \"short\": true\n      },\n      {\n        \"title\": \"Status Code\",\n        \"value\": \"{{ $json.status_code }}\",\n        \"short\": true\n      }\n    ]\n  }\n]"
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1780, 400],
+      "id": "send-slack-notification",
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "schedule-trigger": {
+      "main": [
+        [
+          {
+            "node": "get-mcp-servers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-mcp-servers": {
+      "main": [
+        [
+          {
+            "node": "split-servers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split-servers": {
+      "main": [
+        [
+          {
+            "node": "check-server-health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-server-health": {
+      "main": [
+        [
+          {
+            "node": "process-health-check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "process-health-check": {
+      "main": [
+        [
+          {
+            "node": "check-if-healthy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-if-healthy": {
+      "main": [
+        [
+          {
+            "node": "get-server-tools",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "create-status-work-package",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "send-slack-notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-server-tools": {
+      "main": [
+        [
+          {
+            "node": "process-tools-response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "process-tools-response": {
+      "main": [
+        [
+          {
+            "node": "mcp-status-webhook-out",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "log-to-spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-status-work-package": {
+      "main": [
+        [
+          {
+            "node": "mcp-status-webhook-out",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "log-to-spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  }
+}

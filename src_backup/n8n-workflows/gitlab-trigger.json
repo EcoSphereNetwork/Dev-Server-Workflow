@@ -1,0 +1,79 @@
+{
+  "name": "GitLab-Trigger",
+  "nodes": [
+    {
+      "parameters": {
+        "authentication": "accessToken",
+        "resource": "project",
+        "projectId": "={{ $env.GITLAB_PROJECT_ID }}",
+        "events": [
+          "issue",
+          "merge_request",
+          "comment",
+          "push"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gitlabTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "gitlab-trigger"
+    },
+    {
+      "parameters": {
+        "mode": "jsonToJson",
+        "jsonInput": "={{ $json }}",
+        "options": {
+          "dotNotation": true
+        },
+        "jsonOutput": "={\n  \"title\": $json.object_attributes && $json.object_attributes.title ? $json.object_attributes.title : $json.commits ? \"Push: \" + $json.commits[0].message.split('\\n')[0] : \"GitLab Event\",\n  \"description\": $json.object_attributes && $json.object_attributes.description ? $json.object_attributes.description : $json.commits ? $json.commits.map(c => c.message).join('\\n') : \"\",\n  \"source_type\": \"gitlab\",\n  \"source_id\": $json.object_attributes && $json.object_attributes.id ? $json.object_attributes.id : $json.object_iid || \"unknown-id\",\n  \"url\": $json.object_attributes && $json.object_attributes.url ? $json.object_attributes.url : $json.project ? $json.project.web_url : \"\",\n  \"status\": $json.object_attributes && $json.object_attributes.state ? $json.object_attributes.state : \"active\",\n  \"creator\": $json.user ? $json.user.name : \"unknown\",\n  \"action\": $json.object_attributes && $json.object_attributes.action ? $json.object_attributes.action : ($json.commits ? \"push\" : \"unknown\"),\n  \"repository\": $json.project ? $json.project.path_with_namespace : \"\",\n  \"branch\": $json.ref ? $json.ref.replace('refs/heads/', '') : ($json.object_attributes && $json.object_attributes.source_branch ? $json.object_attributes.source_branch : null),\n  \"raw_data\": $json\n}"
+      },
+      "type": "n8n-nodes-base.itemBinary",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "id": "normalize-gitlab-data"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gitlab-webhook",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [660, 300],
+      "id": "gitlab-webhook-out"
+    }
+  ],
+  "connections": {
+    "gitlab-trigger": {
+      "main": [
+        [
+          {
+            "node": "normalize-gitlab-data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "normalize-gitlab-data": {
+      "main": [
+        [
+          {
+            "node": "gitlab-webhook-out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  }
+}

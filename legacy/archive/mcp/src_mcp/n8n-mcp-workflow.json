@@ -1,0 +1,343 @@
+{
+  "name": "MCP Server Integration",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "/mcp/endpoint",
+        "options": {
+          "responseMode": "responseNode"
+        }
+      },
+      "id": "1a1a1a1a-1a1a-1a1a-1a1a-1a1a1a1a1a1a",
+      "name": "MCP Server Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the incoming MCP request\nconst mcpRequest = $input.item.json;\n\n// Check if it's a valid JSON-RPC request\nif (!mcpRequest.jsonrpc || mcpRequest.jsonrpc !== '2.0' || !mcpRequest.method) {\n  return {\n    jsonrpc: '2.0',\n    id: mcpRequest.id || null,\n    error: {\n      code: -32600,\n      message: 'Invalid Request'\n    }\n  };\n}\n\n// Handle different MCP methods\nlet result;\nswitch (mcpRequest.method) {\n  case 'mcp.listTools':\n    // Return the list of available tools\n    result = {\n      jsonrpc: '2.0',\n      id: mcpRequest.id,\n      result: [\n        {\n          name: 'workflow_create_github_issue',\n          description: 'Creates a new issue in a GitHub repository',\n          parameter_schema: {\n            type: 'object',\n            properties: {\n              repository: {\n                type: 'string',\n                description: 'The repository in format owner/repo'\n              },\n              title: {\n                type: 'string',\n                description: 'The title of the issue'\n              },\n              body: {\n                type: 'string',\n                description: 'The body content of the issue'\n              },\n              labels: {\n                type: 'array',\n                items: {\n                  type: 'string'\n                },\n                description: 'Labels to add to the issue'\n              }\n            },\n            required: ['repository', 'title']\n          }\n        },\n        {\n          name: 'workflow_update_work_package',\n          description: 'Updates a work package in OpenProject',\n          parameter_schema: {\n            type: 'object',\n            properties: {\n              id: {\n                type: 'integer',\n                description: 'The ID of the work package to update'\n              },\n              subject: {\n                type: 'string',\n                description: 'The new subject of the work package'\n              },\n              description: {\n                type: 'string',\n                description: 'The new description of the work package'\n              },\n              status: {\n                type: 'string',\n                description: 'The new status of the work package'\n              }\n            },\n            required: ['id']\n          }\n        },\n        {\n          name: 'workflow_sync_documentation',\n          description: 'Synchronizes documentation between repositories',\n          parameter_schema: {\n            type: 'object',\n            properties: {\n              source_repo: {\n                type: 'string',\n                description: 'Source repository in format owner/repo'\n              },\n              target_repo: {\n                type: 'string',\n                description: 'Target repository in format owner/repo'\n              },\n              path: {\n                type: 'string',\n                description: 'Path to the documentation files'\n              }\n            },\n            required: ['source_repo', 'target_repo']\n          }\n        },\n        {\n          name: 'workflow_get_file_content',\n          description: 'Gets the content of a file from a repository',\n          parameter_schema: {\n            type: 'object',\n            properties: {\n              repository: {\n                type: 'string',\n                description: 'Repository in format owner/repo'\n              },\n              path: {\n                type: 'string',\n                description: 'Path to the file'\n              },\n              ref: {\n                type: 'string',\n                description: 'The name of the commit/branch/tag'\n              }\n            },\n            required: ['repository', 'path']\n          }\n        }\n      ]\n    };\n    break;\n    \n  case 'mcp.callTool':\n    // Handle tool calls\n    const params = mcpRequest.params || {};\n    const toolName = params.name;\n    const args = params.arguments || {};\n    \n    if (!toolName) {\n      result = {\n        jsonrpc: '2.0',\n        id: mcpRequest.id,\n        error: {\n          code: -32602,\n          message: 'Invalid params: missing tool name'\n        }\n      };\n      break;\n    }\n    \n    // Store the tool name and arguments for the next nodes\n    $node.tool = { name: toolName, arguments: args };\n    \n    // Return a placeholder - the actual response will be set by the Response node\n    return $input.item;\n    \n  default:\n    // Method not found\n    result = {\n      jsonrpc: '2.0',\n      id: mcpRequest.id,\n      error: {\n        code: -32601,\n        message: `Method not found: ${mcpRequest.method}`\n      }\n    };\n}\n\nreturn result;"
+      },
+      "id": "2b2b2b2b-2b2b-2b2b-2b2b-2b2b2b2b2b2b",
+      "name": "Parse MCP Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $node[\"Parse MCP Request\"].tool.name }}",
+              "operation": "contains",
+              "value2": "workflow_create_github_issue"
+            }
+          ]
+        }
+      },
+      "id": "3c3c3c3c-3c3c-3c3c-3c3c-3c3c3c3c3c3c",
+      "name": "GitHub Issue Router",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "issue",
+        "owner": "={{ $node[\"Parse MCP Request\"].tool.arguments.repository.split(\"/\")[0] }}",
+        "repository": "={{ $node[\"Parse MCP Request\"].tool.arguments.repository.split(\"/\")[1] }}",
+        "title": "={{ $node[\"Parse MCP Request\"].tool.arguments.title }}",
+        "body": "={{ $node[\"Parse MCP Request\"].tool.arguments.body }}",
+        "labels": "={{ $node[\"Parse MCP Request\"].tool.arguments.labels }}"
+      },
+      "id": "4d4d4d4d-4d4d-4d4d-4d4d-4d4d4d4d4d4d",
+      "name": "GitHub Create Issue",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [
+        850,
+        200
+      ],
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "1",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $node[\"Parse MCP Request\"].tool.name }}",
+              "operation": "contains",
+              "value2": "workflow_update_work_package"
+            }
+          ]
+        }
+      },
+      "id": "5e5e5e5e-5e5e-5e5e-5e5e-5e5e5e5e5e5e",
+      "name": "OpenProject Router",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        650,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "basicAuth",
+        "resource": "workPackage",
+        "operation": "update",
+        "id": "={{ $node[\"Parse MCP Request\"].tool.arguments.id }}",
+        "updateFields": {
+          "subject": "={{ $node[\"Parse MCP Request\"].tool.arguments.subject }}",
+          "description": {
+            "raw": "={{ $node[\"Parse MCP Request\"].tool.arguments.description }}"
+          },
+          "status": "={{ $node[\"Parse MCP Request\"].tool.arguments.status }}"
+        }
+      },
+      "id": "6f6f6f6f-6f6f-6f6f-6f6f-6f6f6f6f6f6f",
+      "name": "OpenProject Update",
+      "type": "n8n-nodes-base.openProject",
+      "typeVersion": 1,
+      "position": [
+        850,
+        450
+      ],
+      "credentials": {
+        "openProjectApi": {
+          "id": "2",
+          "name": "OpenProject account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $node[\"Parse MCP Request\"].tool.name }}",
+              "operation": "contains",
+              "value2": "workflow_get_file_content"
+            }
+          ]
+        }
+      },
+      "id": "7g7g7g7g-7g7g-7g7g-7g7g-7g7g7g7g7g7g",
+      "name": "File Content Router",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        650,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "owner": "={{ $node[\"Parse MCP Request\"].tool.arguments.repository.split(\"/\")[0] }}",
+        "repository": "={{ $node[\"Parse MCP Request\"].tool.arguments.repository.split(\"/\")[1] }}",
+        "filePath": "={{ $node[\"Parse MCP Request\"].tool.arguments.path }}",
+        "ref": "={{ $node[\"Parse MCP Request\"].tool.arguments.ref || \"main\" }}"
+      },
+      "id": "8h8h8h8h-8h8h-8h8h-8h8h-8h8h8h8h8h8h",
+      "name": "GitHub Get File",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [
+        850,
+        600
+      ],
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "1",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare the MCP response based on the executed tool\nconst mcpRequest = $input.first().json;\nlet result;\n\n// Get the tool name that was executed\nconst toolName = $node[\"Parse MCP Request\"].tool.name;\n\n// Format the response based on the tool that was executed\nswitch (toolName) {\n  case 'workflow_create_github_issue':\n    if ($node[\"GitHub Create Issue\"]) {\n      const issueData = $node[\"GitHub Create Issue\"].json;\n      result = {\n        success: true,\n        issue: {\n          number: issueData.number,\n          url: issueData.html_url,\n          title: issueData.title,\n          state: issueData.state\n        }\n      };\n    } else {\n      result = {\n        success: false,\n        error: 'Failed to create GitHub issue'\n      };\n    }\n    break;\n    \n  case 'workflow_update_work_package':\n    if ($node[\"OpenProject Update\"]) {\n      const wpData = $node[\"OpenProject Update\"].json;\n      result = {\n        success: true,\n        workPackage: {\n          id: wpData.id,\n          subject: wpData.subject,\n          status: wpData._links.status.title\n        }\n      };\n    } else {\n      result = {\n        success: false,\n        error: 'Failed to update work package'\n      };\n    }\n    break;\n    \n  case 'workflow_get_file_content':\n    if ($node[\"GitHub Get File\"]) {\n      const fileData = $node[\"GitHub Get File\"].json;\n      result = {\n        success: true,\n        file: {\n          name: fileData.name,\n          path: fileData.path,\n          content: Buffer.from(fileData.content, 'base64').toString('utf-8'),\n          sha: fileData.sha\n        }\n      };\n    } else {\n      result = {\n        success: false,\n        error: 'Failed to get file content'\n      };\n    }\n    break;\n    \n  default:\n    result = {\n      success: false,\n      error: `Unsupported tool: ${toolName}`\n    };\n}\n\n// Format the final JSON-RPC response\nreturn {\n  jsonrpc: '2.0',\n  id: mcpRequest.id,\n  result: result\n};"
+      },
+      "id": "9i9i9i9i-9i9i-9i9i-9i9i-9i9i9i9i9i9i",
+      "name": "Format MCP Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "0j0j0j0j-0j0j-0j0j-0j0j-0j0j0j0j0j0j",
+      "name": "MCP Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "MCP Server Trigger": {
+      "main": [
+        [
+          {
+            "node": "Parse MCP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse MCP Request": {
+      "main": [
+        [
+          {
+            "node": "GitHub Issue Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub Issue Router": {
+      "main": [
+        [
+          {
+            "node": "GitHub Create Issue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "OpenProject Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub Create Issue": {
+      "main": [
+        [
+          {
+            "node": "Format MCP Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenProject Router": {
+      "main": [
+        [
+          {
+            "node": "OpenProject Update",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "File Content Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenProject Update": {
+      "main": [
+        [
+          {
+            "node": "Format MCP Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "File Content Router": {
+      "main": [
+        [
+          {
+            "node": "GitHub Get File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format MCP Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub Get File": {
+      "main": [
+        [
+          {
+            "node": "Format MCP Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format MCP Response": {
+      "main": [
+        [
+          {
+            "node": "MCP Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "tags": [
+    "mcp",
+    "integration",
+    "automation"
+  ],
+  "pinData": {},
+  "versionId": "1",
+  "triggerCount": 1,
+  "staticData": null,
+  "createdAt": "2025-05-07T00:00:00.000Z",
+  "updatedAt": "2025-05-07T00:00:00.000Z"
+}

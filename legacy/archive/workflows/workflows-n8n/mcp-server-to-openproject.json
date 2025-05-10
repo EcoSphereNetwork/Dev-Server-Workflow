@@ -1,0 +1,396 @@
+{
+  "name": "Improved-MCP-to-OpenProject",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mcp-to-openproject",
+        "options": {
+          "responseMode": "responseNode"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "mcp-webhook"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Validate and normalize MCP data\nlet eventData = $json;\n\n// Check if this is already normalized by integration hub\nif (eventData.source_type === 'mcp_server') {\n  // Already normalized\n  return eventData;\n}\n\n// This is a direct MCP server event, normalize it\nlet normalizedEvent = {\n  id: eventData.id || `mcp-${Date.now()}`,\n  timestamp: eventData.timestamp || new Date().toISOString(),\n  source_type: 'mcp_server',\n  source_id: eventData.source_id || `mcp-event-${Date.now()}`,\n  server_name: eventData.server_name || 'unknown',\n  event_type: eventData.type || 'event',\n  title: eventData.title || `MCP Event: ${eventData.type || 'unknown'}`,\n  description: eventData.description || eventData.message || '',\n  severity: eventData.severity || 'info',\n  components: eventData.components || [],\n  raw_data: eventData\n};\n\n// Add server-specific fields based on server name\nswitch(normalizedEvent.server_name.toLowerCase()) {\n  case 'filesystem-mcp':\n    normalizedEvent.path = eventData.path || '';\n    normalizedEvent.operation = eventData.operation || '';\n    break;\n    \n  case 'desktop-commander-mcp':\n    normalizedEvent.command = eventData.command || '';\n    normalizedEvent.exit_code = eventData.exit_code || 0;\n    break;\n    \n  case 'github-mcp':\n  case 'github-chat-mcp':\n    normalizedEvent.repository = eventData.repository || '';\n    normalizedEvent.user = eventData.user || '';\n    break;\n    \n  case 'puppeteer-mcp':\n    normalizedEvent.url = eventData.url || '';\n    normalizedEvent.action = eventData.action || '';\n    break;\n    \n  case 'wikipedia-mcp':\n    normalizedEvent.query = eventData.query || '';\n    normalizedEvent.language = eventData.language || 'en';\n    break;\n}\n\nreturn normalizedEvent;"
+      },
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "id": "normalize-mcp-data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.llm_analyzed }}",
+              "operation": "equal",
+              "value2": "true"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "id": "check-if-analyzed"
+    },
+    {
+      "parameters": {
+        "resource": "Work Packages",
+        "operation": "List Work Packages",
+        "filters": {
+          "fields": [
+            {
+              "name": "customField1",
+              "value": "mcp_server"
+            },
+            {
+              "name": "customField2",
+              "value": "={{ $json.source_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.openProject",
+      "typeVersion": 1,
+      "position": [900, 200],
+      "id": "find-existing-work-package",
+      "credentials": {
+        "openProjectApi": {
+          "id": "1",
+          "name": "OpenProject account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "=http://localhost:5678/webhook/llm-analyze",
+        "allowUnauthorizedCerts": true,
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={{ $json }}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [900, 400],
+      "id": "send-to-llm-agent"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json._embedded ? $json._embedded.elements.length : 0 }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1120, 200],
+      "id": "check-work-package-exists"
+    },
+    {
+      "parameters": {
+        "resource": "Work Packages",
+        "operation": "Update Work Package",
+        "id": "={{ $json._embedded.elements[0].id }}",
+        "subject": "={{ $json.title }}",
+        "description": "={{ $json._embedded.elements[0].description.raw + '\\n\\nUpdate from MCP Server (' + $json.server_name + '): ' + $json.description }}",
+        "_links": {
+          "status": {
+            "href": "={{ '/api/v3/statuses/' + ($json.severity === 'critical' ? '7' : '1') }}"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.openProject",
+      "typeVersion": 1,
+      "position": [1340, 140],
+      "id": "update-work-package",
+      "credentials": {
+        "openProjectApi": {
+          "id": "1",
+          "name": "OpenProject account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Work Packages",
+        "operation": "Create Work Package",
+        "subject": "={{ $json.title }}",
+        "description": "={{ $json.description + '\\n\\nSource: MCP Server (' + $json.server_name + ')\\nType: ' + $json.event_type + '\\nSeverity: ' + $json.severity + '\\nTimestamp: ' + $json.timestamp + '\\nComponents: ' + $json.components.join(', ') }}",
+        "_links": {
+          "project": {
+            "href": "/api/v3/projects/1"
+          },
+          "type": {
+            "href": "/api/v3/types/1"
+          },
+          "status": {
+            "href": "={{ '/api/v3/statuses/' + ($json.severity === 'critical' ? '7' : '1') }}"
+          },
+          "priority": {
+            "href": "={{ '/api/v3/priorities/' + ($json.severity === 'critical' ? '7' : $json.severity === 'error' ? '6' : $json.severity === 'warning' ? '5' : '3') }}"
+          }
+        },
+        "additionalFields": {
+          "customField1": "mcp_server",
+          "customField2": "={{ $json.source_id }}",
+          "customField3": "={{ $json.server_name }}"
+        }
+      },
+      "type": "n8n-nodes-base.openProject",
+      "typeVersion": 1,
+      "position": [1340, 260],
+      "id": "create-work-package",
+      "credentials": {
+        "openProjectApi": {
+          "id": "1",
+          "name": "OpenProject account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "databaseId": "={{ $env.APPFLOWY_DATABASE_ID }}",
+        "record": "={\n  \"Title\": $json.subject || $json.title,\n  \"Description\": $json.description.raw || $json.description,\n  \"Source\": \"mcp_server\",\n  \"Server\": $json.server_name,\n  \"Source ID\": $json.source_id,\n  \"Type\": $json.event_type,\n  \"Severity\": $json.severity,\n  \"Components\": $json.components ? $json.components.join(\", \") : \"\",\n  \"Timestamp\": $json.timestamp,\n  \"OpenProject ID\": $json.id,\n  \"Last Updated\": new Date().toISOString()\n}"
+      },
+      "type": "n8n-nodes-base.appflowy",
+      "typeVersion": 1,
+      "position": [1560, 200],
+      "id": "update-appflowy-record",
+      "credentials": {
+        "appFlowyApi": {
+          "id": "2",
+          "name": "AppFlowy account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.severity === 'critical' || $json.severity === 'error' }}",
+              "operation": "equal",
+              "value2": "true"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1780, 200],
+      "id": "check-notification-needed"
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "=http://localhost:5678/webhook/notification-service",
+        "allowUnauthorizedCerts": true,
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={{ $json }}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [2000, 140],
+      "id": "send-notification"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Prepare response\nreturn {\n  success: true,\n  message: `MCP event processed successfully: ${$json.server_name} - ${$json.event_type}`,\n  source_type: 'mcp_server',\n  server_name: $json.server_name,\n  event_type: $json.event_type,\n  openproject_id: $json.id,\n  appflowy_synced: true,\n  notification_sent: $json.severity === 'critical' || $json.severity === 'error',\n  timestamp: new Date().toISOString()\n};"
+      },
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2220, 200],
+      "id": "prepare-response"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2440, 200],
+      "id": "send-response"
+    }
+  ],
+  "connections": {
+    "mcp-webhook": {
+      "main": [
+        [
+          {
+            "node": "normalize-mcp-data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "normalize-mcp-data": {
+      "main": [
+        [
+          {
+            "node": "check-if-analyzed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-if-analyzed": {
+      "main": [
+        [
+          {
+            "node": "find-existing-work-package",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "send-to-llm-agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "find-existing-work-package": {
+      "main": [
+        [
+          {
+            "node": "check-work-package-exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send-to-llm-agent": {
+      "main": [
+        [
+          {
+            "node": "find-existing-work-package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-work-package-exists": {
+      "main": [
+        [
+          {
+            "node": "update-work-package",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "create-work-package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update-work-package": {
+      "main": [
+        [
+          {
+            "node": "update-appflowy-record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-work-package": {
+      "main": [
+        [
+          {
+            "node": "update-appflowy-record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update-appflowy-record": {
+      "main": [
+        [
+          {
+            "node": "check-notification-needed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-notification-needed": {
+      "main": [
+        [
+          {
+            "node": "send-notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "prepare-response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send-notification": {
+      "main": [
+        [
+          {
+            "node": "prepare-response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prepare-response": {
+      "main": [
+        [
+          {
+            "node": "send-response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "error-handler"
+  },
+  "tags": ["mcp", "openproject", "integration", "improved"]
+}

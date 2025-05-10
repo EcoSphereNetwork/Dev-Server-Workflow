@@ -1,0 +1,99 @@
+{
+  "name": "OpenHands-Config",
+  "parameters": {
+    "instances": [
+      {
+        "id": "oh1",
+        "name": "OpenHands 1",
+        "url": "https://oh1.ecospherenet.work",
+        "apiKey": "OH1_API_KEY"
+      },
+      {
+        "id": "oh2",
+        "name": "OpenHands 2",
+        "url": "https://oh2.ecospherenet.work",
+        "apiKey": "OH2_API_KEY"
+      },
+      {
+        "id": "oh3",
+        "name": "OpenHands 3",
+        "url": "https://oh3.ecospherenet.work",
+        "apiKey": "OH3_API_KEY"
+      },
+      {
+        "id": "oh4",
+        "name": "OpenHands 4",
+        "url": "https://oh4.ecospherenet.work",
+        "apiKey": "OH4_API_KEY"
+      },
+      {
+        "id": "oh5",
+        "name": "OpenHands 5",
+        "url": "https://oh5.ecospherenet.work",
+        "apiKey": "OH5_API_KEY"
+      },
+      {
+        "id": "oh6",
+        "name": "OpenHands 6",
+        "url": "https://oh6.ecospherenet.work",
+        "apiKey": "OH6_API_KEY"
+      },
+      {
+        "id": "oh7",
+        "name": "OpenHands 7",
+        "url": "https://oh7.ecospherenet.work",
+        "apiKey": "OH7_API_KEY"
+      },
+      {
+        "id": "oh8",
+        "name": "OpenHands 8",
+        "url": "https://oh8.ecospherenet.work",
+        "apiKey": "OH8_API_KEY"
+      },
+      {
+        "id": "oh9",
+        "name": "OpenHands 9",
+        "url": "https://oh9.ecospherenet.work",
+        "apiKey": "OH9_API_KEY"
+      },
+      {
+        "id": "oh10",
+        "name": "OpenHands 10",
+        "url": "https://oh10.ecospherenet.work",
+        "apiKey": "OH10_API_KEY"
+      }
+    ],
+    "mapping": {
+      "github": {
+        "internal": {
+          "owner": "GITHUB_INTERNAL_OWNER",
+          "organization": "GITHUB_INTERNAL_ORG",
+          "repositories": ["REPO1", "REPO2", "REPO3"]
+        },
+        "public": {
+          "owner": "GITHUB_PUBLIC_OWNER",
+          "organization": "GITHUB_PUBLIC_ORG",
+          "repositories": ["PUBLIC_REPO1", "PUBLIC_REPO2", "PUBLIC_REPO3"]
+        }
+      },
+      "gitlab": {
+        "community": {
+          "group": "GITLAB_COMMUNITY_GROUP",
+          "projects": ["PROJECT1", "PROJECT2", "PROJECT3"]
+        },
+        "release": {
+          "group": "GITLAB_RELEASE_GROUP",
+          "projects": ["RELEASE_PROJECT1", "RELEASE_PROJECT2", "RELEASE_PROJECT3"]
+        }
+      },
+      "openproject": {
+        "url": "https://your-openproject-instance.com",
+        "projects": ["PROJECT1", "PROJECT2", "PROJECT3"]
+      },
+      "appflowy": {
+        "workspace": "YOUR_APPFLOWY_WORKSPACE",
+        "databases": ["DATABASE1", "DATABASE2", "DATABASE3"]
+      }
+    }
+  }
+}

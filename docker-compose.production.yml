@@ -1,0 +1,340 @@
+version: '3.8'
+
+services:
+  # MCP Hub - Central control component
+  mcp-hub:
+    build:
+      context: .
+      dockerfile: docker/base/mcp-hub/Dockerfile
+    image: dev-server-workflow/mcp-hub:latest
+    container_name: mcp-hub
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - mcp-hub-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+      - PORT=3000
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Docker MCP Server - Manages Docker containers
+  docker-mcp:
+    build:
+      context: .
+      dockerfile: docker/base/docker-mcp/Dockerfile
+    image: dev-server-workflow/docker-mcp:latest
+    container_name: docker-mcp
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - docker-mcp-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+      - PORT=3001
+      - MCP_HUB_URL=http://mcp-hub:3000
+    networks:
+      - mcp-network
+    depends_on:
+      - mcp-hub
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # n8n MCP Server - Manages n8n workflows
+  n8n-mcp:
+    build:
+      context: .
+      dockerfile: docker/base/n8n-mcp/Dockerfile
+    image: dev-server-workflow/n8n-mcp:latest
+    container_name: n8n-mcp
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    volumes:
+      - n8n-mcp-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+      - PORT=3002
+      - MCP_HUB_URL=http://mcp-hub:3000
+      - N8N_URL=http://n8n:5678
+    networks:
+      - mcp-network
+    depends_on:
+      - mcp-hub
+      - n8n
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Prompt MCP Server - Manages LLM prompts
+  prompt-mcp:
+    build:
+      context: .
+      dockerfile: docker/base/prompt-mcp/Dockerfile
+    image: dev-server-workflow/prompt-mcp:latest
+    container_name: prompt-mcp
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    volumes:
+      - prompt-mcp-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+      - PORT=3003
+      - MCP_HUB_URL=http://mcp-hub:3000
+    networks:
+      - mcp-network
+    depends_on:
+      - mcp-hub
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # LLM Cost Analyzer MCP Server - Analyzes LLM costs
+  llm-cost-analyzer-mcp:
+    build:
+      context: .
+      dockerfile: docker/base/llm-cost-analyzer-mcp/Dockerfile
+    image: dev-server-workflow/llm-cost-analyzer-mcp:latest
+    container_name: llm-cost-analyzer-mcp
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    volumes:
+      - llm-cost-analyzer-mcp-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+      - PORT=3004
+      - MCP_HUB_URL=http://mcp-hub:3000
+    networks:
+      - mcp-network
+    depends_on:
+      - mcp-hub
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # OpenHands MCP Server - Integrates with OpenHands
+  openhands-mcp:
+    build:
+      context: .
+      dockerfile: docker/base/openhands-mcp/Dockerfile
+    image: dev-server-workflow/openhands-mcp:latest
+    container_name: openhands-mcp
+    restart: unless-stopped
+    ports:
+      - "3005:3005"
+    volumes:
+      - openhands-mcp-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+      - PORT=3005
+      - MCP_HUB_URL=http://mcp-hub:3000
+      - OPENHANDS_URL=http://openhands:8000
+    networks:
+      - mcp-network
+    depends_on:
+      - mcp-hub
+      - openhands
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3005/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # n8n - Workflow automation
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n-data:/home/node/.n8n
+      - ./src/workflows/n8n:/home/node/.n8n/workflows
+    environment:
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_HOST=n8n
+      - N8N_EDITOR_BASE_URL=http://localhost:5678
+      - NODE_ENV=production
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-n8n-encryption-key}
+      - N8N_LOG_LEVEL=info
+      - WEBHOOK_URL=http://localhost:5678/
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # OpenHands - AI platform
+  openhands:
+    image: openhands/openhands:latest
+    container_name: openhands
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - openhands-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+      - PORT=8000
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Nginx - API gateway and reverse proxy
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/base/nginx/Dockerfile
+    image: dev-server-workflow/nginx:latest
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/base/nginx/conf:/etc/nginx/conf.d
+      - ./docker/base/nginx/certs:/etc/nginx/certs
+    networks:
+      - mcp-network
+    depends_on:
+      - mcp-hub
+      - n8n
+      - openhands
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Prometheus - Metrics collection
+  prometheus:
+    build:
+      context: .
+      dockerfile: docker/monitoring/prometheus/Dockerfile
+    image: dev-server-workflow/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Grafana - Metrics visualization
+  grafana:
+    build:
+      context: .
+      dockerfile: docker/monitoring/grafana/Dockerfile
+    image: dev-server-workflow/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3100:3000"
+    volumes:
+      - ./docker/monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3100
+    networks:
+      - mcp-network
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Alertmanager - Alert management
+  alertmanager:
+    build:
+      context: .
+      dockerfile: docker/monitoring/alertmanager/Dockerfile
+    image: dev-server-workflow/alertmanager:latest
+    container_name: alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./docker/monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager-data:/alertmanager
+    networks:
+      - mcp-network
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  mcp-network:
+    driver: bridge
+
+volumes:
+  mcp-hub-data:
+  docker-mcp-data:
+  n8n-mcp-data:
+  prompt-mcp-data:
+  llm-cost-analyzer-mcp-data:
+  openhands-mcp-data:
+  n8n-data:
+  openhands-data:
+  prometheus-data:
+  grafana-data:
+  alertmanager-data:

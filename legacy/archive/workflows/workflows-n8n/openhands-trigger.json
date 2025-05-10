@@ -1,0 +1,91 @@
+{
+  "name": "OpenHands-Trigger",
+  "nodes": [
+    {
+      "parameters": {
+        "functionCode": "// Function to fetch data from all OpenHands instances\nasync function fetchFromAllInstances() {\n  const instances = $getNodeParameter('instances');\n  const results = [];\n  \n  for (const instance of instances) {\n    try {\n      // Make API call to each OpenHands instance\n      const response = await fetch(`${instance.url}/api/issues`, {\n        headers: {\n          'Authorization': `Bearer ${instance.apiKey}`,\n          'Content-Type': 'application/json'\n        }\n      });\n      \n      const data = await response.json();\n      \n      // Add instance info to each issue\n      const issuesWithInstance = data.issues.map(issue => ({\n        ...issue,\n        instance_id: instance.id,\n        instance_name: instance.name,\n        instance_url: instance.url\n      }));\n      \n      results.push(...issuesWithInstance);\n    } catch (error) {\n      console.error(`Error fetching from ${instance.name}: ${error.message}`);\n    }\n  }\n  \n  return results;\n}\n\n// Get issues from all instances\nconst allIssues = await fetchFromAllInstances();\n\n// Return only new or updated issues since last check\nconst lastCheckedTime = $getNodeParameter('lastCheckedTime', new Date(0).toISOString());\nconst now = new Date().toISOString();\n\nconst newOrUpdatedIssues = allIssues.filter(issue => {\n  const updatedAt = new Date(issue.updated_at).toISOString();\n  return updatedAt > lastCheckedTime;\n});\n\n// Update the last checked time\n$setNodeParameter('lastCheckedTime', now);\n\n// Return the results\nreturn newOrUpdatedIssues.map(issue => ({ json: issue }));"
+      },
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "fetch-openhands-issues"
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "id": "split-issues"
+    },
+    {
+      "parameters": {
+        "mode": "jsonToJson",
+        "jsonInput": "={{ $json }}",
+        "options": {
+          "dotNotation": true
+        },
+        "jsonOutput": "={\n  \"title\": $json.title || \"Issue from OpenHands\",\n  \"description\": $json.description || \"\",\n  \"source_type\": \"openhands\",\n  \"source_id\": $json.id,\n  \"url\": $json.instance_url + \"/issues/\" + $json.id,\n  \"status\": $json.status || \"open\",\n  \"creator\": $json.created_by || \"unknown\",\n  \"instance_id\": $json.instance_id,\n  \"instance_name\": $json.instance_name,\n  \"labels\": $json.labels || [],\n  \"priority\": $json.priority || \"medium\",\n  \"assignees\": $json.assignees || [],\n  \"updated_at\": $json.updated_at,\n  \"created_at\": $json.created_at,\n  \"raw_data\": $json\n}"
+      },
+      "type": "n8n-nodes-base.itemBinary",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "id": "normalize-openhands-data"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "openhands-webhook",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "id": "openhands-webhook-out"
+    }
+  ],
+  "connections": {
+    "fetch-openhands-issues": {
+      "main": [
+        [
+          {
+            "node": "split-issues",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split-issues": {
+      "main": [
+        [
+          {
+            "node": "normalize-openhands-data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "normalize-openhands-data": {
+      "main": [
+        [
+          {
+            "node": "openhands-webhook-out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  }
+}

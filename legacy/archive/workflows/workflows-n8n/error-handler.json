@@ -1,0 +1,190 @@
+{
+  "name": "Error-Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "error-trigger"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extract error information\nconst execution = $execution;\nconst workflow = $workflow;\nconst error = $error;\n\n// Format error details\nconst errorDetails = {\n  workflow_id: workflow.id,\n  workflow_name: workflow.name,\n  execution_id: execution.id,\n  error_message: error.message,\n  error_stack: error.stack,\n  timestamp: new Date().toISOString(),\n  node_name: error.node?.name || 'Unknown',\n  node_type: error.node?.type || 'Unknown',\n  execution_mode: execution.mode,\n  last_node_executed: execution.lastNodeExecuted,\n  retry_count: execution.retryOf ? (execution.data.executionData?.retryCount || 0) : 0\n};\n\n// Add input data if available\nif (error.node && error.node.parameters) {\n  errorDetails.node_parameters = error.node.parameters;\n}\n\n// Add execution data if available\nif (execution.data && execution.data.resultData) {\n  const failedNodeData = execution.data.resultData.runData[error.node?.name];\n  if (failedNodeData && failedNodeData.length > 0) {\n    errorDetails.node_input = failedNodeData[0].data.main[0];\n  }\n}\n\nreturn errorDetails;"
+      },
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "id": "format-error"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.retry_count }}",
+              "operation": "smaller",
+              "value2": 3
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "id": "check-retry"
+    },
+    {
+      "parameters": {
+        "workflowId": "={{ $workflow.id }}",
+        "runData": "={{ $execution.data.executionData }}",
+        "additionalFields": {
+          "retryOf": "={{ $execution.id }}"
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [900, 200],
+      "id": "retry-workflow"
+    },
+    {
+      "parameters": {
+        "resource": "Work Packages",
+        "operation": "Create Work Package",
+        "subject": "={{ 'Workflow Error: ' + $json.workflow_name }}",
+        "description": "={{ `Error in workflow execution:\n\nWorkflow: ${$json.workflow_name}\nExecution ID: ${$json.execution_id}\nTimestamp: ${$json.timestamp}\nNode: ${$json.node_name} (${$json.node_type})\n\nError Message:\n${$json.error_message}\n\nStack Trace:\n${$json.error_stack}\n\nLast Node Executed: ${$json.last_node_executed}\nRetry Count: ${$json.retry_count}` }}",
+        "_links": {
+          "project": {
+            "href": "/api/v3/projects/1"
+          },
+          "type": {
+            "href": "/api/v3/types/1"
+          },
+          "status": {
+            "href": "/api/v3/statuses/7"
+          },
+          "priority": {
+            "href": "/api/v3/priorities/7"
+          }
+        },
+        "additionalFields": {
+          "customField1": "workflow_error",
+          "customField2": "={{ $json.workflow_id }}",
+          "customField3": "={{ $json.execution_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.openProject",
+      "typeVersion": 1,
+      "position": [900, 400],
+      "id": "create-error-work-package",
+      "credentials": {
+        "openProjectApi": {
+          "id": "1",
+          "name": "OpenProject account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "=http://localhost:5678/webhook/notification-service",
+        "allowUnauthorizedCerts": true,
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={\n  \"source_type\": \"workflow_error\",\n  \"source_id\": $json.execution_id,\n  \"title\": `Workflow Error: ${$json.workflow_name}`,\n  \"description\": `Error in workflow execution: ${$json.error_message}`,\n  \"severity\": \"error\",\n  \"timestamp\": $json.timestamp,\n  \"components\": [\"n8n\", \"workflow\", $json.workflow_name],\n  \"raw_data\": $json\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1120, 300],
+      "id": "send-notification"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "databaseId": "={{ $env.APPFLOWY_DATABASE_ID }}",
+        "record": "={\n  \"Title\": `Workflow Error: ${$json.workflow_name}`,\n  \"Description\": `Error in workflow execution: ${$json.error_message}`,\n  \"Source\": \"workflow_error\",\n  \"Workflow\": $json.workflow_name,\n  \"Execution ID\": $json.execution_id,\n  \"Node\": $json.node_name,\n  \"Error\": $json.error_message,\n  \"Timestamp\": $json.timestamp,\n  \"Retry Count\": $json.retry_count,\n  \"OpenProject ID\": $json.id,\n  \"Last Updated\": new Date().toISOString()\n}"
+      },
+      "type": "n8n-nodes-base.appflowy",
+      "typeVersion": 1,
+      "position": [1340, 300],
+      "id": "log-to-appflowy",
+      "credentials": {
+        "appFlowyApi": {
+          "id": "2",
+          "name": "AppFlowy account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "error-trigger": {
+      "main": [
+        [
+          {
+            "node": "format-error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "format-error": {
+      "main": [
+        [
+          {
+            "node": "check-retry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-retry": {
+      "main": [
+        [
+          {
+            "node": "retry-workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "create-error-work-package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-error-work-package": {
+      "main": [
+        [
+          {
+            "node": "send-notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send-notification": {
+      "main": [
+        [
+          {
+            "node": "log-to-appflowy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  },
+  "tags": ["error", "handler", "system"]
+}

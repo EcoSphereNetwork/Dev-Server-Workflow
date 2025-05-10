@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dev-Server Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.5.95/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@2.6.14/dist/vuetify.min.css" rel="stylesheet">
+    <link href="/static/style.css" rel="stylesheet">
+    <link rel="icon" href="/static/favicon.ico">
+</head>
+<body>
+    <div id="app">
+        <v-app>
+            <v-navigation-drawer
+                v-model="drawer"
+                app
+                clipped
+                color="grey lighten-4"
+            >
+                <v-list dense>
+                    <v-list-item
+                        v-for="service in services"
+                        :key="service.id"
+                        :href="service.url"
+                        target="_blank"
+                        link
+                    >
+                        <v-list-item-icon>
+                            <v-icon>{{ service.icon }}</v-icon>
+                        </v-list-item-icon>
+                        <v-list-item-content>
+                            <v-list-item-title>{{ service.name }}</v-list-item-title>
+                        </v-list-item-content>
+                    </v-list-item>
+                    
+                    <v-divider class="my-2"></v-divider>
+                    
+                    <v-list-item @click="showSettings = true">
+                        <v-list-item-icon>
+                            <v-icon>mdi-cog</v-icon>
+                        </v-list-item-icon>
+                        <v-list-item-content>
+                            <v-list-item-title>Einstellungen</v-list-item-title>
+                        </v-list-item-content>
+                    </v-list-item>
+                </v-list>
+            </v-navigation-drawer>
+
+            <v-app-bar
+                app
+                clipped-left
+                color="primary"
+                dark
+            >
+                <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
+                <v-toolbar-title>Dev-Server Dashboard</v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-btn icon @click="refreshIframe">
+                    <v-icon>mdi-refresh</v-icon>
+                </v-btn>
+            </v-app-bar>
+
+            <v-main>
+                <v-container fluid fill-height class="pa-0">
+                    <iframe 
+                        v-if="selectedService" 
+                        :src="selectedService.url" 
+                        frameborder="0" 
+                        class="iframe-container"
+                        ref="serviceFrame"
+                    ></iframe>
+                    <v-container v-else fluid class="d-flex align-center justify-center">
+                        <v-card max-width="800" class="mx-auto">
+                            <v-card-title class="headline">Willkommen beim Dev-Server Dashboard</v-card-title>
+                            <v-card-text>
+                                <p>Wählen Sie einen Dienst aus der Seitenleiste, um ihn zu öffnen.</p>
+                                <v-row>
+                                    <v-col 
+                                        v-for="service in services" 
+                                        :key="service.id" 
+                                        cols="12" sm="6" md="4"
+                                    >
+                                        <v-card 
+                                            @click="openService(service)"
+                                            hover
+                                            class="service-card"
+                                        >
+                                            <v-card-title>
+                                                <v-icon left size="24">{{ service.icon }}</v-icon>
+                                                {{ service.name }}
+                                            </v-card-title>
+                                            <v-card-text>
+                                                {{ service.description }}
+                                            </v-card-text>
+                                            <v-card-actions>
+                                                <v-btn 
+                                                    text 
+                                                    color="primary"
+                                                    :href="service.url"
+                                                    target="_blank"
+                                                >
+                                                    In neuem Tab öffnen
+                                                </v-btn>
+                                                <v-spacer></v-spacer>
+                                                <v-btn 
+                                                    text 
+                                                    color="primary"
+                                                    @click.stop="openService(service)"
+                                                >
+                                                    Öffnen
+                                                </v-btn>
+                                            </v-card-actions>
+                                        </v-card>
+                                    </v-col>
+                                </v-row>
+                            </v-card-text>
+                        </v-card>
+                    </v-container>
+                </v-container>
+            </v-main>
+
+            <!-- Einstellungen Dialog -->
+            <v-dialog v-model="showSettings" max-width="600px">
+                <v-card>
+                    <v-card-title>
+                        <span class="headline">Dienste verwalten</span>
+                        <v-spacer></v-spacer>
+                        <v-btn icon @click="showSettings = false">
+                            <v-icon>mdi-close</v-icon>
+                        </v-btn>
+                    </v-card-title>
+                    <v-card-text>
+                        <v-data-table
+                            :headers="serviceHeaders"
+                            :items="servicesArray"
+                            :items-per-page="10"
+                            class="elevation-1"
+                        >
+                            <template v-slot:item.actions="{ item }">
+                                <v-icon small class="mr-2" @click="editService(item)">
+                                    mdi-pencil
+                                </v-icon>
+                                <v-icon small @click="deleteService(item)">
+                                    mdi-delete
+                                </v-icon>
+                            </template>
+                        </v-data-table>
+                        
+                        <v-btn color="primary" class="mt-4" @click="addNewService">
+                            <v-icon left>mdi-plus</v-icon>
+                            Neuen Dienst hinzufügen
+                        </v-btn>
+                    </v-card-text>
+                </v-card>
+            </v-dialog>
+
+            <!-- Service bearbeiten Dialog -->
+            <v-dialog v-model="showServiceDialog" max-width="500px">
+                <v-card>
+                    <v-card-title>
+                        <span class="headline">{{ editedIndex === -1 ? 'Neuen Dienst hinzufügen' : 'Dienst bearbeiten' }}</span>
+                    </v-card-title>
+                    <v-card-text>
+                        <v-container>
+                            <v-row>
+                                <v-col cols="12">
+                                    <v-text-field
+                                        v-model="editedService.id"
+                                        label="ID"
+                                        :disabled="editedIndex !== -1"
+                                        required
+                                    ></v-text-field>
+                                </v-col>
+                                <v-col cols="12">
+                                    <v-text-field
+                                        v-model="editedService.name"
+                                        label="Name"
+                                        required
+                                    ></v-text-field>
+                                </v-col>
+                                <v-col cols="12">
+                                    <v-text-field
+                                        v-model="editedService.url"
+                                        label="URL"
+                                        required
+                                    ></v-text-field>
+                                </v-col>
+                                <v-col cols="12">
+                                    <v-text-field
+                                        v-model="editedService.description"
+                                        label="Beschreibung"
+                                    ></v-text-field>
+                                </v-col>
+                                <v-col cols="12">
+                                    <v-text-field
+                                        v-model="editedService.icon"
+                                        label="Icon (MDI)"
+                                        hint="z.B. mdi-web"
+                                        persistent-hint
+                                    ></v-text-field>
+                                </v-col>
+                            </v-row>
+                        </v-container>
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn color="blue darken-1" text @click="closeServiceDialog">Abbrechen</v-btn>
+                        <v-btn color="blue darken-1" text @click="saveService">Speichern</v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+
+            <!-- Bestätigungsdialog -->
+            <v-dialog v-model="showDeleteDialog" max-width="400px">
+                <v-card>
+                    <v-card-title class="headline">Dienst löschen</v-card-title>
+                    <v-card-text>
+                        Möchten Sie den Dienst "{{ editedService.name }}" wirklich löschen?
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn color="blue darken-1" text @click="showDeleteDialog = false">Abbrechen</v-btn>
+                        <v-btn color="red darken-1" text @click="confirmDelete">Löschen</v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+
+            <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="3000">
+                {{ snackbar.text }}
+                <template v-slot:action="{ attrs }">
+                    <v-btn text v-bind="attrs" @click="snackbar.show = false">
+                        Schließen
+                    </v-btn>
+                </template>
+            </v-snackbar>
+        </v-app>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.6.14/dist/vuetify.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/static/app.js"></script>
+</body>
+</html>

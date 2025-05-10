@@ -1,0 +1,1941 @@
+Run started:2025-05-10 07:02:39.824048
+
+Test results:
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ./src/common/docker_utils.py:6:0
+5	import os
+6	import subprocess
+7	import logging
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/common/docker_utils.py:26:17
+25	    try:
+26	        result = subprocess.run(
+27	            ["docker", "--version"],
+28	            stdout=subprocess.PIPE,
+29	            stderr=subprocess.PIPE,
+30	            check=False
+31	        )
+32	        return result.returncode == 0
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/common/docker_utils.py:26:17
+25	    try:
+26	        result = subprocess.run(
+27	            ["docker", "--version"],
+28	            stdout=subprocess.PIPE,
+29	            stderr=subprocess.PIPE,
+30	            check=False
+31	        )
+32	        return result.returncode == 0
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/common/docker_utils.py:45:17
+44	    try:
+45	        result = subprocess.run(
+46	            ["docker", "info"],
+47	            stdout=subprocess.PIPE,
+48	            stderr=subprocess.PIPE,
+49	            check=False
+50	        )
+51	        return result.returncode == 0
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/common/docker_utils.py:45:17
+44	    try:
+45	        result = subprocess.run(
+46	            ["docker", "info"],
+47	            stdout=subprocess.PIPE,
+48	            stderr=subprocess.PIPE,
+49	            check=False
+50	        )
+51	        return result.returncode == 0
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/common/docker_utils.py:65:17
+64	        # Versuche zuerst das neue Docker Compose Plugin
+65	        result = subprocess.run(
+66	            ["docker", "compose", "version"],
+67	            stdout=subprocess.PIPE,
+68	            stderr=subprocess.PIPE,
+69	            check=False
+70	        )
+71	        if result.returncode == 0:
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/common/docker_utils.py:65:17
+64	        # Versuche zuerst das neue Docker Compose Plugin
+65	        result = subprocess.run(
+66	            ["docker", "compose", "version"],
+67	            stdout=subprocess.PIPE,
+68	            stderr=subprocess.PIPE,
+69	            check=False
+70	        )
+71	        if result.returncode == 0:
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/common/docker_utils.py:75:17
+74	        # Versuche das alte docker-compose Kommando
+75	        result = subprocess.run(
+76	            ["docker-compose", "--version"],
+77	            stdout=subprocess.PIPE,
+78	            stderr=subprocess.PIPE,
+79	            check=False
+80	        )
+81	        return result.returncode == 0
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/common/docker_utils.py:75:17
+74	        # Versuche das alte docker-compose Kommando
+75	        result = subprocess.run(
+76	            ["docker-compose", "--version"],
+77	            stdout=subprocess.PIPE,
+78	            stderr=subprocess.PIPE,
+79	            check=False
+80	        )
+81	        return result.returncode == 0
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/common/docker_utils.py:95:17
+94	        # Versuche zuerst das neue Docker Compose Plugin
+95	        result = subprocess.run(
+96	            ["docker", "compose", "version"],
+97	            stdout=subprocess.PIPE,
+98	            stderr=subprocess.PIPE,
+99	            check=False
+100	        )
+101	        if result.returncode == 0:
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/common/docker_utils.py:95:17
+94	        # Versuche zuerst das neue Docker Compose Plugin
+95	        result = subprocess.run(
+96	            ["docker", "compose", "version"],
+97	            stdout=subprocess.PIPE,
+98	            stderr=subprocess.PIPE,
+99	            check=False
+100	        )
+101	        if result.returncode == 0:
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/common/docker_utils.py:105:17
+104	        # Versuche das alte docker-compose Kommando
+105	        result = subprocess.run(
+106	            ["docker-compose", "--version"],
+107	            stdout=subprocess.PIPE,
+108	            stderr=subprocess.PIPE,
+109	            check=False
+110	        )
+111	        if result.returncode == 0:
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/common/docker_utils.py:105:17
+104	        # Versuche das alte docker-compose Kommando
+105	        result = subprocess.run(
+106	            ["docker-compose", "--version"],
+107	            stdout=subprocess.PIPE,
+108	            stderr=subprocess.PIPE,
+109	            check=False
+110	        )
+111	        if result.returncode == 0:
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/common/docker_utils.py:148:17
+147	        docker_compose = get_docker_compose_command()
+148	        result = subprocess.run(
+149	            docker_compose + ["-f", compose_file, "up", "-d"],
+150	            stdout=subprocess.PIPE,
+151	            stderr=subprocess.PIPE,
+152	            text=True,
+153	            check=False
+154	        )
+155	        
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/common/docker_utils.py:185:17
+184	        docker_compose = get_docker_compose_command()
+185	        result = subprocess.run(
+186	            docker_compose + ["-f", compose_file, "down"],
+187	            stdout=subprocess.PIPE,
+188	            stderr=subprocess.PIPE,
+189	            text=True,
+190	            check=False
+191	        )
+192	        
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/common/docker_utils.py:222:17
+221	        docker_compose = get_docker_compose_command()
+222	        result = subprocess.run(
+223	            docker_compose + ["-f", compose_file, "restart"],
+224	            stdout=subprocess.PIPE,
+225	            stderr=subprocess.PIPE,
+226	            text=True,
+227	            check=False
+228	        )
+229	        
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/common/docker_utils.py:253:17
+252	        # Suche nach dem Container
+253	        result = subprocess.run(
+254	            ["docker", "ps", "-aqf", f"name={container_name}"],
+255	            stdout=subprocess.PIPE,
+256	            stderr=subprocess.PIPE,
+257	            text=True,
+258	            capture_output=True
+259	        )
+260	        
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/common/docker_utils.py:253:17
+252	        # Suche nach dem Container
+253	        result = subprocess.run(
+254	            ["docker", "ps", "-aqf", f"name={container_name}"],
+255	            stdout=subprocess.PIPE,
+256	            stderr=subprocess.PIPE,
+257	            text=True,
+258	            capture_output=True
+259	        )
+260	        
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/common/docker_utils.py:287:17
+286	        # Überprüfe den Status
+287	        result = subprocess.run(
+288	            ["docker", "inspect", "--format", "{{.State.Status}}", container_id],
+289	            stdout=subprocess.PIPE,
+290	            stderr=subprocess.PIPE,
+291	            text=True,
+292	            capture_output=True
+293	        )
+294	        
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/common/docker_utils.py:287:17
+286	        # Überprüfe den Status
+287	        result = subprocess.run(
+288	            ["docker", "inspect", "--format", "{{.State.Status}}", container_id],
+289	            stdout=subprocess.PIPE,
+290	            stderr=subprocess.PIPE,
+291	            text=True,
+292	            capture_output=True
+293	        )
+294	        
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/common/docker_utils.py:324:17
+323	        # Starte den Container
+324	        result = subprocess.run(
+325	            ["docker", "start", container_id],
+326	            stdout=subprocess.PIPE,
+327	            stderr=subprocess.PIPE,
+328	            text=True,
+329	            check=False
+330	        )
+331	        
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/common/docker_utils.py:324:17
+323	        # Starte den Container
+324	        result = subprocess.run(
+325	            ["docker", "start", container_id],
+326	            stdout=subprocess.PIPE,
+327	            stderr=subprocess.PIPE,
+328	            text=True,
+329	            check=False
+330	        )
+331	        
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/common/docker_utils.py:366:17
+365	        # Stoppe den Container
+366	        result = subprocess.run(
+367	            ["docker", "stop", container_id],
+368	            stdout=subprocess.PIPE,
+369	            stderr=subprocess.PIPE,
+370	            text=True,
+371	            check=False
+372	        )
+373	        
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/common/docker_utils.py:366:17
+365	        # Stoppe den Container
+366	        result = subprocess.run(
+367	            ["docker", "stop", container_id],
+368	            stdout=subprocess.PIPE,
+369	            stderr=subprocess.PIPE,
+370	            text=True,
+371	            check=False
+372	        )
+373	        
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/common/docker_utils.py:403:17
+402	        # Starte den Container neu
+403	        result = subprocess.run(
+404	            ["docker", "restart", container_id],
+405	            stdout=subprocess.PIPE,
+406	            stderr=subprocess.PIPE,
+407	            text=True,
+408	            check=False
+409	        )
+410	        
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/common/docker_utils.py:403:17
+402	        # Starte den Container neu
+403	        result = subprocess.run(
+404	            ["docker", "restart", container_id],
+405	            stdout=subprocess.PIPE,
+406	            stderr=subprocess.PIPE,
+407	            text=True,
+408	            check=False
+409	        )
+410	        
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/common/docker_utils.py:440:17
+439	        # Rufe die Logs ab
+440	        result = subprocess.run(
+441	            ["docker", "logs", "--tail", str(lines), container_id],
+442	            stdout=subprocess.PIPE,
+443	            stderr=subprocess.PIPE,
+444	            text=True,
+445	            capture_output=True
+446	        )
+447	        
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/common/docker_utils.py:440:17
+439	        # Rufe die Logs ab
+440	        result = subprocess.run(
+441	            ["docker", "logs", "--tail", str(lines), container_id],
+442	            stdout=subprocess.PIPE,
+443	            stderr=subprocess.PIPE,
+444	            text=True,
+445	            capture_output=True
+446	        )
+447	        
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/common/docker_utils.py:465:17
+464	    try:
+465	        result = subprocess.run(
+466	            ["docker"] + command,
+467	            stdout=subprocess.PIPE,
+468	            stderr=subprocess.PIPE,
+469	            text=True,
+470	            check=False
+471	        )
+472	        
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ./src/core/utils/docker_utils.py:8:0
+7	import os
+8	import subprocess
+9	import time
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/core/utils/docker_utils.py:31:21
+30	        try:
+31	            result = subprocess.run(
+32	                ["docker", "--version"],
+33	                stdout=subprocess.PIPE,
+34	                stderr=subprocess.PIPE,
+35	                check=False
+36	            )
+37	            return result.returncode == 0
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/core/utils/docker_utils.py:31:21
+30	        try:
+31	            result = subprocess.run(
+32	                ["docker", "--version"],
+33	                stdout=subprocess.PIPE,
+34	                stderr=subprocess.PIPE,
+35	                check=False
+36	            )
+37	            return result.returncode == 0
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/core/utils/docker_utils.py:51:21
+50	        try:
+51	            result = subprocess.run(
+52	                ["docker", "info"],
+53	                stdout=subprocess.PIPE,
+54	                stderr=subprocess.PIPE,
+55	                check=False
+56	            )
+57	            return result.returncode == 0
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/core/utils/docker_utils.py:51:21
+50	        try:
+51	            result = subprocess.run(
+52	                ["docker", "info"],
+53	                stdout=subprocess.PIPE,
+54	                stderr=subprocess.PIPE,
+55	                check=False
+56	            )
+57	            return result.returncode == 0
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/core/utils/docker_utils.py:72:21
+71	            # Try the new Docker Compose plugin first
+72	            result = subprocess.run(
+73	                ["docker", "compose", "version"],
+74	                stdout=subprocess.PIPE,
+75	                stderr=subprocess.PIPE,
+76	                check=False
+77	            )
+78	            if result.returncode == 0:
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/core/utils/docker_utils.py:72:21
+71	            # Try the new Docker Compose plugin first
+72	            result = subprocess.run(
+73	                ["docker", "compose", "version"],
+74	                stdout=subprocess.PIPE,
+75	                stderr=subprocess.PIPE,
+76	                check=False
+77	            )
+78	            if result.returncode == 0:
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/core/utils/docker_utils.py:82:21
+81	            # Try the old docker-compose command
+82	            result = subprocess.run(
+83	                ["docker-compose", "--version"],
+84	                stdout=subprocess.PIPE,
+85	                stderr=subprocess.PIPE,
+86	                check=False
+87	            )
+88	            return result.returncode == 0
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/core/utils/docker_utils.py:82:21
+81	            # Try the old docker-compose command
+82	            result = subprocess.run(
+83	                ["docker-compose", "--version"],
+84	                stdout=subprocess.PIPE,
+85	                stderr=subprocess.PIPE,
+86	                check=False
+87	            )
+88	            return result.returncode == 0
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/core/utils/docker_utils.py:103:21
+102	        try:
+103	            result = subprocess.run(
+104	                ["docker", "compose", "version"],
+105	                stdout=subprocess.PIPE,
+106	                stderr=subprocess.PIPE,
+107	                check=False
+108	            )
+109	            if result.returncode == 0:
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/core/utils/docker_utils.py:103:21
+102	        try:
+103	            result = subprocess.run(
+104	                ["docker", "compose", "version"],
+105	                stdout=subprocess.PIPE,
+106	                stderr=subprocess.PIPE,
+107	                check=False
+108	            )
+109	            if result.returncode == 0:
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b110_try_except_pass.html
+   Location: ./src/core/utils/docker_utils.py:111:8
+110	                return ["docker", "compose"]
+111	        except Exception:
+112	            pass
+113	        
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/core/utils/docker_utils.py:151:21
+150	            logger.info(f"Starting Docker Compose with file: {compose_file}")
+151	            result = subprocess.run(
+152	                cmd,
+153	                stdout=subprocess.PIPE,
+154	                stderr=subprocess.PIPE,
+155	                check=False
+156	            )
+157	            
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/core/utils/docker_utils.py:193:21
+192	            logger.info(f"Stopping Docker Compose with file: {compose_file}")
+193	            result = subprocess.run(
+194	                cmd,
+195	                stdout=subprocess.PIPE,
+196	                stderr=subprocess.PIPE,
+197	                check=False
+198	            )
+199	            
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/core/utils/docker_utils.py:222:21
+221	        try:
+222	            result = subprocess.run(
+223	                ["docker", "ps", "-a", "--filter", f"name={container_name}", "--format", "{{.ID}}"],
+224	                stdout=subprocess.PIPE,
+225	                stderr=subprocess.PIPE,
+226	                check=False
+227	            )
+228	            
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/core/utils/docker_utils.py:222:21
+221	        try:
+222	            result = subprocess.run(
+223	                ["docker", "ps", "-a", "--filter", f"name={container_name}", "--format", "{{.ID}}"],
+224	                stdout=subprocess.PIPE,
+225	                stderr=subprocess.PIPE,
+226	                check=False
+227	            )
+228	            
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/core/utils/docker_utils.py:251:21
+250	        try:
+251	            result = subprocess.run(
+252	                ["docker", "ps", "--filter", f"name={container_name}", "--format", "{{.ID}}"],
+253	                stdout=subprocess.PIPE,
+254	                stderr=subprocess.PIPE,
+255	                check=False
+256	            )
+257	            
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/core/utils/docker_utils.py:251:21
+250	        try:
+251	            result = subprocess.run(
+252	                ["docker", "ps", "--filter", f"name={container_name}", "--format", "{{.ID}}"],
+253	                stdout=subprocess.PIPE,
+254	                stderr=subprocess.PIPE,
+255	                check=False
+256	            )
+257	            
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/core/utils/docker_utils.py:280:21
+279	        try:
+280	            result = subprocess.run(
+281	                ["docker", "logs", f"--tail={tail}", container_name],
+282	                stdout=subprocess.PIPE,
+283	                stderr=subprocess.PIPE,
+284	                check=False
+285	            )
+286	            
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/core/utils/docker_utils.py:280:21
+279	        try:
+280	            result = subprocess.run(
+281	                ["docker", "logs", f"--tail={tail}", container_name],
+282	                stdout=subprocess.PIPE,
+283	                stderr=subprocess.PIPE,
+284	                check=False
+285	            )
+286	            
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/core/utils/docker_utils.py:308:21
+307	        try:
+308	            result = subprocess.run(
+309	                ["docker", "start", container_name],
+310	                stdout=subprocess.PIPE,
+311	                stderr=subprocess.PIPE,
+312	                check=False
+313	            )
+314	            
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/core/utils/docker_utils.py:308:21
+307	        try:
+308	            result = subprocess.run(
+309	                ["docker", "start", container_name],
+310	                stdout=subprocess.PIPE,
+311	                stderr=subprocess.PIPE,
+312	                check=False
+313	            )
+314	            
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/core/utils/docker_utils.py:337:21
+336	        try:
+337	            result = subprocess.run(
+338	                ["docker", "stop", container_name],
+339	                stdout=subprocess.PIPE,
+340	                stderr=subprocess.PIPE,
+341	                check=False
+342	            )
+343	            
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/core/utils/docker_utils.py:337:21
+336	        try:
+337	            result = subprocess.run(
+338	                ["docker", "stop", container_name],
+339	                stdout=subprocess.PIPE,
+340	                stderr=subprocess.PIPE,
+341	                check=False
+342	            )
+343	            
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/core/utils/docker_utils.py:372:21
+371	            
+372	            result = subprocess.run(
+373	                cmd,
+374	                stdout=subprocess.PIPE,
+375	                stderr=subprocess.PIPE,
+376	                check=False
+377	            )
+378	            
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/core/utils/docker_utils.py:402:21
+401	            # Check if the network already exists
+402	            result = subprocess.run(
+403	                ["docker", "network", "inspect", network_name],
+404	                stdout=subprocess.PIPE,
+405	                stderr=subprocess.PIPE,
+406	                check=False
+407	            )
+408	            
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/core/utils/docker_utils.py:402:21
+401	            # Check if the network already exists
+402	            result = subprocess.run(
+403	                ["docker", "network", "inspect", network_name],
+404	                stdout=subprocess.PIPE,
+405	                stderr=subprocess.PIPE,
+406	                check=False
+407	            )
+408	            
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/core/utils/docker_utils.py:414:21
+413	            # Create the network
+414	            result = subprocess.run(
+415	                ["docker", "network", "create", network_name],
+416	                stdout=subprocess.PIPE,
+417	                stderr=subprocess.PIPE,
+418	                check=False
+419	            )
+420	            
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/core/utils/docker_utils.py:414:21
+413	            # Create the network
+414	            result = subprocess.run(
+415	                ["docker", "network", "create", network_name],
+416	                stdout=subprocess.PIPE,
+417	                stderr=subprocess.PIPE,
+418	                check=False
+419	            )
+420	            
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/core/utils/docker_utils.py:489:21
+488	            
+489	            result = subprocess.run(
+490	                cmd,
+491	                stdout=subprocess.PIPE,
+492	                stderr=subprocess.PIPE,
+493	                check=False
+494	            )
+495	            
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ./src/core/utils/process_utils.py:11:0
+10	import signal
+11	import subprocess
+12	import time
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/core/utils/process_utils.py:197:22
+196	            # Start the process
+197	            process = subprocess.Popen(
+198	                command,
+199	                stdout=log_fd,
+200	                stderr=subprocess.STDOUT,
+201	                env=process_env,
+202	                cwd=cwd,
+203	                start_new_session=True
+204	            )
+205	            
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ./src/core/utils/system_utils.py:11:0
+10	import platform
+11	import subprocess
+12	import shutil
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/core/utils/system_utils.py:107:21
+106	        try:
+107	            result = subprocess.run(
+108	                [sys.executable, "-m", "pip", "install", package],
+109	                stdout=subprocess.PIPE,
+110	                stderr=subprocess.PIPE,
+111	                check=False
+112	            )
+113	            return result.returncode == 0
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/llm_cost_analyzer/llm_cost_analyzer/core/config.py:24:16
+23	    # Server-Einstellungen
+24	    HOST: str = "0.0.0.0"
+25	    PORT: int = 8000
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/llm_selector/llm_selector_api.py:243:13
+242	        "llm_selector_api:app",
+243	        host="0.0.0.0",
+244	        port=port,
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Call to requests without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b113_request_without_timeout.html
+   Location: ./src/llm_selector/llm_selector_client.py:49:15
+48	    
+49	    response = requests.post(endpoint, json=payload)
+50	    response.raise_for_status()
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Call to requests without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b113_request_without_timeout.html
+   Location: ./src/llm_selector/llm_selector_client.py:66:15
+65	    
+66	    response = requests.post(endpoint, json=payload)
+67	    response.raise_for_status()
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Call to requests without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b113_request_without_timeout.html
+   Location: ./src/llm_selector/llm_selector_client.py:80:15
+79	    
+80	    response = requests.post(endpoint, json=payload)
+81	    response.raise_for_status()
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Call to requests without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b113_request_without_timeout.html
+   Location: ./src/llm_selector/llm_selector_client.py:87:15
+86	    endpoint = f"{api_url}/complexity-categories"
+87	    response = requests.get(endpoint)
+88	    response.raise_for_status()
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Call to requests without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b113_request_without_timeout.html
+   Location: ./src/llm_selector/llm_selector_client.py:94:15
+93	    endpoint = f"{api_url}/available-models"
+94	    response = requests.get(endpoint)
+95	    response.raise_for_status()
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Call to requests without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b113_request_without_timeout.html
+   Location: ./src/llm_selector/llm_selector_client.py:101:15
+100	    endpoint = f"{api_url}/task-types"
+101	    response = requests.get(endpoint)
+102	    response.raise_for_status()
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/mcp/base/base_mcp_server.py:48:29
+47	                 version: str = "1.0.0",
+48	                 host: str = "0.0.0.0", 
+49	                 port: int = 3000,
+50	                 log_level: str = "INFO",
+51	                 log_file: Optional[str] = None,
+52	                 config_file: Optional[str] = None):
+53	        """
+54	        Initialize the MCP server.
+55	        
+56	        Args:
+57	            name: Name of the MCP server
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/mcp/base/base_mcp_server.py:475:46
+474	        """
+475	        parser.add_argument('--host', default='0.0.0.0',
+476	                            help='Host for the MCP server')
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/mcp/base_mcp_server_improved.py:49:29
+48	                 version: str = "1.0.0",
+49	                 host: str = "0.0.0.0", 
+50	                 port: int = 3000,
+51	                 log_level: str = "INFO",
+52	                 log_file: Optional[str] = None,
+53	                 config_file: Optional[str] = None):
+54	        """
+55	        Initialize the MCP server.
+56	        
+57	        Args:
+58	            name: Name of the MCP server
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/mcp/base_mcp_server_improved.py:476:46
+475	        """
+476	        parser.add_argument('--host', default='0.0.0.0',
+477	                            help='Host for the MCP server')
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ./src/mcp/generator_server.py:39:0
+38	import argparse
+39	import subprocess
+40	import importlib.util
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/mcp/generator_server.py:60:35
+59	    
+60	    def __init__(self, host: str = "0.0.0.0", port: int = 3007, servers_dir: str = "generated_servers"):
+61	        """
+
+--------------------------------------------------
+>> Issue: [B103:set_bad_file_permissions] Chmod setting a permissive mask 0o755 on file (NOT PARSED).
+   Severity: Medium   Confidence: High
+   CWE: CWE-732 (https://cwe.mitre.org/data/definitions/732.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b103_set_bad_file_permissions.html
+   Location: ./src/mcp/generator_server.py:975:8
+974	        # Mache die Datei ausführbar
+975	        os.chmod(os.path.join(server_dir, "server.py"), 0o755)
+976	        
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp/generator_server.py:1181:22
+1180	        try:
+1181	            process = subprocess.Popen(
+1182	                [sys.executable, server_path],
+1183	                stdout=open(log_path, "a"),
+1184	                stderr=subprocess.STDOUT,
+1185	                cwd=os.path.join(self.servers_dir, server_id)
+1186	            )
+1187	            
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/mcp/generator_server.py:1873:42
+1872	    parser = argparse.ArgumentParser(description='MCP-Server-Generator')
+1873	    parser.add_argument('--host', default='0.0.0.0', help='Host für den MCP-Server-Generator')
+1874	    parser.add_argument('--port', type=int, default=3007, help='Port für den MCP-Server-Generator')
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ./src/mcp/mcp-client.py:37:0
+36	import argparse
+37	import subprocess
+38	from pathlib import Path
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/mcp/n8n_mcp_server.py:421:43
+420	
+421	    async def start_http_server(self, host='0.0.0.0', port=3456):
+422	        """Startet einen HTTP-Server für MCP-Anfragen.
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/mcp/n8n_mcp_server.py:496:47
+495	                        help='Betriebsmodus (stdio oder http)')
+496	    parser.add_argument('--http-host', default='0.0.0.0',
+497	                        help='Host für den HTTP-Server (nur im HTTP-Modus)')
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ./src/mcp/utils.py:9:0
+8	import logging
+9	import subprocess
+10	from typing import Dict, List, Any, Optional, Tuple, Union
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/mcp/utils.py:46:17
+45	    try:
+46	        result = subprocess.run(
+47	            ["docker", "ps", "--format", "{{.Names}}"],
+48	            stdout=subprocess.PIPE,
+49	            stderr=subprocess.PIPE,
+50	            text=True,
+51	            check=False
+52	        )
+53	        
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp/utils.py:46:17
+45	    try:
+46	        result = subprocess.run(
+47	            ["docker", "ps", "--format", "{{.Names}}"],
+48	            stdout=subprocess.PIPE,
+49	            stderr=subprocess.PIPE,
+50	            text=True,
+51	            check=False
+52	        )
+53	        
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ./src/mcp_hub/core/installer.py:10:0
+9	import logging
+10	import subprocess
+11	import asyncio
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ./src/mcp_hub/core/manager.py:10:0
+9	import logging
+10	import subprocess
+11	import asyncio
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ./src/mcp_hub/core/registry.py:12:0
+11	import tempfile
+12	import subprocess
+13	import requests
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b110_try_except_pass.html
+   Location: ./src/mcp_hub/core/registry.py:253:20
+252	                                    logger.error(f"Fehler beim Parsen der Serverinformationen: {e}")
+253	                    except Exception as e:
+254	                        # Ignoriere Fehler beim Scannen
+255	                        pass
+256	        
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ./src/mcp_hub/hub_manager.py:10:0
+9	import logging
+10	import subprocess
+11	from typing import Dict, List, Optional, Any, Union
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/mcp_hub/hub_manager.py:332:16
+331	                # Starte den Server mit Docker Compose
+332	                subprocess.run(["docker-compose", "up", "-d"], cwd=server_path, check=True)
+333	                return True
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp_hub/hub_manager.py:332:16
+331	                # Starte den Server mit Docker Compose
+332	                subprocess.run(["docker-compose", "up", "-d"], cwd=server_path, check=True)
+333	                return True
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/mcp_hub/hub_manager.py:338:16
+337	                # Baue und starte den Server mit Docker
+338	                subprocess.run(["docker", "build", "-t", f"mcp-{server_id}", "."], cwd=server_path, check=True)
+339	                subprocess.run(["docker", "run", "-d", "--name", f"mcp-{server_id}", f"mcp-{server_id}"], check=True)
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp_hub/hub_manager.py:338:16
+337	                # Baue und starte den Server mit Docker
+338	                subprocess.run(["docker", "build", "-t", f"mcp-{server_id}", "."], cwd=server_path, check=True)
+339	                subprocess.run(["docker", "run", "-d", "--name", f"mcp-{server_id}", f"mcp-{server_id}"], check=True)
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/mcp_hub/hub_manager.py:339:16
+338	                subprocess.run(["docker", "build", "-t", f"mcp-{server_id}", "."], cwd=server_path, check=True)
+339	                subprocess.run(["docker", "run", "-d", "--name", f"mcp-{server_id}", f"mcp-{server_id}"], check=True)
+340	                return True
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp_hub/hub_manager.py:339:16
+338	                subprocess.run(["docker", "build", "-t", f"mcp-{server_id}", "."], cwd=server_path, check=True)
+339	                subprocess.run(["docker", "run", "-d", "--name", f"mcp-{server_id}", f"mcp-{server_id}"], check=True)
+340	                return True
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/mcp_hub/hub_manager.py:345:16
+344	                # Starte den Server mit Python
+345	                subprocess.Popen(["python", "main.py"], cwd=server_path)
+346	                return True
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp_hub/hub_manager.py:345:16
+344	                # Starte den Server mit Python
+345	                subprocess.Popen(["python", "main.py"], cwd=server_path)
+346	                return True
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/mcp_hub/hub_manager.py:351:16
+350	                # Starte den Server mit Node.js
+351	                subprocess.Popen(["npm", "start"], cwd=server_path)
+352	                return True
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp_hub/hub_manager.py:351:16
+350	                # Starte den Server mit Node.js
+351	                subprocess.Popen(["npm", "start"], cwd=server_path)
+352	                return True
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/mcp_hub/hub_manager.py:389:16
+388	                # Stoppe den Server mit Docker Compose
+389	                subprocess.run(["docker-compose", "down"], cwd=server_path, check=True)
+390	                return True
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp_hub/hub_manager.py:389:16
+388	                # Stoppe den Server mit Docker Compose
+389	                subprocess.run(["docker-compose", "down"], cwd=server_path, check=True)
+390	                return True
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/mcp_hub/hub_manager.py:395:16
+394	                # Stoppe den Server mit Docker
+395	                subprocess.run(["docker", "stop", f"mcp-{server_id}"], check=True)
+396	                subprocess.run(["docker", "rm", f"mcp-{server_id}"], check=True)
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp_hub/hub_manager.py:395:16
+394	                # Stoppe den Server mit Docker
+395	                subprocess.run(["docker", "stop", f"mcp-{server_id}"], check=True)
+396	                subprocess.run(["docker", "rm", f"mcp-{server_id}"], check=True)
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/mcp_hub/hub_manager.py:396:16
+395	                subprocess.run(["docker", "stop", f"mcp-{server_id}"], check=True)
+396	                subprocess.run(["docker", "rm", f"mcp-{server_id}"], check=True)
+397	                return True
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp_hub/hub_manager.py:396:16
+395	                subprocess.run(["docker", "stop", f"mcp-{server_id}"], check=True)
+396	                subprocess.run(["docker", "rm", f"mcp-{server_id}"], check=True)
+397	                return True
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/mcp_hub/hub_manager.py:444:25
+443	                # Prüfe den Status mit Docker Compose
+444	                result = subprocess.run(["docker-compose", "ps", "-q"], cwd=server_path, capture_output=True, text=True)
+445	                if result.stdout.strip():
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp_hub/hub_manager.py:444:25
+443	                # Prüfe den Status mit Docker Compose
+444	                result = subprocess.run(["docker-compose", "ps", "-q"], cwd=server_path, capture_output=True, text=True)
+445	                if result.stdout.strip():
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/mcp_hub/hub_manager.py:453:25
+452	                # Prüfe den Status mit Docker
+453	                result = subprocess.run(["docker", "ps", "-q", "-f", f"name=mcp-{server_id}"], capture_output=True, text=True)
+454	                if result.stdout.strip():
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp_hub/hub_manager.py:453:25
+452	                # Prüfe den Status mit Docker
+453	                result = subprocess.run(["docker", "ps", "-q", "-f", f"name=mcp-{server_id}"], capture_output=True, text=True)
+454	                if result.stdout.strip():
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ./src/mcp_hub/installer.py:13:0
+12	import tempfile
+13	import subprocess
+14	import requests
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/mcp_hub/installer.py:88:12
+87	            # Klone das Repository
+88	            subprocess.run(["git", "clone", repo_url, server_dir], check=True)
+89	            
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp_hub/installer.py:88:12
+87	            # Klone das Repository
+88	            subprocess.run(["git", "clone", repo_url, server_dir], check=True)
+89	            
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/mcp_hub/installer.py:98:16
+97	                # Installiere Node.js-Abhängigkeiten
+98	                subprocess.run(["npm", "install"], cwd=server_dir, check=True)
+99	            elif os.path.exists(os.path.join(server_dir, "pyproject.toml")):
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp_hub/installer.py:98:16
+97	                # Installiere Node.js-Abhängigkeiten
+98	                subprocess.run(["npm", "install"], cwd=server_dir, check=True)
+99	            elif os.path.exists(os.path.join(server_dir, "pyproject.toml")):
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/mcp_hub/installer.py:101:16
+100	                # Installiere Python-Abhängigkeiten
+101	                subprocess.run(["pip", "install", "-e", "."], cwd=server_dir, check=True)
+102	            elif os.path.exists(os.path.join(server_dir, "requirements.txt")):
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp_hub/installer.py:101:16
+100	                # Installiere Python-Abhängigkeiten
+101	                subprocess.run(["pip", "install", "-e", "."], cwd=server_dir, check=True)
+102	            elif os.path.exists(os.path.join(server_dir, "requirements.txt")):
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/mcp_hub/installer.py:104:16
+103	                # Installiere Python-Abhängigkeiten
+104	                subprocess.run(["pip", "install", "-r", "requirements.txt"], cwd=server_dir, check=True)
+105	            
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp_hub/installer.py:104:16
+103	                # Installiere Python-Abhängigkeiten
+104	                subprocess.run(["pip", "install", "-r", "requirements.txt"], cwd=server_dir, check=True)
+105	            
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/mcp_hub/installer.py:201:16
+200	                # Stoppe den Server mit Docker Compose
+201	                subprocess.run(["docker-compose", "down"], cwd=server_path, check=True)
+202	            
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp_hub/installer.py:201:16
+200	                # Stoppe den Server mit Docker Compose
+201	                subprocess.run(["docker-compose", "down"], cwd=server_path, check=True)
+202	            
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/mcp_hub/installer.py:207:16
+206	                server_name = os.path.basename(server_path)
+207	                subprocess.run(["docker", "stop", f"mcp-{server_name}"], check=True)
+208	                subprocess.run(["docker", "rm", f"mcp-{server_name}"], check=True)
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp_hub/installer.py:207:16
+206	                server_name = os.path.basename(server_path)
+207	                subprocess.run(["docker", "stop", f"mcp-{server_name}"], check=True)
+208	                subprocess.run(["docker", "rm", f"mcp-{server_name}"], check=True)
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/mcp_hub/installer.py:208:16
+207	                subprocess.run(["docker", "stop", f"mcp-{server_name}"], check=True)
+208	                subprocess.run(["docker", "rm", f"mcp-{server_name}"], check=True)
+209	            
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp_hub/installer.py:208:16
+207	                subprocess.run(["docker", "stop", f"mcp-{server_name}"], check=True)
+208	                subprocess.run(["docker", "rm", f"mcp-{server_name}"], check=True)
+209	            
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/mcp_hub/main.py:52:13
+51	        "src.mcp_hub.main:app",
+52	        host="0.0.0.0",
+53	        port=8000,
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ./src/mcp_hub/registry.py:12:0
+11	import tempfile
+12	import subprocess
+13	import requests
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/mcp_hub/registry.py:115:16
+114	                # Aktualisiere das Repository
+115	                subprocess.run(["git", "pull"], cwd=repo_cache_dir, check=True)
+116	            else:
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp_hub/registry.py:115:16
+114	                # Aktualisiere das Repository
+115	                subprocess.run(["git", "pull"], cwd=repo_cache_dir, check=True)
+116	            else:
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/mcp_hub/registry.py:118:16
+117	                # Klone das Repository
+118	                subprocess.run(["git", "clone", repo_url, repo_cache_dir], check=True)
+119	            
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp_hub/registry.py:118:16
+117	                # Klone das Repository
+118	                subprocess.run(["git", "clone", repo_url, repo_cache_dir], check=True)
+119	            
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Call to requests without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b113_request_without_timeout.html
+   Location: ./src/mcp_hub/registry.py:199:23
+198	            url = f"https://hub.docker.com/v2/repositories/{username}/"
+199	            response = requests.get(url)
+200	            response.raise_for_status()
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/mcp_servers/docker_mcp/core/config.py:25:30
+24	    # Server-Einstellungen
+25	    HOST: str = Field(default="0.0.0.0", env="HOST")
+26	    PORT: int = Field(default=3458, env="PORT")
+
+--------------------------------------------------
+>> Issue: [B604:any_other_function_with_shell_equals_true] Function call with shell=True parameter identified, possible security issue.
+   Severity: Medium   Confidence: Low
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b604_any_other_function_with_shell_equals_true.html
+   Location: ./src/mcp_servers/docker_mcp/docker_executor.py:32:24
+31	            stderr=asyncio.subprocess.PIPE,
+32	            shell=True
+33	        )
+34	        stdout, stderr = await process.communicate()
+35	        return process.returncode, stdout.decode(), stderr.decode()
+36	
+37	
+38	class UnixExecutor:
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/mcp_servers/docker_mcp/http_server.py:25:35
+24	    
+25	    def __init__(self, host: str = "0.0.0.0", port: int = 3334, 
+26	                 metrics_collector=None, auth_manager=None, audit_logger=None):
+27	        """Initialize the HTTP server.
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/mcp_servers/docker_mcp/models/docker.py:35:19
+34	    
+35	    host_ip: str = "0.0.0.0"
+36	    host_port: int
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/mcp_servers/llm_cost_analyzer_mcp/llm_cost_analyzer/core/config.py:24:16
+23	    # Server-Einstellungen
+24	    HOST: str = "0.0.0.0"
+25	    PORT: int = 8000
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/mcp_servers/llm_cost_analyzer_mcp/llm_cost_analyzer_mcp/core/config.py:24:16
+23	    # Server-Einstellungen
+24	    HOST: str = "0.0.0.0"
+25	    PORT: int = 8000
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/mcp_servers/n8n_mcp_server/core/config.py:25:30
+24	    # Server-Einstellungen
+25	    HOST: str = Field(default="0.0.0.0", env="HOST")
+26	    PORT: int = Field(default=3456, env="PORT")
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/mcp_servers/n8n_mcp_server/core/config.py:65:38
+64	        if v is None:
+65	            host = values.get("HOST", "0.0.0.0")
+66	            port = values.get("PORT", 3456)
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/mcp_servers/n8n_mcp_server/core/config.py:70:23
+69	            # Wenn der Host 0.0.0.0 ist, verwende localhost
+70	            if host == "0.0.0.0":
+71	                host = "localhost"
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/mcp_servers/n8n_mcp_server/n8n_mcp_server.py:421:43
+420	
+421	    async def start_http_server(self, host='0.0.0.0', port=3456):
+422	        """Startet einen HTTP-Server für MCP-Anfragen.
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/mcp_servers/n8n_mcp_server/n8n_mcp_server.py:496:47
+495	                        help='Betriebsmodus (stdio oder http)')
+496	    parser.add_argument('--http-host', default='0.0.0.0',
+497	                        help='Host für den HTTP-Server (nur im HTTP-Modus)')
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ./src/mcp_servers/n8n_mcp_server/utils.py:9:0
+8	import logging
+9	import subprocess
+10	from typing import Dict, List, Any, Optional, Tuple, Union
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html
+   Location: ./src/mcp_servers/n8n_mcp_server/utils.py:46:17
+45	    try:
+46	        result = subprocess.run(
+47	            ["docker", "ps", "--format", "{{.Names}}"],
+48	            stdout=subprocess.PIPE,
+49	            stderr=subprocess.PIPE,
+50	            text=True,
+51	            check=False
+52	        )
+53	        
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/mcp_servers/n8n_mcp_server/utils.py:46:17
+45	    try:
+46	        result = subprocess.run(
+47	            ["docker", "ps", "--format", "{{.Names}}"],
+48	            stdout=subprocess.PIPE,
+49	            stderr=subprocess.PIPE,
+50	            text=True,
+51	            check=False
+52	        )
+53	        
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/mcp_servers/prompt_mcp_server/prompt_mcp_server/core/config.py:24:16
+23	    # Server settings
+24	    HOST: str = "0.0.0.0"
+25	    PORT: int = 8000
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ./src/monitoring/prometheus_exporter.py:33:0
+32	import logging
+33	import subprocess
+34	from datetime import datetime
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: ./src/monitoring/prometheus_exporter.py:43:4
+42	    logger.info("Required packages not installed. Installing...")
+43	    subprocess.check_call([sys.executable, "-m", "pip", "install", "psutil", "docker", "prometheus_client"])
+44	    import psutil
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: ./src/openhands/agent.py:13:0
+12	import requests
+13	import subprocess
+14	from typing import Dict, List, Any, Optional, Union, Tuple, Callable
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Call to requests without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b113_request_without_timeout.html
+   Location: ./src/openhands/agent.py:167:23
+166	        try:
+167	            response = requests.post(
+168	                f"{self.config['openhands']['api_url']}/v1/chat/completions",
+169	                headers={
+170	                    "Content-Type": "application/json",
+171	                    "Authorization": f"Bearer {self.config['openhands']['api_key']}"
+172	                },
+173	                json=request_data,
+174	                timeout=self.config["openhands"]["timeout"]
+175	            )
+176	            
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/prompt_mcp_server/prompt_mcp_server/core/config.py:24:16
+23	    # Server settings
+24	    HOST: str = "0.0.0.0"
+25	    PORT: int = 8000
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/web_ui/server.py:129:38
+128	
+129	    async def start_server(self, host='0.0.0.0', port=8080):
+130	        """Startet den Web-Server.
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.3/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./src/web_ui/server.py:240:42
+239	                        help='Pfad zur Konfigurationsdatei')
+240	    parser.add_argument('--host', default='0.0.0.0',
+241	                        help='Host für den Web-Server')
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 26183
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 120
+		Medium: 35
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 9
+		Medium: 25
+		High: 121
+Files skipped (0):
