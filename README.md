@@ -28,6 +28,7 @@
 - [Workflows](#-workflows)
 - [OpenHands Integration](#-openhands-integration)
 - [MCP Integration](#-mcp-integration)
+- [Abgeschlossene Aufgaben](#-abgeschlossene-aufgaben)
 - [Fehlerbehebung](#-fehlerbehebung)
 - [Mitwirken](#-mitwirken)
 - [Lizenz](#-lizenz)
@@ -60,7 +61,7 @@ Die Integration ermöglicht eine nahtlose Zusammenarbeit zwischen den verschiede
 ## 🚀 Erste Schritte
 
 ### Voraussetzungen
-- **Für direkte Installation**: Python 3.6+
+- **Für direkte Installation**: Python 3.8+
 - **Für Docker-Installation**: Docker und Docker Compose
 - Gültige API-Keys für die zu integrierenden Dienste
 
@@ -99,7 +100,58 @@ Die Docker-Installation ist der einfachste Weg, um die n8n Workflow Integration 
 
 5. **Zugriff auf die Dienste**
    - n8n: http://localhost:5678 (Benutzername: admin, Passwort: password)
-   - MCP-Server: http://localhost:3000
+   - MCP-Hub: http://localhost:3000
+   - Frontend: http://localhost:8080
+   - Grafana: http://localhost:3001 (Benutzername: admin, Passwort: admin)
+   - Prometheus: http://localhost:9090
+
+### Docker-Start-Skript
+
+Das `docker-start.sh`-Skript bietet eine einfache Möglichkeit, die Docker-Container zu verwalten:
+
+```bash
+# Hilfe anzeigen
+./docker-start.sh help
+
+# Alle Container starten
+./docker-start.sh start
+
+# Bestimmte Container starten
+./docker-start.sh start n8n mcp-hub
+
+# Alle Container stoppen
+./docker-start.sh stop
+
+# Container-Status anzeigen
+./docker-start.sh status
+
+# Logs anzeigen
+./docker-start.sh logs [service]
+
+# Container neu starten
+./docker-start.sh restart
+
+# Container bauen
+./docker-start.sh build
+
+# Container-Images aktualisieren
+./docker-start.sh pull
+
+# Ungenutzte Docker-Ressourcen bereinigen
+./docker-start.sh prune
+```
+
+Für die Produktion können Sie die Produktionskonfiguration verwenden:
+
+```bash
+./docker-start.sh --production start
+```
+
+Für die Web-UI-Komponenten:
+
+```bash
+./docker-start.sh --web-ui start
+```
 
 Weitere Befehle und Informationen zur Docker-Installation finden Sie in der [ausführlichen Docker-Anleitung](docs/docs/Dev-Server-Workflow/DOCKER.md).
 
@@ -368,6 +420,31 @@ python src/n8n_setup_main.py --install --env-file .env --mcp
 3. Integrieren Sie diese in Ihr OpenHands-Setup:
    - Kopieren Sie die Datei in Ihr OpenHands-Verzeichnis
    - Fügen Sie den Pfad zur Konfiguration in die OpenHands-Umgebungsvariable ein oder konfigurieren Sie OpenHands entsprechend
+
+## ✅ Abgeschlossene Aufgaben
+
+Folgende Aufgaben wurden bereits abgeschlossen:
+
+### Frontend-Komponenten
+
+- **Dashboard-Übersicht**: Eine umfassende Dashboard-Übersicht, die Systemstatus, Dienst-Metriken, Workflow-Statistiken und Benachrichtigungen anzeigt.
+- **Dashboard-Anpassung**: Eine anpassbare Dashboard-Komponente mit Widgets, die hinzugefügt, entfernt und konfiguriert werden können.
+- **MCP-Server-Manager**: Eine Komponente zur Verwaltung von MCP-Servern mit Statusanzeigen und Steuerungsaktionen.
+
+### Infrastruktur
+
+- **Docker-Compose-Konfiguration**: Aktualisierte Docker-Compose-Konfiguration mit korrekten Volume-Mounts, Netzwerkkonfiguration, Gesundheitschecks und Logging.
+- **Produktions-Docker-Compose**: Eine produktionsreife Docker-Compose-Konfiguration mit optimierten Einstellungen.
+- **Web-UI-Docker-Compose**: Eine Docker-Compose-Konfiguration speziell für die Web-UI-Komponenten.
+
+### Kernfunktionalität
+
+- **Strukturierte Fehlerbehandlung**: Ein umfassendes Fehlerbehandlungssystem mit strukturierten Fehlerklassen, Fehlercodes und Fehlerbehandlungsdienstprogrammen.
+- **Strukturiertes Logging**: Ein strukturiertes Logging-System mit standardisierten Log-Formaten, Log-Levels und Logging-Dienstprogrammen.
+
+### Integration
+
+- **Dashboard-Integration**: Integration der Dashboard-Übersichtskomponente mit der Haupt-Dashboard-Komponente, die es Benutzern ermöglicht, zwischen der Übersicht und der anpassbaren Widgets-Ansicht zu wechseln.
 
 ### Verfügbare MCP-Tools
 
