@@ -1,15 +1,17 @@
 // src/components/AIAssistant.tsx
 import React, { useState, useRef, useEffect } from 'react';
-import styled from 'styled-components';
-import { Button, Input, Card } from '../design-system';
+import styled, { keyframes } from 'styled-components';
+import { Button, Input, Card, Spinner, Tooltip } from '../design-system';
+import { useServices } from '../context/ServicesContext';
 
 // Typen für Nachrichten
 interface Message {
   id: string;
   text: string;
-  sender: 'user' | 'assistant';
+  sender: 'user' | 'assistant' | 'system';
   timestamp: Date;
   isLoading?: boolean;
+  status?: 'sending' | 'sent' | 'error';
   actions?: Array<{
     id: string;
     label: string;
