@@ -1,0 +1,31 @@
+stages:
+  - resolve
+
+openhands-resolver:
+  stage: resolve
+  image: python:3.10-slim
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "webhook" && $CI_WEBHOOK_BODY =~ /fix-me/
+    - if: $CI_PIPELINE_SOURCE == "webhook" && $CI_WEBHOOK_BODY =~ /@openhands-agent/
+  script:
+    - pip install openhands-agent
+    - |
+      openhands-agent resolve \
+        --repo $CI_PROJECT_PATH \
+        --issue $CI_ISSUE_IID \
+        --platform gitlab
+  variables:
+    GIT_STRATEGY: clone
+    GIT_DEPTH: 0
+  environment:
+    name: production
+  variables:
+    GITLAB_TOKEN: $GITLAB_TOKEN
+    LLM_API_KEY: $LLM_API_KEY
+    LLM_MODEL: $LLM_MODEL
+    LLM_BASE_URL: $LLM_BASE_URL
+    OPENHANDS_MAX_ITER: $OPENHANDS_MAX_ITER
+    OPENHANDS_MACRO: $OPENHANDS_MACRO
+    TARGET_BRANCH: $TARGET_BRANCH
+    GIT_USERNAME: $GIT_USERNAME
+    GITLAB_URL: $GITLAB_URL
