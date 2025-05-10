@@ -1,0 +1,117 @@
+{
+  "name": "MCP-Server-Trigger",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 5,
+              "unit": "minutes"
+            }
+          ]
+        },
+        "url": "={{ $env.MCP_SERVERS[0].url }}/api/events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "httpHeaderAuth": {
+          "name": "X-API-Key",
+          "value": "={{ $env.MCP_SERVERS[0].apiKey }}"
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "mcp-events-poller"
+    },
+    {
+      "parameters": {
+        "mode": "jsonToJson",
+        "jsonInput": "={{ $json.body.events }}",
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "id": "split-mcp-events"
+    },
+    {
+      "parameters": {
+        "mode": "jsonToJson",
+        "jsonInput": "={{ $json }}",
+        "options": {
+          "dotNotation": true
+        },
+        "jsonOutput": "={\n  \"title\": $json.title || \"MCP Server Event: \" + $json.type,\n  \"description\": $json.description || $json.message || \"\",\n  \"source_type\": \"mcp_server\",\n  \"source_id\": $json.id,\n  \"server_name\": \"{{ $env.MCP_SERVERS[0].name }}\",\n  \"url\": $env.MCP_SERVERS[0].url + \"/events/\" + $json.id,\n  \"status\": $json.status || \"active\",\n  \"creator\": $json.user || \"system\",\n  \"severity\": $json.severity || \"info\",\n  \"timestamp\": $json.timestamp,\n  \"type\": $json.type,\n  \"components\": $json.components || [],\n  \"raw_data\": $json\n}"
+      },
+      "type": "n8n-nodes-base.itemBinary",
+      "typeVersion": 1,
+      "position": [660, 300],
+      "id": "normalize-mcp-data"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mcp-webhook",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [840, 300],
+      "id": "mcp-webhook-out"
+    }
+  ],
+  "connections": {
+    "mcp-events-poller": {
+      "main": [
+        [
+          {
+            "node": "split-mcp-events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split-mcp-events": {
+      "main": [
+        [
+          {
+            "node": "normalize-mcp-data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "normalize-mcp-data": {
+      "main": [
+        [
+          {
+            "node": "mcp-webhook-out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  }
+}

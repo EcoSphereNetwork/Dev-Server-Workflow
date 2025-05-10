@@ -1,0 +1,41 @@
+{
+  "name": "Integration-Config",
+  "parameters": {
+    "openproject": {
+      "url": "https://your-openproject-instance.com",
+      "apiKey": "YOUR_OPENPROJECT_API_KEY"
+    },
+    "github": {
+      "owner": "GITHUB_OWNER",
+      "repository": "GITHUB_REPO",
+      "accessToken": "GITHUB_ACCESS_TOKEN"
+    },
+    "gitlab": {
+      "projectId": "GITLAB_PROJECT_ID",
+      "accessToken": "GITLAB_ACCESS_TOKEN"
+    },
+    "appflowy": {
+      "databaseId": "YOUR_DATABASE_ID",
+      "apiKey": "YOUR_APPFLOWY_API_KEY"
+    },
+    "mcp": {
+      "servers": [
+        {
+          "name": "Production",
+          "url": "https://mcp-prod.example.com",
+          "apiKey": "MCP_PROD_API_KEY"
+        },
+        {
+          "name": "Staging",
+          "url": "https://mcp-staging.example.com",
+          "apiKey": "MCP_STAGING_API_KEY"
+        }
+      ]
+    },
+    "llm": {
+      "provider": "openai",
+      "model": "gpt-4",
+      "apiKey": "YOUR_OPENAI_API_KEY"
+    }
+  }
+}

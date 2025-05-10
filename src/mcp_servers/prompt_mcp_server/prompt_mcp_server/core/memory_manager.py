@@ -9,8 +9,8 @@ from datetime import datetime
 from typing import Dict, List, Optional, Any
 from uuid import uuid4
 
-from ..models.chat import ChatMessage, ChatSession
-from .config import settings
+from src.models.chat import ChatMessage, ChatSession
+from src.config import settings
 
 # Create logger
 logger = logging.getLogger(__name__)

@@ -1,0 +1,124 @@
+{
+  "name": "OpenHands-Status-Dashboard",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyDay",
+              "hour": 5,
+              "minute": 0
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "daily-status-trigger"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Function to collect status from all OpenHands instances\nconst instances = $getNodeParameter('instances');\nconst results = [];\n\n// Collect status from all instances\nfor (const instance of instances) {\n  try {\n    // Get basic status\n    const statusResponse = await fetch(`${instance.url}/api/status`, {\n      headers: {\n        'Authorization': `Bearer ${instance.apiKey}`,\n        'Content-Type': 'application/json'\n      }\n    });\n    \n    const statusData = await statusResponse.json();\n    \n    // Get issue statistics\n    const statsResponse = await fetch(`${instance.url}/api/issues/stats`, {\n      headers: {\n        'Authorization': `Bearer ${instance.apiKey}`,\n        'Content-Type': 'application/json'\n      }\n    });\n    \n    const statsData = await statsResponse.json();\n    \n    // Combine the data\n    results.push({\n      instance_id: instance.id,\n      instance_name: instance.name,\n      instance_url: instance.url,\n      status: statusData.status,\n      version: statusData.version,\n      uptime: statusData.uptime,\n      cpu_usage: statusData.cpu_usage,\n      memory_usage: statusData.memory_usage,\n      disk_usage: statusData.disk_usage,\n      total_issues: statsData.total,\n      open_issues: statsData.open,\n      closed_issues: statsData.closed,\n      critical_issues: statsData.critical,\n      high_priority: statsData.high_priority,\n      medium_priority: statsData.medium_priority,\n      low_priority: statsData.low_priority,\n      activity_last_24h: statsData.activity_last_24h,\n      timestamp: new Date().toISOString()\n    });\n  } catch (error) {\n    console.error(`Error fetching status from ${instance.name}: ${error.message}`);\n    \n    // Add error entry\n    results.push({\n      instance_id: instance.id,\n      instance_name: instance.name,\n      instance_url: instance.url,\n      status: 'error',\n      error: error.message,\n      timestamp: new Date().toISOString()\n    });\n  }\n}\n\n// Return the collected status information\nreturn [{ json: { instances: results } }];"
+      },
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [440, 300],
+      "id": "collect-openhands-status"
+    },
+    {
+      "parameters": {
+        "provider": "={{ $env.LLM.provider }}",
+        "apiKey": "={{ $env.LLM.apiKey }}",
+        "model": "={{ $env.LLM.model }}",
+        "prompt": "=# OpenHands Status Report Generation\n\nGenerate a comprehensive status report for the OpenHands instances based on the following data:\n\n```json\n{{ JSON.stringify($json.instances) }}\n```\n\nPlease generate a professional status report with the following sections:\n\n1. Executive Summary\n   - Overall health of the system\n   - Key metrics across all instances\n   - Urgent issues requiring attention\n\n2. Instance Status\n   - Status of each instance\n   - Performance metrics (CPU, memory, disk usage)\n   - Issues statistics for each instance\n\n3. Issue Trends\n   - Open vs. closed issues\n   - Priority distribution\n   - Recent activity analysis\n\n4. Recommendations\n   - Instances requiring maintenance\n   - Resource allocation suggestions\n   - Issue management recommendations\n\nThe report should be formatted in Markdown for easy reading. Use tables and bullet points where appropriate to organize information clearly.",
+        "options": {
+          "maxTokens": 2000,
+          "temperature": 0.3
+        }
+      },
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [640, 300],
+      "id": "generate-status-report"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "databaseId": "={{ $env.APPFLOWY_DATABASE_ID }}",
+        "record": "={\n  \"Title\": \"OpenHands Status Report - \" + new Date().toISOString().split('T')[0],\n  \"Type\": \"Status Report\",\n  \"Content\": $json.text,\n  \"Generated At\": new Date().toISOString(),\n  \"Instance Count\": $json.instances.length,\n  \"Healthy Instances\": $json.instances.filter(i => i.status === 'healthy').length,\n  \"Warning Instances\": $json.instances.filter(i => i.status === 'warning').length,\n  \"Error Instances\": $json.instances.filter(i => i.status === 'error').length,\n  \"Total Issues\": $json.instances.reduce((sum, i) => sum + (i.total_issues || 0), 0),\n  \"Open Issues\": $json.instances.reduce((sum, i) => sum + (i.open_issues || 0), 0)\n}"
+      },
+      "type": "n8n-nodes-base.appflowy",
+      "typeVersion": 1,
+      "position": [840, 300],
+      "id": "save-report-to-appflowy"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://localhost:5678/webhook/send-notification",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"notification_type\": \"email\",\n  \"to\": \"admin@ecospherenet.work\",\n  \"subject\": \"OpenHands Daily Status Report - \" + new Date().toISOString().split('T')[0],\n  \"message\": $json.text,\n  \"from\": \"openhands-monitor@ecospherenet.work\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1040, 300],
+      "id": "email-status-report"
+    }
+  ],
+  "connections": {
+    "daily-status-trigger": {
+      "main": [
+        [
+          {
+            "node": "collect-openhands-status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "collect-openhands-status": {
+      "main": [
+        [
+          {
+            "node": "generate-status-report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate-status-report": {
+      "main": [
+        [
+          {
+            "node": "save-report-to-appflowy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "save-report-to-appflowy": {
+      "main": [
+        [
+          {
+            "node": "email-status-report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  }
+}

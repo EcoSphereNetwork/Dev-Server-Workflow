@@ -1,0 +1,429 @@
+{
+  "name": "GitLab-OpenProject-Basis-Synchronisation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gitlab-issue-webhook",
+        "responseMode": "onReceived",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "a3b0a307-4b8a-4afe-915f-e253b12db08e",
+      "name": "GitLab Issue Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "gitlab-issue-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrahiere und validiere die Issue-Daten aus dem Webhook\nconst payload = $input.item.json.body || $input.item.json;\n\n// Prüfen, ob es sich um ein Issue-Event handelt\nif (!payload.object_kind || payload.object_kind !== 'issue') {\n  console.log(`Ignoriere nicht-Issue Event: ${payload.object_kind || 'unbekannt'}`);\n  return {\n    continue: false,\n    reason: `Ignoriere Event vom Typ ${payload.object_kind || 'unbekannt'}`\n  };\n}\n\n// Extract relevant issue data\nconst issue = payload.object_attributes;\nconst project = payload.project;\nlabels = payload.labels || [];\n\n// Stelle sicher, dass Issue-Informationen vollständig sind\nif (!issue || !issue.id || !project || !project.id) {\n  console.error('Unvollständige Issue-Daten erhalten:', JSON.stringify(payload, null, 2));\n  return {\n    continue: false,\n    reason: 'Unvollständige Issue-Daten'\n  };\n}\n\n// Sammle alle relevanten Issue-Daten\nconst issueData = {\n  issue_id: issue.id,\n  issue_iid: issue.iid,\n  project_id: project.id,\n  project_name: project.name,\n  project_path: project.path_with_namespace,\n  title: issue.title,\n  description: issue.description || '',\n  state: issue.state,\n  created_at: issue.created_at,\n  updated_at: issue.updated_at,\n  labels: labels.map(label => label.title),\n  assignees: (payload.assignees || []).map(assignee => assignee.username),\n  author: payload.user ? payload.user.username : 'unknown',\n  url: issue.url,\n  milestone_id: issue.milestone_id,\n  due_date: issue.due_date,\n  time_estimate: issue.time_estimate,\n  // Add a synchronization marker\n  sync_source: 'gitlab',\n  sync_timestamp: new Date().toISOString(),\n  sync_action: issue.action || 'update' // open, close, update\n};\n\n// Log für Debugging\nconsole.log(`Verarbeite GitLab Issue #${issue.iid} (${issue.title})`);\n\nreturn {\n  continue: true,\n  issueData: issueData\n};"
+      },
+      "id": "0cc27354-bfc4-496a-bc30-49f093f97e85",
+      "name": "Validiere und extrahiere Issue-Daten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.continue}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "a5a3e2c9-b65b-4ac5-a2d4-31ac3e7d87a3",
+      "name": "Ist Issue relevant?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "=Ignoriere Event: {{$json.reason}}",
+        "options": {}
+      },
+      "id": "cb87b1bd-9bc3-4d9e-a3e0-b37a84872a2c",
+      "name": "Ignoriere Event",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        900,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Lade das Referenz-Mapping zwischen GitLab und OpenProject\nlet refMapping = {};\ntry {\n  // In Produktion aus Datenbank oder Umgebungsvariable laden\n  const storedMapping = process.env.REFERENCE_MAPPING;\n  if (storedMapping) {\n    refMapping = JSON.parse(storedMapping);\n  }\n} catch (error) {\n  console.error('Fehler beim Laden des Referenz-Mappings:', error);\n  refMapping = { issues: {} };\n}\n\n// Initialisiere Structure falls nötig\nif (!refMapping.issues) {\n  refMapping.issues = {};\n}\n\n// Erzeuge eindeutigen Key für das GitLab Issue\nconst gitlabIssueId = $input.item.json.issueData.issue_id;\nconst refKey = `gitlab-${gitlabIssueId}`;\n\n// Prüfe, ob bereits ein OpenProject Work Package für dieses Issue existiert\nlet openProjectId = null;\nlet needsCreation = true;\n\nif (refMapping.issues[refKey]) {\n  openProjectId = refMapping.issues[refKey].openproject_id;\n  needsCreation = false;\n  console.log(`Gefundenes Mapping für GitLab Issue ${gitlabIssueId} -> OpenProject Work Package ${openProjectId}`);\n} else {\n  console.log(`Kein Mapping gefunden für GitLab Issue ${gitlabIssueId}, erstelle neues Work Package`);\n}\n\n// Gib Ergebnis zurück mit allen relevanten Daten\nreturn {\n  ...($input.item.json.issueData),\n  ref_key: refKey,\n  openproject_id: openProjectId,\n  needs_creation: needsCreation\n};"
+      },
+      "id": "d1c2a519-0e00-4a4b-b4a0-04b60d1a0aaf",
+      "name": "OpenProject-Referenz prüfen",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        900,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.needs_creation}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "15b0ead9-1aaa-446e-9d94-a8a25de2f2c1",
+      "name": "Neu erstellen oder aktualisieren?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$node[\"Config: OpenProject API\"].json.openproject_api_url}}/work_packages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{\"Basic \" + Buffer.from(\"apikey:\" + $node[\"Config: OpenProject API\"].json.openproject_api_token).toString(\"base64\")}}"
+            }
+          ]
+        },
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"_links\": {\n    \"project\": {\n      \"href\": \"/api/v3/projects/{{$node[\"Projekt-ID Mapping\"].json.openproject_project_id}}\"\n    },\n    \"type\": {\n      \"href\": \"/api/v3/types/{{$node[\"Issue-Typ Mapping\"].json.openproject_type_id}}\"\n    },\n    \"status\": {\n      \"href\": \"/api/v3/statuses/{{$node[\"Status Mapping\"].json.openproject_status_id}}\"\n    }\n  },\n  \"subject\": \"{{$json.title}}\",\n  \"description\": {\n    \"format\": \"markdown\",\n    \"raw\": \"**GitLab Issue #{{$json.issue_iid}}**\\n\\n{{$json.description}}\\n\\n---\\n*Synchronisiert von GitLab - [Original Issue]({{$json.url}})*\"\n  },\n  \"customField1\": \"gitlab-issue-{{$json.issue_id}}\" \n}",
+        "options": {
+          "response": {
+            "fullResponse": true
+          }
+        }
+      },
+      "id": "d83c0ab1-8ceb-4adb-80d5-e4089d3e4f6c",
+      "name": "Erstelle OpenProject Work Package",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1340,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$node[\"Config: OpenProject API\"].json.openproject_api_url}}/work_packages/{{$json.openproject_id}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "PATCH",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{\"Basic \" + Buffer.from(\"apikey:\" + $node[\"Config: OpenProject API\"].json.openproject_api_token).toString(\"base64\")}}"
+            }
+          ]
+        },
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"_links\": {\n    \"status\": {\n      \"href\": \"/api/v3/statuses/{{$node[\"Status Mapping\"].json.openproject_status_id}}\"\n    }\n  },\n  \"subject\": \"{{$json.title}}\",\n  \"description\": {\n    \"format\": \"markdown\",\n    \"raw\": \"**GitLab Issue #{{$json.issue_iid}}**\\n\\n{{$json.description}}\\n\\n---\\n*Aktualisiert von GitLab - [Original Issue]({{$json.url}})*\"\n  },\n  \"lockVersion\": 1\n}",
+        "options": {
+          "response": {
+            "fullResponse": true
+          }
+        }
+      },
+      "id": "1ca01f13-cad5-4e3e-a6a7-3be95a8b1e35",
+      "name": "Aktualisiere OpenProject Work Package",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1340,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Statische Konfiguration (sollte in Produktion aus Umgebungsvariablen stammen)\nreturn {\n  // OpenProject API Konfiguration\n  openproject_api_url: 'https://openproject.example.com/api/v3',\n  openproject_api_token: 'YOUR_OPENPROJECT_API_TOKEN',\n  \n  // GitLab API Konfiguration\n  gitlab_api_url: 'https://gitlab.example.com/api/v4',\n  gitlab_api_token: 'YOUR_GITLAB_API_TOKEN',\n  \n  // GitHub API Konfiguration\n  github_api_url: 'https://api.github.com',\n  github_api_token: 'YOUR_GITHUB_API_TOKEN',\n  github_owner: 'your-organization',\n  \n  // Logging-Konfiguration\n  debug_mode: true,\n  log_details: true,\n  \n  // Synchronisierungs-Konfiguration\n  sync_comments: true,\n  sync_attachments: false,\n  sync_milestones: true,\n  \n  // Alert-Konfiguration\n  alert_on_errors: true,\n  alert_email: 'admin@example.com',\n  slack_webhook_url: 'https://hooks.slack.com/services/YOUR_SLACK_WEBHOOK'\n};"
+      },
+      "id": "01e1c673-b84d-4a4c-802e-5a2a83a2c2bc",
+      "name": "Config: OpenProject API",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mapping von GitLab Projekt IDs zu OpenProject Projekt IDs\n// In Produktion aus Datenbank oder Konfigurationsdatei laden\nconst projectMapping = {\n  // GitLab-Projekt-ID → OpenProject-Projekt-ID\n  '123': '456',\n  '124': '457',\n  '125': '458',\n  // ... weitere Mappings\n};\n\n// Holt die OpenProject Projekt ID für das aktuelle GitLab Projekt\nconst gitlabProjectId = $input.item.json.project_id.toString();\nconst openProjectProjectId = projectMapping[gitlabProjectId] || '1'; // Fallback-ID\n\nreturn {\n  gitlab_project_id: gitlabProjectId,\n  openproject_project_id: openProjectProjectId\n};"
+      },
+      "id": "0eb67bb8-2cb1-4f9e-a6e4-07adb9f0acaf",
+      "name": "Projekt-ID Mapping",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mapping von GitLab Status zu OpenProject Status\nconst statusMapping = {\n  'opened': '1',   // OpenProject \"In Bearbeitung\"\n  'reopened': '1', // OpenProject \"In Bearbeitung\"\n  'closed': '5'    // OpenProject \"Geschlossen\"\n  // Weitere Status hinzufügen nach Bedarf\n};\n\n// Ermittle Status-ID für OpenProject\nconst gitlabStatus = $input.item.json.state || 'opened';\nconst openProjectStatusId = statusMapping[gitlabStatus] || '1'; // Fallback to \"In Bearbeitung\"\n\nreturn {\n  gitlab_status: gitlabStatus,\n  openproject_status_id: openProjectStatusId\n};"
+      },
+      "id": "b8a49e24-f7aa-45aa-baea-dcee6bde8c38",
+      "name": "Status Mapping",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        840
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mapping von GitLab Labels zu OpenProject-Typ\nconst typeMapping = {\n  'bug': '1',       // OpenProject \"Fehler\"\n  'feature': '2',   // OpenProject \"Feature\"\n  'task': '3',      // OpenProject \"Aufgabe\"\n  'story': '4',     // OpenProject \"User Story\"\n  // Weitere Typen hinzufügen nach Bedarf\n};\n\n// Ermittle Typ-ID für OpenProject basierend auf GitLab Labels\nconst gitlabLabels = $input.item.json.labels || [];\n\n// Standardtyp festlegen\nlet openProjectTypeId = '3'; // Default: Aufgabe\n\n// Suche nach einem passenden Label\nfor (const label of gitlabLabels) {\n  if (typeMapping[label]) {\n    openProjectTypeId = typeMapping[label];\n    break;\n  }\n}\n\nreturn {\n  gitlab_labels: gitlabLabels,\n  openproject_type_id: openProjectTypeId\n};"
+      },
+      "id": "5e29c13b-3f3f-41d4-8d1b-1b453a6de1a3",
+      "name": "Issue-Typ Mapping",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        980
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.statusCode }}",
+              "operation": "smaller",
+              "value2": 300
+            }
+          ]
+        }
+      },
+      "id": "59c631a7-8958-40ae-a1a5-5bef43eef654",
+      "name": "API Anfrage erfolgreich?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Aktualisiere das Referenz-Mapping zwischen GitLab Issue und OpenProject Work Package\nlet refMapping = {};\ntry {\n  // In Produktion aus Datenbank oder Umgebungsvariable laden\n  const storedMapping = process.env.REFERENCE_MAPPING;\n  if (storedMapping) {\n    refMapping = JSON.parse(storedMapping);\n  }\n} catch (error) {\n  console.error('Fehler beim Laden des Referenz-Mappings:', error);\n  refMapping = { issues: {} };\n}\n\n// Initialisiere Structure falls nötig\nif (!refMapping.issues) {\n  refMapping.issues = {};\n}\n\n// Extrahiere die OpenProject Work Package ID aus der API-Antwort\nconst responseData = $input.item.json.body;\nlet openProjectId = null;\n\n// Bei neuen Work Packages ist die ID im self-Link enthalten\nif (responseData && responseData._links && responseData._links.self) {\n  const selfLink = responseData._links.self.href;\n  const idMatch = selfLink.match(/\\/work_packages\\/(\\d+)/);\n  if (idMatch && idMatch[1]) {\n    openProjectId = idMatch[1];\n  }\n} \n// Bei Updates ist die ID bereits bekannt\nelse if ($input.item.json.openproject_id) {\n  openProjectId = $input.item.json.openproject_id;\n}\n\n// Wenn keine ID gefunden wurde, Fehler protokollieren\nif (!openProjectId) {\n  console.error('Konnte keine OpenProject Work Package ID extrahieren:', JSON.stringify(responseData, null, 2));\n  return { success: false, error: 'Keine OpenProject ID gefunden' };\n}\n\n// Speichere das Mapping\nconst gitlabIssueId = $input.item.json.issue_id;\nconst refKey = $input.item.json.ref_key || `gitlab-${gitlabIssueId}`;\n\nrefMapping.issues[refKey] = {\n  openproject_id: openProjectId,\n  gitlab_issue_id: gitlabIssueId,\n  last_sync: new Date().toISOString(),\n  sync_source: 'gitlab'\n};\n\n// Speichere das aktualisierte Mapping zurück\ntry {\n  process.env.REFERENCE_MAPPING = JSON.stringify(refMapping);\n} catch (error) {\n  console.error('Fehler beim Speichern des Referenz-Mappings:', error);\n}\n\nreturn {\n  success: true,\n  openproject_id: openProjectId,\n  gitlab_issue_id: gitlabIssueId,\n  ref_key: refKey,\n  action: $input.item.json.needs_creation ? 'created' : 'updated',\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "b94d1e8d-d85b-42aa-b96d-a4e61d3c6979",
+      "name": "Speichere Referenz Mapping",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1780,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Fehler protokollieren und Ergebnis zurückgeben\nconsole.error('Fehler bei der OpenProject API Anfrage:', JSON.stringify($input.item.json, null, 2));\n\nreturn {\n  success: false,\n  error: $input.item.json.error?.message || 'Unbekannter Fehler',\n  status_code: $input.item.json.statusCode,\n  gitlab_issue_id: $input.item.json.issue_id,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "c7db0cb5-4a99-4ccf-80d5-c8a0dfae1a29",
+      "name": "Behandle API Fehler",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1780,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "channel": "#integration-alerts",
+        "text": "=⚠️ Fehler bei GitLab-OpenProject Synchronisation",
+        "attachments": [
+          {
+            "color": "#ff0000",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Fehler bei Synchronisation von GitLab Issue nach OpenProject*\n\n• GitLab Issue ID: `{{$json.gitlab_issue_id}}`\n• Status Code: `{{$json.status_code}}`\n• Fehler: {{$json.error}}\n• Zeitpunkt: {{$json.timestamp}}"
+                }
+              },
+              {
+                "type": "actions",
+                "elements": [
+                  {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "Logs anzeigen"
+                    },
+                    "url": "https://n8n.example.com/logs"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "otherOptions": {}
+      },
+      "id": "25cab36b-d73b-4eb4-b0ea-83c5e4a1bc62",
+      "name": "Sende Fehler-Benachrichtigung",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        460
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "1",
+          "name": "Slack Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $node[\"Config: OpenProject API\"].json.openproject_api_url }}/work_packages/{{ $json.openproject_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ \"Basic \" + Buffer.from(\"apikey:\" + $node[\"Config: OpenProject API\"].json.openproject_api_token).toString(\"base64\") }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ea8d4c9c-61e0-4cae-9fdf-1d84a34b96df",
+      "name": "Hole Work Package Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1980,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "f8d77cfc-d1a9-446a-9683-08057f1eacc8",
+      "name": "15 Minuten Timer (Fallback)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $node[\"Config: OpenProject API\"].json.gitlab_api_url }}/projects/{{ $json.project_id }}/issues?iids={{ $json.issue_iid }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "PRIVATE-TOKEN",
+              "value": "={{ $node[\"Config: OpenProject API\"].json.gitlab_api_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3e41e55-db71-4aa4-bab9-3b7064ce8e87",
+      "name": "Hole GitLab Issue Details (Polling)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        460,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Konvertiere GitLab API Response in das gleiche Format wie unser Webhook\nconst issues = $input.item.json;\n\n// Prüfe, ob Issues gefunden wurden\nif (!Array.isArray(issues) || issues.length === 0) {\n  console.log('Keine Issues gefunden für die angegebene ID');\n  return {\n    continue: false,\n    reason: 'Keine Issues gefunden'\n  };\n}\n\n// Nimm das erste Issue (sollte nur eines mit der spezifischen IID sein)\nconst issue = issues[0];\n\n// Baue Datenstruktur analog zum Webhook auf\nconst issueData = {\n  issue_id: issue.id,\n  issue_iid: issue.iid,\n  project_id: issue.project_id,\n  project_name: issue.references?.full.split('#')[0].trim() || 'Unknown',\n  project_path: issue.references?.full.split('#')[0].trim() || 'Unknown',\n  title: issue.title,\n  description: issue.description || '',\n  state: issue.state,\n  created_at: issue.created_at,\n  updated_at: issue.updated_at,\n  labels: issue.labels || [],\n  assignees: (issue.assignees || []).map(a => a.username),\n  author: issue.author?.username || 'unknown',\n  url: issue.web_url,\n  milestone_id: issue.milestone?.id,\n  due_date: issue.due_date,\n  time_estimate: issue.time_estimate,\n  // Add a synchronization marker\n  sync_source: 'gitlab-polling',\n  sync_timestamp: new Date().toISOString(),\n  sync_action: 'update'\n};\n\nreturn {\n  continue: true,\n  issueData: issueData\n};"
+      },
+      "id": "9f8bd2a9-3b68-48f9-90bb-a8adf6d2a10e",
+      "name": "Transformiere API Daten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 10,
+        "options": {}
+      },
+      "id": "e1da8dc4-de30-4e3c-a9e4-ddf9cc25b0aa",
+      "name": "Verarbeite Benachrichtigungen",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $node[\"Config: OpenProject API\"].json.openproject_api_url }}/projects/{{ $node[\"Projekt-ID Mapping\"].json.openproject_project_id }}/work_packages/{{ $json.id }}/activities",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "POST",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ \"Basic \" + Buffer.from(\"apikey:\" + $node[\"

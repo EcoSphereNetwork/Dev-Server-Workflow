@@ -1,0 +1,79 @@
+{
+  "name": "GitHub-Trigger",
+  "nodes": [
+    {
+      "parameters": {
+        "owner": "={{ $env.GITHUB_OWNER }}",
+        "repository": "={{ $env.GITHUB_REPO }}",
+        "events": [
+          "issues",
+          "issue_comment",
+          "pull_request",
+          "pull_request_review",
+          "push"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.githubTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "github-trigger"
+    },
+    {
+      "parameters": {
+        "mode": "jsonToJson",
+        "jsonInput": "={{ $json }}",
+        "options": {
+          "dotNotation": true
+        },
+        "jsonOutput": "={\n  \"title\": $json.issue ? $json.issue.title : $json.pull_request ? $json.pull_request.title : $json.commits ? \"Push: \" + $json.commits[0].message.split('\\n')[0] : \"GitHub Event\",\n  \"description\": $json.issue ? $json.issue.body : $json.pull_request ? $json.pull_request.body : $json.commits ? $json.commits.map(c => c.message).join('\\n') : \"\",\n  \"source_type\": \"github\",\n  \"source_id\": $json.issue ? $json.issue.number : $json.pull_request ? $json.pull_request.number : $json.commits ? $json.after : \"unknown-id\",\n  \"url\": $json.issue ? $json.issue.html_url : $json.pull_request ? $json.pull_request.html_url : $json.compare,\n  \"status\": $json.issue ? $json.issue.state : $json.pull_request ? $json.pull_request.state : \"active\",\n  \"creator\": $json.sender.login,\n  \"action\": $json.action || ($json.commits ? \"push\" : \"unknown\"),\n  \"repository\": $json.repository.full_name,\n  \"branch\": $json.ref ? $json.ref.replace('refs/heads/', '') : null,\n  \"raw_data\": $json\n}"
+      },
+      "type": "n8n-nodes-base.itemBinary",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "id": "normalize-github-data"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "github-webhook",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [660, 300],
+      "id": "github-webhook-out"
+    }
+  ],
+  "connections": {
+    "github-trigger": {
+      "main": [
+        [
+          {
+            "node": "normalize-github-data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "normalize-github-data": {
+      "main": [
+        [
+          {
+            "node": "github-webhook-out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  }
+}

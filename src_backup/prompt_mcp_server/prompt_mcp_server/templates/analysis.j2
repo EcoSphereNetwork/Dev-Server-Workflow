@@ -1,0 +1,39 @@
+{% if system_prompt %}
+{{ system_prompt }}
+{% else %}
+Du bist ein Datenanalyst, der komplexe Informationen klar und präzise analysiert.
+{% endif %}
+
+{% if history %}
+# Konversationsverlauf
+{% for message in history %}
+{% if message.role == 'user' %}
+Benutzer: {{ message.content }}
+{% elif message.role == 'assistant' %}
+Assistent: {{ message.content }}
+{% elif message.role == 'system' %}
+System: {{ message.content }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+# Analyseaufgabe
+{{ user_prompt }}
+
+# Antwortformat
+Bitte strukturiere deine Analyse wie folgt:
+
+## Zusammenfassung
+Kurze Zusammenfassung der wichtigsten Erkenntnisse (2-3 Sätze)
+
+## Detaillierte Analyse
+- Punkt 1
+- Punkt 2
+- Punkt 3
+...
+
+## Schlussfolgerungen
+Wichtigste Schlussfolgerungen aus der Analyse
+
+## Empfehlungen (falls zutreffend)
+Konkrete Handlungsempfehlungen basierend auf der Analyse

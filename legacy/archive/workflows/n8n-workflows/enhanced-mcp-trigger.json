@@ -1,0 +1,296 @@
+{
+  "name": "Enhanced MCP-Server-Trigger",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 5,
+              "unit": "minutes"
+            }
+          ]
+        },
+        "url": "={{ $env.MCP_SERVERS_CONFIG.servers[$parameter.serverIndex].url }}/health",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "mcp-health-poller",
+      "parameters": {
+        "serverIndex": 0
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.statusCode }}",
+              "operation": "equal",
+              "value2": 200
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "id": "check-server-health"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.MCP_SERVERS_CONFIG.servers[$parameter.serverIndex].url }}/mcp",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "jsonrpc",
+              "value": "2.0"
+            },
+            {
+              "name": "id",
+              "value": 1
+            },
+            {
+              "name": "method",
+              "value": "mcp.listTools"
+            },
+            {
+              "name": "params",
+              "value": "{}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [680, 200],
+      "id": "get-mcp-tools",
+      "parameters": {
+        "serverIndex": 0
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Log server health issue\nconst serverName = $env.MCP_SERVERS_CONFIG.servers[$parameter.serverIndex].name;\nconst serverUrl = $env.MCP_SERVERS_CONFIG.servers[$parameter.serverIndex].url;\n\nconsole.log(`MCP Server ${serverName} (${serverUrl}) is not healthy. Status code: ${$json.statusCode}`);\n\nreturn {\n  server_name: serverName,\n  server_url: serverUrl,\n  status_code: $json.statusCode,\n  timestamp: new Date().toISOString(),\n  message: `MCP Server ${serverName} is not responding properly`,\n  severity: \"warning\",\n  type: \"server_health\",\n  source_id: `${serverName}_health_${Date.now()}`,\n  components: [\"mcp\", serverName]\n};"
+      },
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [680, 400],
+      "id": "log-server-health-issue",
+      "parameters": {
+        "serverIndex": 0
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.result !== undefined }}",
+              "operation": "equal",
+              "value2": "true"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [900, 200],
+      "id": "check-tools-response"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Process MCP tools\nconst serverName = $env.MCP_SERVERS_CONFIG.servers[$parameter.serverIndex].name;\nconst serverUrl = $env.MCP_SERVERS_CONFIG.servers[$parameter.serverIndex].url;\nconst tools = $json.result || [];\n\nconsole.log(`MCP Server ${serverName} has ${tools.length} tools available`);\n\nreturn {\n  server_name: serverName,\n  server_url: serverUrl,\n  tools_count: tools.length,\n  tools: tools,\n  timestamp: new Date().toISOString(),\n  message: `MCP Server ${serverName} has ${tools.length} tools available`,\n  severity: \"info\",\n  type: \"server_tools\",\n  source_id: `${serverName}_tools_${Date.now()}`,\n  components: [\"mcp\", serverName]\n};"
+      },
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1120, 100],
+      "id": "process-mcp-tools",
+      "parameters": {
+        "serverIndex": 0
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Log tools error\nconst serverName = $env.MCP_SERVERS_CONFIG.servers[$parameter.serverIndex].name;\nconst serverUrl = $env.MCP_SERVERS_CONFIG.servers[$parameter.serverIndex].url;\n\nconsole.log(`MCP Server ${serverName} (${serverUrl}) returned an error when listing tools`);\n\nreturn {\n  server_name: serverName,\n  server_url: serverUrl,\n  error: $json.error || \"Unknown error\",\n  timestamp: new Date().toISOString(),\n  message: `MCP Server ${serverName} returned an error when listing tools: ${$json.error ? $json.error.message : 'Unknown error'}`,\n  severity: \"error\",\n  type: \"server_tools_error\",\n  source_id: `${serverName}_tools_error_${Date.now()}`,\n  components: [\"mcp\", serverName]\n};"
+      },
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1120, 300],
+      "id": "log-tools-error",
+      "parameters": {
+        "serverIndex": 0
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mcp-server-status",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [1340, 200],
+      "id": "mcp-status-webhook-out"
+    },
+    {
+      "parameters": {
+        "resource": "Work Packages",
+        "operation": "Create Work Package",
+        "subject": "={{ $json.message }}",
+        "description": "={{ `MCP Server Status Report\n\nServer: ${$json.server_name}\nURL: ${$json.server_url}\nTimestamp: ${$json.timestamp}\nSeverity: ${$json.severity}\nType: ${$json.type}\n\n${$json.error ? 'Error: ' + JSON.stringify($json.error) : ''}\n${$json.tools ? 'Tools: ' + $json.tools.map(t => t.name).join(', ') : ''}` }}",
+        "_links": {
+          "project": {
+            "href": "/api/v3/projects/1"
+          },
+          "type": {
+            "href": "/api/v3/types/1"
+          },
+          "status": {
+            "href": "={{ '/api/v3/statuses/' + ($json.severity === 'error' ? '7' : $json.severity === 'warning' ? '6' : '1') }}"
+          },
+          "priority": {
+            "href": "={{ '/api/v3/priorities/' + ($json.severity === 'error' ? '7' : $json.severity === 'warning' ? '5' : '3') }}"
+          }
+        },
+        "additionalFields": {
+          "customField1": "mcp_server_status",
+          "customField2": "={{ $json.source_id }}",
+          "customField3": "={{ $json.server_name }}"
+        }
+      },
+      "type": "n8n-nodes-base.openProject",
+      "typeVersion": 1,
+      "position": [1340, 400],
+      "id": "create-status-work-package"
+    }
+  ],
+  "connections": {
+    "mcp-health-poller": {
+      "main": [
+        [
+          {
+            "node": "check-server-health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-server-health": {
+      "main": [
+        [
+          {
+            "node": "get-mcp-tools",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "log-server-health-issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-mcp-tools": {
+      "main": [
+        [
+          {
+            "node": "check-tools-response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "log-server-health-issue": {
+      "main": [
+        [
+          {
+            "node": "mcp-status-webhook-out",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "create-status-work-package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-tools-response": {
+      "main": [
+        [
+          {
+            "node": "process-mcp-tools",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "log-tools-error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "process-mcp-tools": {
+      "main": [
+        [
+          {
+            "node": "mcp-status-webhook-out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "log-tools-error": {
+      "main": [
+        [
+          {
+            "node": "mcp-status-webhook-out",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "create-status-work-package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  },
+  "staticData": {
+    "node:mcp-health-poller": {
+      "serverIndices": [0, 1, 2, 3, 4, 5, 6, 7]
+    }
+  }
+}

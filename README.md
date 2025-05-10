@@ -277,12 +277,23 @@ Integriert OpenHands für die KI-gestützte Lösung von Issues.
 
 Die OpenHands Integration ermöglicht die automatische Lösung von Issues durch KI. Dies funktioniert wie folgt:
 
-1. Ein Issue wird in GitHub/GitLab erstellt und mit dem "fix-me" Label versehen.
-2. n8n erkennt dies und benachrichtigt OpenHands über die API.
-3. OpenHands analysiert das Issue und erstellt einen Pull Request mit der Lösung.
+1. Ein Issue wird in GitHub/GitLab erstellt und mit dem "fix-me" Label versehen oder mit `@openhands-agent` in einem Kommentar erwähnt.
+2. Der OpenHands Issue Resolver wird aktiviert und analysiert das Issue.
+3. OpenHands erstellt einen Pull Request mit der Lösung.
 4. n8n erkennt den OpenHands-generierten PR und aktualisiert OpenProject und AFFiNE/AppFlowy.
 
-Für die Einrichtung:
+### OpenHands Issue Resolver
+
+Dieses Repository ist mit dem OpenHands Issue Resolver konfiguriert, der automatisch Issues in GitHub und GitLab lösen kann. Der Resolver kann auf zwei Arten aktiviert werden:
+
+1. **Mit dem `fix-me` Label**: Fügen Sie das Label zu einem Issue hinzu, um den Resolver zu aktivieren.
+2. **Mit `@openhands-agent` Erwähnung**: Erwähnen Sie `@openhands-agent` in einem Kommentar, um den Resolver zu aktivieren.
+
+Für die vollständige Einrichtung und Konfiguration des OpenHands Issue Resolvers, siehe die [OpenHands Resolver Dokumentation](OPENHANDS_RESOLVER.md).
+
+### n8n Workflow Integration
+
+Für die Einrichtung der n8n Workflow Integration mit OpenHands:
 
 ```bash
 python src/n8n_setup_main.py --workflows openhands --env-file .env

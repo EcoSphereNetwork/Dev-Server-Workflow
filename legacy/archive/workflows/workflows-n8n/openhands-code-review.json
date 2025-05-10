@@ -1,0 +1,199 @@
+{
+  "name": "OpenHands-Code-Review",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "openhands-code-review",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "code-review-webhook"
+    },
+    {
+      "parameters": {
+        "provider": "={{ $env.LLM.provider }}",
+        "apiKey": "={{ $env.LLM.apiKey }}",
+        "model": "={{ $env.LLM.model }}",
+        "prompt": "=# Code Review Task\n\nPerform a comprehensive code review on the following code from an OpenHands instance:\n\n```{{ $json.language || 'code' }}\n{{ $json.code }}\n```\n\n## Context\nIssue Title: {{ $json.title || 'Code Review' }}\nIssue Description: {{ $json.description || 'No description provided' }}\nOpenHands Instance: {{ $json.instance_name }}\n\n## Review Requirements\n1. Identify potential bugs, security vulnerabilities, or performance issues\n2. Check for code quality, readability, and maintainability\n3. Ensure adherence to best practices for {{ $json.language || 'programming' }}\n4. Suggest improvements and optimizations\n5. Evaluate whether the code successfully addresses the described issue\n\nRespond in JSON format with the following structure:\n{\n  \"summary\": \"string - overall assessment\",\n  \"issues\": [\n    {\n      \"type\": \"bug|security|performance|readability|maintainability|other\",\n      \"severity\": \"high|medium|low\",\n      \"description\": \"string\",\n      \"location\": \"string - file, line number, or code snippet\",\n      \"suggestion\": \"string\"\n    }\n  ],\n  \"improvements\": [\n    {\n      \"description\": \"string\",\n      \"suggestion\": \"string\",\n      \"code\": \"string - sample improved code\"\n    }\n  ],\n  \"code_quality_score\": \"1-10 number\",\n  \"meets_requirements\": \"boolean\",\n  \"additional_comments\": \"string\"\n}",
+        "options": {
+          "maxTokens": 2500,
+          "temperature": 0.2
+        }
+      },
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "id": "analyze-code-with-llm"
+    },
+    {
+      "parameters": {
+        "mode": "jsonParse",
+        "property": "result",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.setJsonProperty",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "id": "parse-llm-response"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.instance_url }}/api/issues/{{ $json.issue_id }}/reviews",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "httpHeaderAuth": {
+          "name": "Authorization",
+          "value": "=Bearer {{ $getNodeParameter('instances').find(i => i.id === $json.instance_id).apiKey }}"
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"title\": \"Automated Code Review\",\n  \"content\": \"# Code Review Summary\\n\\n\" + $json.result.summary + \"\\n\\n## Issues Found\\n\\n\" + $json.result.issues.map(issue => `**${issue.type.toUpperCase()} (${issue.severity})**: ${issue.description}\\n- Location: ${issue.location}\\n- Suggestion: ${issue.suggestion}\\n`).join('\\n') + \"\\n\\n## Suggested Improvements\\n\\n\" + $json.result.improvements.map(imp => `- ${imp.description}\\n  - Suggestion: ${imp.suggestion}\\n  - Code: \\`\\`\\`\\n${imp.code}\\n\\`\\`\\`\\n`).join('\\n') + \"\\n\\n## Overall Assessment\\n\\n- Code Quality Score: ${$json.result.code_quality_score}/10\\n- Meets Requirements: ${$json.result.meets_requirements ? 'Yes' : 'No'}\\n\\n${$json.result.additional_comments}\\n\",\n  \"code_quality_score\": $json.result.code_quality_score,\n  \"review_type\": \"automated\",\n  \"status\": $json.result.meets_requirements ? \"approved\" : \"changes_requested\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "id": "post-review-to-openhands"
+    },
+    {
+      "parameters": {
+        "resource": "Work Packages",
+        "operation": "List Work Packages",
+        "filters": {
+          "fields": [
+            {
+              "name": "customField1",
+              "value": "openhands"
+            },
+            {
+              "name": "customField2",
+              "value": "={{ $json.issue_id }}"
+            },
+            {
+              "name": "customField3",
+              "value": "={{ $json.instance_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.openProject",
+      "typeVersion": 1,
+      "position": [900, 500],
+      "id": "find-openproject-workpackage"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json._embedded ? $json._embedded.elements.length : 0 }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1120, 500],
+      "id": "check-openproject-exists"
+    },
+    {
+      "parameters": {
+        "resource": "Work Packages",
+        "operation": "Update Work Package",
+        "id": "={{ $json._embedded.elements[0].id }}",
+        "description": "={{ $json._embedded.elements[0].description.raw + '\\n\\n## Code Review Results\\n\\n' + 'Quality Score: ' + $json.result.code_quality_score + '/10\\n\\n' + 'Summary: ' + $json.result.summary }}",
+        "additionalFields": {
+          "customField7": "={{ $json.result.code_quality_score }}",
+          "customField8": "={{ $json.result.meets_requirements ?
+"parameters": {
+        "resource": "Work Packages",
+        "operation": "Update Work Package",
+        "id": "={{ $json._embedded.elements[0].id }}",
+        "description": "={{ $json._embedded.elements[0].description.raw + '\\n\\n## Code Review Results\\n\\n' + 'Quality Score: ' + $json.result.code_quality_score + '/10\\n\\n' + 'Summary: ' + $json.result.summary }}",
+        "additionalFields": {
+          "customField7": "={{ $json.result.code_quality_score }}",
+          "customField8": "={{ $json.result.meets_requirements ? 'approved' : 'changes_requested' }}"
+        }
+      },
+      "type": "n8n-nodes-base.openProject",
+      "typeVersion": 1,
+      "position": [1340, 400],
+      "id": "update-openproject-with-review"
+    }
+  ],
+  "connections": {
+    "code-review-webhook": {
+      "main": [
+        [
+          {
+            "node": "analyze-code-with-llm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "analyze-code-with-llm": {
+      "main": [
+        [
+          {
+            "node": "parse-llm-response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parse-llm-response": {
+      "main": [
+        [
+          {
+            "node": "post-review-to-openhands",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "find-openproject-workpackage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "find-openproject-workpackage": {
+      "main": [
+        [
+          {
+            "node": "check-openproject-exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-openproject-exists": {
+      "main": [
+        [
+          {
+            "node": "update-openproject-with-review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  }
+}
