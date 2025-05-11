@@ -3,8 +3,7 @@
 """
 Unified MCP Server for n8n Workflow Automation.
 
-This module provides a MCP-compliant interface for n8n workflow automation,
-combining the features of both previous implementations.
+This module provides a MCP-compliant interface for n8n workflow automation.
 """
 
 import os
