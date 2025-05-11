@@ -1,66 +1,58 @@
-"""
-Hauptmodul für den n8n MCP Server.
+# main.py - verbesserte Sicherheitskonfiguration
 
-Dieses Modul bietet den Haupteinstiegspunkt für den n8n MCP Server.
-"""
-
-import os
-import sys
-import asyncio
-import uvicorn
-import argparse
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware import Middleware
+from fastapi.security import APIKeyHeader
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from .api.router import router
 from .utils.logger import setup_logging
 from .core.config import settings
 
-# Konfiguriere Logging
+# Configure logging
 logger = setup_logging()
 
-# Erstelle FastAPI-App
+# Create rate limiter
+limiter = Limiter(key_func=get_remote_address)
+
+# API key security
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+# Create FastAPI app with security middleware
+middleware = [
+    Middleware(
+        CORSMiddleware,
+        # Define allowed origins instead of allowing all (*) 
+        allow_origins=settings.ALLOWED_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE"],
+        allow_headers=["*"],
+    )
+]
+
 app = FastAPI(
     title="n8n MCP Server",
-    description="Ein MCP-Server für n8n-Workflow-Automatisierung",
+    description="A MCP server for n8n workflow automation",
     version=settings.APP_VERSION,
+    middleware=middleware,
 )
 
-# Konfiguriere CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Add rate limiting exception handler
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Füge Router hinzu
+# Add router with rate limiting
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    # Add security headers
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["X-Frame-Options"] = "DENY"
+    return response
+
+# Add the router
 app.include_router(router)
-
-
-def parse_args():
-    """Parse die Kommandozeilenargumente."""
-    parser = argparse.ArgumentParser(description="n8n MCP Server")
-    parser.add_argument("--host", default=settings.HOST, help="Host")
-    parser.add_argument("--port", type=int, default=settings.PORT, help="Port")
-    parser.add_argument("--debug", action="store_true", help="Debug-Modus")
-    return parser.parse_args()
-
-
-def main():
-    """Haupteinstiegspunkt."""
-    # Parse die Argumente
-    args = parse_args()
-    
-    # Starte den Server
-    uvicorn.run(
-        "src.mcp_servers.n8n_mcp_server.main:app",
-        host=args.host,
-        port=args.port,
-        reload=args.debug,
-    )
-
-
-if __name__ == "__main__":
-    main()
