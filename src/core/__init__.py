@@ -8,6 +8,7 @@ including configuration management, logging, and utility functions.
 from .config_manager import ConfigManager
 from .logger import setup_logging, get_logger
 from .constants import *
+from src.common.config_manager import ConfigManager, get_config_manager
 
 __all__ = [
     'ConfigManager',
