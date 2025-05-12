@@ -1,35 +1,49 @@
 #!/bin/bash
 
 SEARCH_DIR="."
-OLD_IMPORT="from src.core.config_manager import ConfigManager, get_config_manager"
+SEARCH_PATTERN="src.core.config_manager"
 NEW_IMPORT="from src.common.config_manager import ConfigManager, get_config_manager"
 
-echo "🔍 Durchsuche Python-Dateien in '$SEARCH_DIR' nach veralteten Importen..."
+echo "🔍 Suche nach allen Python-Dateien mit Import von '$SEARCH_PATTERN'..."
 
-# Finde alle betroffenen Dateien
-FILES=$(grep -rl "$OLD_IMPORT" "$SEARCH_DIR" --include="*.py")
+FILES=$(grep -rl "$SEARCH_PATTERN" "$SEARCH_DIR" --include="*.py")
 
 if [ -z "$FILES" ]; then
-    echo "✅ Keine Dateien mit dem alten Import gefunden."
+    echo "✅ Keine Dateien mit '$SEARCH_PATTERN' gefunden."
     exit 0
 fi
 
-echo "⚠️  Veralteter Import gefunden in:"
+echo "⚠️  Dateien mit verdächtigen Importen:"
 echo "$FILES"
 echo
 
-# Jede Datei bearbeiten
+# Bearbeite jede gefundene Datei
 for FILE in $FILES; do
     echo "✏️  Bearbeite: $FILE"
 
-    # Backup erstellen
-    cp "$FILE" "$FILE.bak"
+    cp "$FILE" "$FILE.bak"  # Backup
 
-    # Ersetze die Import-Zeile
-    sed -i "s|$OLD_IMPORT|$NEW_IMPORT|g" "$FILE"
+    # Zeilenweise durchgehen, Import ersetzen, falls vorhanden
+    awk -v new_import="$NEW_IMPORT" '
+        BEGIN { replaced=0 }
+        {
+            if ($0 ~ /from[[:space:]]+src\.core\.config_manager[[:space:]]+import/) {
+                print new_import
+                replaced=1
+            } else {
+                print $0
+            }
+        }
+        END {
+            if (replaced) {
+                print "✅ Import ersetzt."
+            } else {
+                print "ℹ️  Kein passender Import in Datei gefunden."
+            }
+        }
+    ' "$FILE.bak" > "$FILE"
 
-    echo "✅ Ersetzt in $FILE (Backup: $FILE.bak)"
 done
 
 echo
-echo "🚀 Fertig! Alle veralteten Importe wurden ersetzt."
+echo "🚀 Alle relevanten Dateien wurden bearbeitet."
