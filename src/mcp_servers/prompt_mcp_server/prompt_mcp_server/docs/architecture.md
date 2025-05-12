@@ -1,6 +1,6 @@
 # Prompt MCP Server Architektur
 
-Der Prompt MCP Server ist ein Master Control Program (MCP) Server für Prompt Engineering mit Templates, Memory und Pre-Prompts. Er verbessert Benutzer-Eingaben automatisch zu strukturierten Best-Practice-Prompts.
+Der Prompt MCP Server ist ein Model Context Protocol (MCP) Server für Prompt Engineering mit Templates, Memory und Pre-Prompts. Er verbessert Benutzer-Eingaben automatisch zu strukturierten Best-Practice-Prompts.
 
 ## Systemarchitektur
 
