@@ -5,6 +5,7 @@ Dieses Modul bietet Funktionen zur Protokollierung von Audit-Ereignissen.
 """
 
 import os
+import copy
 import json
 import logging
 import datetime
@@ -110,3 +111,54 @@ class AuditLogger:
         except Exception as e:
             logger.error(f"Fehler beim Abrufen der Audit-Logs: {e}")
             return []
+
+    def log_api_access(self, event: str, user: Optional[str], resource: str, 
+                      action: str, resource_id: Optional[str], data: Optional[Dict] = None):
+        """
+        Protokolliere einen API-Zugriff detailliert.
+        """
+        if not self.enabled:
+            return
+        
+        try:
+            audit_entry = {
+                "timestamp": datetime.datetime.now().isoformat(),
+                "event": event,
+                "user": user or "anonymous",
+                "resource": resource,
+                "action": action,
+                "resource_id": resource_id,
+                "data": self._sanitize_sensitive_data(data) if data else {},
+            }
+            
+            with open(self.audit_file, "a") as f:
+                f.write(json.dumps(audit_entry) + "\n")
+        except Exception as e:
+            logger.error(f"Fehler beim Protokollieren des API-Zugriffs: {e}")
+            
+    def _sanitize_sensitive_data(self, data: Dict) -> Dict:
+        """Entferne sensible Daten vor dem Logging."""
+        if not data:
+            return {}
+            
+        sanitized = copy.deepcopy(data)
+        
+        # Liste sensibler Felder
+        sensitive_fields = [
+            "password", "token", "secret", "key", "credential"
+        ]
+        
+        # Rekursive Funktion zum Durchsuchen des Dictionaries
+        def redact_sensitive(obj, path=""):
+            if isinstance(obj, dict):
+                for k, v in list(obj.items()):
+                    if any(sensitive in k.lower() for sensitive in sensitive_fields):
+                        obj[k] = "***REDACTED***"
+                    else:
+                        redact_sensitive(v, f"{path}.{k}")
+            elif isinstance(obj, list):
+                for i, item in enumerate(obj):
+                    redact_sensitive(item, f"{path}[{i}]")
+                    
+        redact_sensitive(sanitized)
+        return sanitized
