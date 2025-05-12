@@ -1,6 +1,6 @@
 # Prompt MCP Server
 
-A Master Control Program (MCP) server for prompt engineering with templates, memory, and pre-prompts. This server automatically selects the appropriate LLM based on task complexity, using both local and cloud LLMs for optimal cost-efficiency.
+A Model Context Protocol (MCP) server for prompt engineering with templates, memory, and pre-prompts. This server automatically selects the appropriate LLM based on task complexity, using both local and cloud LLMs for optimal cost-efficiency. 
 
 ## Features
 
