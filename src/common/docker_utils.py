@@ -1,10 +1,15 @@
 """
-Gemeinsame Docker-Hilfsfunktionen für das Dev-Server-Workflow-Projekt.
+Docker-Hilfsfunktionen für das Dev-Server-Workflow-Projekt.
+
+Dieses Modul bietet Funktionen zur Interaktion mit Docker-Containern, Docker Compose
+und zur Verwaltung von Docker-Ressourcen.
 """
 
 import os
 import subprocess
 import logging
+import time
+from pathlib import Path
 from typing import List, Optional, Tuple, Dict, Any, Union
 
 # Konfiguriere Logging
@@ -30,7 +35,8 @@ def check_docker_installed() -> bool:
             check=False
         )
         return result.returncode == 0
-    except Exception:
+    except Exception as e:
+        logger.error(f"Fehler beim Überprüfen der Docker-Installation: {e}")
         return False
 
 
@@ -49,7 +55,8 @@ def check_docker_running() -> bool:
             check=False
         )
         return result.returncode == 0
-    except Exception:
+    except Exception as e:
+        logger.error(f"Fehler beim Überprüfen des Docker-Status: {e}")
         return False
 
 
@@ -79,7 +86,8 @@ def check_docker_compose_installed() -> bool:
             check=False
         )
         return result.returncode == 0
-    except Exception:
+    except Exception as e:
+        logger.error(f"Fehler beim Überprüfen der Docker Compose Installation: {e}")
         return False
 
 
@@ -113,17 +121,19 @@ def get_docker_compose_command() -> List[str]:
         
         # Fallback
         return ["docker-compose"]
-    except Exception:
+    except Exception as e:
+        logger.error(f"Fehler beim Ermitteln des Docker Compose Befehls: {e}")
         return ["docker-compose"]
 
 
-def start_docker_compose(compose_file: str, extended: bool = False) -> bool:
+def start_docker_compose(compose_file: Union[str, Path], extended: bool = False, env_file: Optional[Union[str, Path]] = None) -> bool:
     """
     Starte Docker Compose.
     
     Args:
         compose_file: Pfad zur Docker Compose Datei.
         extended: Ob die erweiterte Version gestartet werden soll.
+        env_file: Pfad zur Umgebungsvariablen-Datei.
         
     Returns:
         bool: True, wenn erfolgreich, sonst False.
@@ -139,14 +149,30 @@ def start_docker_compose(compose_file: str, extended: bool = False) -> bool:
             logger.error("Docker Compose ist nicht installiert. Bitte installieren Sie Docker Compose und versuchen Sie es erneut.")
             return False
         
-        # Wähle die richtige Compose-Datei
-        if extended and os.path.exists(compose_file.replace('.yml', '-extended.yml')):
-            compose_file = compose_file.replace('.yml', '-extended.yml')
+        # Konvertiere Pfade zu Path-Objekten
+        compose_file = Path(compose_file)
+        if not compose_file.exists():
+            logger.error(f"Docker Compose Datei nicht gefunden: {compose_file}")
+            return False
+        
+        # Wähle die richtige Compose-Datei, wenn extended aktiviert ist
+        if extended and compose_file.with_suffix('').with_suffix('.extended.yml').exists():
+            compose_file = compose_file.with_suffix('').with_suffix('.extended.yml')
         
         # Starte Docker Compose
         docker_compose = get_docker_compose_command()
+        cmd = docker_compose + ["-f", str(compose_file), "up", "-d"]
+        
+        # Füge env-file hinzu, wenn angegeben
+        if env_file:
+            env_file = Path(env_file)
+            if not env_file.exists():
+                logger.warning(f"Umgebungsvariablen-Datei nicht gefunden: {env_file}")
+            else:
+                cmd.extend(["--env-file", str(env_file)])
+        
         result = subprocess.run(
-            docker_compose + ["-f", compose_file, "up", "-d"],
+            cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
@@ -164,7 +190,7 @@ def start_docker_compose(compose_file: str, extended: bool = False) -> bool:
         return False
 
 
-def stop_docker_compose(compose_file: str) -> bool:
+def stop_docker_compose(compose_file: Union[str, Path]) -> bool:
     """
     Stoppe Docker Compose.
     
@@ -180,10 +206,16 @@ def stop_docker_compose(compose_file: str) -> bool:
             logger.error("Docker läuft nicht. Bitte starten Sie Docker und versuchen Sie es erneut.")
             return False
         
+        # Konvertiere zu Path-Objekt
+        compose_file = Path(compose_file)
+        if not compose_file.exists():
+            logger.error(f"Docker Compose Datei nicht gefunden: {compose_file}")
+            return False
+        
         # Stoppe Docker Compose
         docker_compose = get_docker_compose_command()
         result = subprocess.run(
-            docker_compose + ["-f", compose_file, "down"],
+            docker_compose + ["-f", str(compose_file), "down"],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
@@ -201,7 +233,7 @@ def stop_docker_compose(compose_file: str) -> bool:
         return False
 
 
-def restart_docker_compose(compose_file: str) -> bool:
+def restart_docker_compose(compose_file: Union[str, Path]) -> bool:
     """
     Starte Docker Compose neu.
     
@@ -217,10 +249,16 @@ def restart_docker_compose(compose_file: str) -> bool:
             logger.error("Docker läuft nicht. Bitte starten Sie Docker und versuchen Sie es erneut.")
             return False
         
+        # Konvertiere zu Path-Objekt
+        compose_file = Path(compose_file)
+        if not compose_file.exists():
+            logger.error(f"Docker Compose Datei nicht gefunden: {compose_file}")
+            return False
+        
         # Starte Docker Compose neu
         docker_compose = get_docker_compose_command()
         result = subprocess.run(
-            docker_compose + ["-f", compose_file, "restart"],
+            docker_compose + ["-f", str(compose_file), "restart"],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
@@ -278,24 +316,53 @@ def is_docker_container_running(container_name: str) -> bool:
         bool: True, wenn der Container läuft, sonst False.
     """
     try:
-        # Hole die Container-ID
-        container_id = get_docker_container_id(container_name)
-        if not container_id:
-            return False
-        
-        # Überprüfe den Status
+        # Überprüfe direkt mit docker ps
         result = subprocess.run(
-            ["docker", "inspect", "--format", "{{.State.Status}}", container_id],
+            ["docker", "ps", "--filter", f"name={container_name}", "--format", "{{.ID}}"],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            capture_output=True
+            check=False
         )
         
-        return result.stdout.strip() == "running"
-    except Exception as e:
-        logger.error(f"Fehler beim Überprüfen des Docker-Status für {container_name}: {e}")
+        if result.returncode == 0:
+            container_id = result.stdout.strip()
+            return bool(container_id)
+        
         return False
+    except Exception as e:
+        logger.error(f"Fehler beim Überprüfen, ob Container {container_name} läuft: {e}")
+        return False
+
+
+def get_docker_container_logs(container_name: str, tail: int = 100) -> Optional[str]:
+    """
+    Rufe die Logs eines Docker-Containers ab.
+    
+    Args:
+        container_name: Name des Containers.
+        tail: Anzahl der Zeilen, die abgerufen werden sollen.
+        
+    Returns:
+        Optional[str]: Container-Logs oder None, wenn ein Fehler aufgetreten ist.
+    """
+    try:
+        result = subprocess.run(
+            ["docker", "logs", f"--tail={tail}", container_name],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False
+        )
+        
+        if result.returncode == 0:
+            return result.stdout
+        else:
+            logger.error(f"Fehler beim Abrufen der Logs für Container {container_name}: {result.stderr}")
+            return None
+    except Exception as e:
+        logger.error(f"Fehler beim Abrufen der Logs für Container {container_name}: {e}")
+        return None
 
 
 def start_docker_container(container_name: str) -> bool:
@@ -356,15 +423,9 @@ def stop_docker_container(container_name: str) -> bool:
             logger.info(f"Container {container_name} läuft nicht.")
             return True
         
-        # Hole die Container-ID
-        container_id = get_docker_container_id(container_name)
-        if not container_id:
-            logger.error(f"Container {container_name} nicht gefunden.")
-            return False
-        
         # Stoppe den Container
         result = subprocess.run(
-            ["docker", "stop", container_id],
+            ["docker", "stop", container_name],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
@@ -419,36 +480,161 @@ def restart_docker_container(container_name: str) -> bool:
         return False
 
 
-def get_docker_container_logs(container_name: str, lines: int = 100) -> str:
+def remove_docker_container(container_name: str, force: bool = False) -> bool:
     """
-    Rufe die Logs eines Docker-Containers ab.
+    Entferne einen Docker-Container.
     
     Args:
         container_name: Name des Containers.
-        lines: Anzahl der Zeilen, die abgerufen werden sollen.
+        force: Erzwinge das Entfernen (auch wenn der Container läuft).
         
     Returns:
-        str: Logs des Containers.
+        bool: True, wenn erfolgreich, sonst False.
     """
     try:
-        # Hole die Container-ID
-        container_id = get_docker_container_id(container_name)
-        if not container_id:
-            return "Container not found"
+        # Bereite das Kommando vor
+        cmd = ["docker", "rm"]
+        if force:
+            cmd.append("-f")
+        cmd.append(container_name)
         
-        # Rufe die Logs ab
+        # Führe das Kommando aus
         result = subprocess.run(
-            ["docker", "logs", "--tail", str(lines), container_id],
+            cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            capture_output=True
+            check=False
         )
         
-        return result.stdout
+        if result.returncode != 0:
+            logger.error(f"Fehler beim Entfernen des Containers {container_name}: {result.stderr}")
+            return False
+        
+        logger.info(f"Container {container_name} wurde erfolgreich entfernt.")
+        return True
     except Exception as e:
-        logger.error(f"Fehler beim Abrufen der Logs für Container {container_name}: {e}")
-        return f"Error retrieving logs: {str(e)}"
+        logger.error(f"Fehler beim Entfernen des Containers {container_name}: {e}")
+        return False
+
+
+def create_docker_network(network_name: str) -> bool:
+    """
+    Erstelle ein Docker-Netzwerk.
+    
+    Args:
+        network_name: Name des Netzwerks.
+        
+    Returns:
+        bool: True, wenn erfolgreich, sonst False.
+    """
+    try:
+        # Überprüfe, ob das Netzwerk bereits existiert
+        result = subprocess.run(
+            ["docker", "network", "inspect", network_name],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False
+        )
+        
+        if result.returncode == 0:
+            logger.info(f"Netzwerk {network_name} existiert bereits.")
+            return True
+        
+        # Erstelle das Netzwerk
+        result = subprocess.run(
+            ["docker", "network", "create", network_name],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False
+        )
+        
+        if result.returncode == 0:
+            logger.info(f"Netzwerk {network_name} erfolgreich erstellt.")
+            return True
+        else:
+            logger.error(f"Fehler beim Erstellen des Netzwerks {network_name}: {result.stderr.decode()}")
+            return False
+    except Exception as e:
+        logger.error(f"Fehler beim Erstellen des Netzwerks {network_name}: {e}")
+        return False
+
+
+def run_docker_container(
+    image: str,
+    name: Optional[str] = None,
+    ports: Optional[List[str]] = None,
+    volumes: Optional[List[str]] = None,
+    environment: Optional[Dict[str, str]] = None,
+    network: Optional[str] = None,
+    command: Optional[List[str]] = None,
+    detach: bool = True
+) -> Tuple[bool, Optional[str]]:
+    """
+    Starte einen Docker-Container.
+    
+    Args:
+        image: Docker-Image.
+        name: Container-Name.
+        ports: Port-Mappings ("host:container").
+        volumes: Volume-Mappings ("host:container").
+        environment: Umgebungsvariablen.
+        network: Docker-Netzwerk.
+        command: Kommando zum Ausführen.
+        detach: Im Hintergrund ausführen.
+        
+    Returns:
+        Tuple[bool, Optional[str]]: (Erfolg, Container-ID oder Output).
+    """
+    try:
+        cmd = ["docker", "run"]
+        
+        if detach:
+            cmd.append("-d")
+        
+        if name:
+            cmd.extend(["--name", name])
+        
+        if ports:
+            for port in ports:
+                cmd.extend(["-p", port])
+        
+        if volumes:
+            for volume in volumes:
+                cmd.extend(["-v", volume])
+        
+        if environment:
+            for key, value in environment.items():
+                cmd.extend(["-e", f"{key}={value}"])
+        
+        if network:
+            cmd.extend(["--network", network])
+        
+        cmd.append(image)
+        
+        if command:
+            cmd.extend(command)
+        
+        logger.info(f"Starte Docker-Container: {' '.join(cmd)}")
+        
+        result = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False
+        )
+        
+        if result.returncode == 0:
+            output = result.stdout.strip()
+            logger.info(f"Container erfolgreich gestartet: {output}")
+            return True, output
+        else:
+            logger.error(f"Fehler beim Starten des Containers: {result.stderr}")
+            return False, None
+    except Exception as e:
+        logger.error(f"Fehler beim Starten des Containers: {e}")
+        return False, None
 
 
 def run_docker_command(command: List[str]) -> bool:
@@ -470,7 +656,81 @@ def run_docker_command(command: List[str]) -> bool:
             check=False
         )
         
-        return result.returncode == 0
+        if result.returncode == 0:
+            logger.info(f"Docker-Befehl erfolgreich ausgeführt: {' '.join(['docker'] + command)}")
+            return True
+        else:
+            logger.error(f"Fehler beim Ausführen des Docker-Befehls: {result.stderr}")
+            return False
     except Exception as e:
         logger.error(f"Fehler beim Ausführen des Docker-Befehls: {e}")
         return False
+
+
+def inspect_docker_container(container_name: str) -> Optional[Dict[str, Any]]:
+    """
+    Inspiziere einen Docker-Container.
+    
+    Args:
+        container_name: Name des Containers.
+        
+    Returns:
+        Optional[Dict[str, Any]]: Container-Informationen oder None, wenn ein Fehler aufgetreten ist.
+    """
+    try:
+        result = subprocess.run(
+            ["docker", "inspect", container_name],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False
+        )
+        
+        if result.returncode == 0:
+            import json
+            return json.loads(result.stdout)[0]
+        else:
+            logger.error(f"Fehler beim Inspizieren des Containers {container_name}: {result.stderr}")
+            return None
+    except Exception as e:
+        logger.error(f"Fehler beim Inspizieren des Containers {container_name}: {e}")
+        return None
+
+
+def get_container_ip(container_name: str, network: Optional[str] = None) -> Optional[str]:
+    """
+    Ermittle die IP-Adresse eines Docker-Containers.
+    
+    Args:
+        container_name: Name des Containers.
+        network: Netzwerkname (optional).
+        
+    Returns:
+        Optional[str]: IP-Adresse oder None, wenn ein Fehler aufgetreten ist.
+    """
+    try:
+        inspect_data = inspect_docker_container(container_name)
+        if not inspect_data:
+            return None
+        
+        networks = inspect_data.get("NetworkSettings", {}).get("Networks", {})
+        
+        if network:
+            # Wenn ein Netzwerk angegeben wurde, nur dieses Netzwerk prüfen
+            if network in networks:
+                return networks[network].get("IPAddress")
+            else:
+                logger.error(f"Container {container_name} ist nicht mit dem Netzwerk {network} verbunden.")
+                return None
+        else:
+            # Ansonsten die erste verfügbare IP-Adresse zurückgeben
+            for net_name, net_data in networks.items():
+                ip = net_data.get("IPAddress")
+                if ip:
+                    return ip
+            
+            # Fallback: Versuche Bridge-Netzwerk
+            return networks.get("bridge", {}).get("IPAddress")
+    except Exception as e:
+        logger.error(f"Fehler beim Ermitteln der IP-Adresse für Container {container_name}: {e}")
+        return None
