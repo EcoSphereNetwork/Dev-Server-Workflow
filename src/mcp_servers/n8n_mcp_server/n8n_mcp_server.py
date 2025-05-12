@@ -29,6 +29,11 @@ from .core.auth import AuthManager
 from .core.audit import AuditLogger
 from .core.metrics import MetricsCollector
 
+from .n8n_api_resources import API_RESOURCES, ResourceType
+from .n8n_tool_generator import generate_all_tools
+from .n8n_mcp_handler import N8nToolRegistry, N8nAPIClient, N8nMCPHandler
+import time
+
 # Configure logging
 logger = setup_logging()
 
@@ -69,15 +74,39 @@ class N8nMCPServer(BaseMCPServer):
         self.request_counter = 0
 
     async def initialize(self):
-        """Initialize the server and load workflow information."""
+        """Initialisiere den Server und lade alle verfügbaren API-Tools."""
         self.session = aiohttp.ClientSession(headers={
             "X-N8N-API-KEY": self.api_key,
             "Content-Type": "application/json"
         })
         
-        # Load workflows and generate tools
+        # API-Client erstellen
+        self.api_client = N8nAPIClient(self.n8n_url, self.api_key, self.session)
+        
+        # Tool-Registry erstellen
+        self.tool_registry = N8nToolRegistry()
+        
+        # MCP-Handler erstellen
+        self.mcp_handler = N8nMCPHandler(self.api_client, self.tool_registry)
+        
+        # Warten, bis die Registry initialisiert ist
+        await self.mcp_handler.initialized.wait()
+        
+        # Legacy: Lade Workflows und generiere workflow-Tools
         await self._fetch_workflows()
-        await self._load_tools()
+        
+        # Tools aus der Registry in die Server-Tools übernehmen
+        api_tools = [
+            MCPTool(
+                name=tool["name"],
+                description=tool["description"],    
+                parameter_schema=tool["parameter_schema"]
+            )
+            for tool in self.tool_registry.list_tools()
+        ]
+        
+        # Füge workflow-Tools und API-Tools zusammen
+        self.tools.extend(api_tools)
         
         logger.info(f"MCP Server initialized with {len(self.tools)} tools")
 
@@ -517,7 +546,7 @@ class N8nMCPServer(BaseMCPServer):
             logger.warning(f"Error extracting parameter schema for workflow {workflow_id}: {e}")
         
         return default_schema
-
+        
     async def call_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """
         Call a tool.
@@ -538,41 +567,63 @@ class N8nMCPServer(BaseMCPServer):
             details={"arguments": arguments},
         )
         
-        # Find the tool
-        tool = next((t for t in self.tools if t.name == tool_name), None)
-        if not tool:
-            raise ValueError(f"Tool not found: {tool_name}")
-        
         # Record start time
         start_time = asyncio.get_event_loop().time()
         
         try:
-            # Handle standard tools
-            if tool_name == "list_workflows":
-                result = await self._handle_list_workflows(arguments)
-            elif tool_name == "get_workflow":
-                result = await self._handle_get_workflow(arguments)
-            elif tool_name == "run_workflow":
-                result = await self._handle_run_workflow(arguments)
-            elif tool_name == "create_workflow":
-                result = await self._handle_create_workflow(arguments)
-            elif tool_name == "update_workflow":
-                result = await self._handle_update_workflow(arguments)
-            elif tool_name == "delete_workflow":
-                result = await self._handle_delete_workflow(arguments)
-            elif tool_name == "activate_workflow":
-                result = await self._handle_activate_workflow(arguments)
-            elif tool_name == "deactivate_workflow":
-                result = await self._handle_deactivate_workflow(arguments)
-            # Handle workflow execution tools
-            elif tool_name.startswith("workflow_"):
-                workflow_id = self._get_workflow_id_by_tool_name(tool_name)
-                if workflow_id:
-                    result = await self._execute_workflow(workflow_id, arguments)
+            # Check if it's an API tool
+            api_tool = self.tool_registry.get_tool(tool_name)
+            if api_tool:
+                # Extract resource and action from tool name
+                parts = tool_name.split("_", 1)
+                if len(parts) > 1:
+                    action = parts[0]
+                    resource_parts = parts[1].split("_", 1)
+                    resource = resource_parts[0]
+                    
+                    # Log API access
+                    self.audit_logger.log_api_access(
+                        event=f"api_access:{tool_name}",
+                        user=None,
+                        resource=resource,
+                        action=action,
+                        resource_id=arguments.get("id"),
+                        data=arguments.get("data")
+                    )
+                    
+                    # Call the API tool handler
+                    result = await api_tool["handler"](arguments)
                 else:
-                    raise ValueError(f"No matching workflow for tool: {tool_name}")
+                    # Fallback if tool name doesn't follow the expected pattern
+                    result = await api_tool["handler"](arguments)
             else:
-                raise ValueError(f"Tool not implemented: {tool_name}")
+                # Legacy workflow tools
+                # Handle standard tools
+                if tool_name == "list_workflows":
+                    result = await self._handle_list_workflows(arguments)
+                elif tool_name == "get_workflow":
+                    result = await self._handle_get_workflow(arguments)
+                elif tool_name == "run_workflow":
+                    result = await self._handle_run_workflow(arguments)
+                elif tool_name == "create_workflow":
+                    result = await self._handle_create_workflow(arguments)
+                elif tool_name == "update_workflow":
+                    result = await self._handle_update_workflow(arguments)
+                elif tool_name == "delete_workflow":
+                    result = await self._handle_delete_workflow(arguments)
+                elif tool_name == "activate_workflow":
+                    result = await self._handle_activate_workflow(arguments)
+                elif tool_name == "deactivate_workflow":
+                    result = await self._handle_deactivate_workflow(arguments)
+                # Handle workflow execution tools
+                elif tool_name.startswith("workflow_"):
+                    workflow_id = self._get_workflow_id_by_tool_name(tool_name)
+                    if workflow_id:
+                        result = await self._execute_workflow(workflow_id, arguments)
+                    else:
+                        raise ValueError(f"No matching workflow for tool: {tool_name}")
+                else:
+                    raise ValueError(f"Tool not found: {tool_name}")
             
             # Record end time and metrics
             end_time = asyncio.get_event_loop().time()
