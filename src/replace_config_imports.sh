@@ -1,8 +1,8 @@
 #!/bin/bash
 
 SEARCH_DIR="."
-OLD_IMPORT="from core.config_manager import ConfigManager, get_config_manager"
-NEW_IMPORT="from common.config_manager import ConfigManager, get_config_manager"
+OLD_IMPORT="from src.core.config_manager import ConfigManager, get_config_manager"
+NEW_IMPORT="from src.common.config_manager import ConfigManager, get_config_manager"
 
 echo "🔍 Durchsuche Python-Dateien in '$SEARCH_DIR' nach veralteten Importen..."
 
